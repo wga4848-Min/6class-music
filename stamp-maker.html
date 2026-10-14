@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<title>이름 도장 공방</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Dokdo&family=Gaegu:wght@700&family=Jua&family=Nanum+Brush+Script&family=Nanum+Myeongjo:wght@800&family=Yeon+Sung&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 넓은 화면은 왼쪽 미리보기(찍힌 모양 + 3D 출력판) 고정 · 오른쪽 설정, 폰은 3D 위에 찍힌 모양을 겹치고 아래 설정 + 하단 저장 바 */
+:root{
+  --paper:#F3F2EE; --surface:#FFFFFF; --ink:#1C2030; --muted:#656A77; --line:#DCDAD2;
+  --inju:#C12A32; --inju-ink:#FFFFFF; --inju-soft:#F6E2E0; --sheet:#FCFBF7; --sheet-ink:#5A564D; --stage:#E7E5DF;
+  --grid-minor:#D2CFC7; --grid-major:#ACA89E; --focus:#2B5FD9; --warn:#8A5A00; --warn-soft:#FBF0D9;
+  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161B; --surface:#1C1F26; --ink:#ECEAE4; --muted:#A0A4AE; --line:#2E323C;
+    --inju:#DB444C; --inju-ink:#FFFFFF; --inju-soft:#3B2124; --sheet:#ECE9E1; --sheet-ink:#57534A; --stage:#21242B;
+    --grid-minor:#30343E; --grid-major:#4A505D; --focus:#86A6FF; --warn:#F2C46B; --warn-soft:#3A2F17;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161B; --surface:#1C1F26; --ink:#ECEAE4; --muted:#A0A4AE; --line:#2E323C;
+  --inju:#DB444C; --inju-ink:#FFFFFF; --inju-soft:#3B2124; --sheet:#ECE9E1; --sheet-ink:#57534A; --stage:#21242B;
+  --grid-minor:#30343E; --grid-major:#4A505D; --focus:#86A6FF; --warn:#F2C46B; --warn-soft:#3A2F17;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 0}
+.wrap{max-width:1180px;margin:0 auto}
+header.top{display:flex;align-items:center;gap:14px;padding-block:4px 18px}
+.seal{width:46px;height:46px;flex:none;background:var(--inju);color:var(--inju-ink);border-radius:6px;display:grid;
+  grid-template-columns:1fr 1fr;place-items:center;font-family:var(--f-display);font-size:19px;line-height:1;padding:5px;transform:rotate(-4deg)}
+.seal span{display:block}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4.2vw,34px);line-height:1.1;margin:0;letter-spacing:.01em;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);font-size:14px}
+.layout{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){
+  .layout{grid-template-columns:minmax(0,1.1fr) minmax(340px,1fr);align-items:start}
+  .left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
+.left{display:flex;flex-direction:column;gap:14px;min-width:0}
+.preview{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px}
+.pane{position:relative;border-radius:10px;overflow:hidden;min-width:0}
+.pane-label{position:absolute;left:10px;top:8px;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500;z-index:2;pointer-events:none}
+.proof{background:var(--sheet);border:1px solid var(--line);aspect-ratio:1/1;max-width:100%}
+.proof .pane-label{color:var(--sheet-ink)}
+.proof canvas{width:100%;height:100%;display:block}
+.stage{background:var(--stage);aspect-ratio:1/1;max-width:100%;touch-action:none}
+.stage canvas{display:block;width:100%!important;height:100%!important}
+.stage-hint{position:absolute;right:10px;bottom:8px;font-size:12px;color:var(--muted);pointer-events:none}
+.busy{position:absolute;right:10px;top:8px;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--surface);color:var(--muted);border:1px solid var(--line);z-index:2}
+.fallback3d{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:var(--muted);font-size:14px}
+@media (max-width:560px){
+  .preview{display:block;position:relative}
+  .proof{position:absolute;left:10px;top:10px;width:36%;z-index:3;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+  .proof .pane-label{left:6px;top:4px;font-size:11px}
+  .stage .pane-label{display:none}
+}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.stats b{font-family:var(--f-num);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.notes{display:flex;flex-direction:column;gap:6px}
+.note{font-size:13px;border-radius:8px;padding:7px 10px;background:var(--warn-soft);color:var(--warn)}
+.actions{display:flex;flex-direction:column;gap:8px}
+.btn-dl{appearance:none;border:0;border-radius:10px;background:var(--inju);color:var(--inju-ink);font:700 16px/1 var(--f-body);
+  padding:15px 18px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+.btn-dl:hover{filter:brightness(1.06)}
+.btn-dl:disabled{opacity:.5;cursor:not-allowed}
+.btn-dl svg{width:18px;height:18px}
+.dl-note{font-size:12.5px;color:var(--muted);margin:0}
+.toast{font-size:13px;color:var(--ink);min-height:1em;margin:0}
+.right{display:flex;flex-direction:column;gap:12px;min-width:0}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0;margin:0}
+.group > legend,.g-title{float:left;width:100%;padding:0;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.g-title small,.group > legend small{font-weight:400;color:var(--muted);font-size:12.5px}
+fieldset.group{min-inline-size:0}
+.text-in{width:100%;font:500 22px/1.2 var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);letter-spacing:.08em}
+.text-in:focus{outline:2px solid var(--focus);outline-offset:1px}
+.fonts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.font-tile{appearance:none;border:1px solid var(--line);background:var(--sheet);border-radius:9px;padding:6px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.font-tile canvas{width:100%;aspect-ratio:1/1;max-width:86px;display:block}
+.font-tile span{font-size:12px;color:var(--sheet-ink);white-space:nowrap}
+.font-tile[aria-pressed="true"]{border-color:var(--inju);box-shadow:0 0 0 2px var(--inju)}
+.seg{display:grid;gap:6px}
+.seg.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.seg.c5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:420px){.seg.c5{grid-template-columns:repeat(3,minmax(0,1fr))}.seg.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.opt{position:relative;display:block;min-width:0}
+.opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt .face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;border:1px solid var(--line);border-radius:9px;padding:9px 6px;background:var(--paper);font-size:13px;font-weight:500;height:100%;transition:border-color .12s,background .12s}
+.opt .face small{font-weight:400;color:var(--muted);font-size:11.5px;line-height:1.35}
+.opt input:checked + .face{border-color:var(--inju);background:var(--inju-soft);color:var(--ink)}
+.opt input:focus-visible + .face{outline:2px solid var(--focus);outline-offset:1px}
+.opt svg{width:24px;height:24px;color:var(--ink)}
+.opt svg.mode-ico{width:44px;height:24px;display:block}
+.slider{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 10px}
+.slider label{font-size:13.5px}
+.slider output{justify-self:end;font-family:var(--f-num);font-size:13px;font-variant-numeric:tabular-nums}
+.slider input{grid-column:1 / -1;width:100%;accent-color:var(--inju)}
+.slider .hint{grid-column:1 / -1;font-size:12px;color:var(--muted);margin-top:-2px}
+.toggle{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--inju);margin-top:2px;flex:none}
+.toggle small{display:block;color:var(--muted);font-size:12px}
+.tips{font-size:13px;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.tips b{color:var(--ink);font-weight:500}
+.mbar{display:none}
+@media (max-width:899px){
+  .left .actions{display:none}
+  .mbar{display:flex;position:sticky;bottom:0;z-index:20;gap:12px;align-items:center;margin-top:16px;
+    margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+    padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+    background:var(--surface);border-top:1px solid var(--line)}
+  .mbar .m-info{flex:1;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.35}
+  .mbar .m-info b{font-family:var(--f-num);font-weight:500;color:var(--ink)}
+  .mbar .btn-dl{width:auto;padding:13px 18px;font-size:15px}
+}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0;border-radius:12px;background:var(--surface);border:1px solid var(--line);min-inline-size:0}
+.tabs .opt .face{border:0;background:transparent;padding:11px 6px;font-size:14.5px;font-weight:700;border-radius:9px}
+.tabs .opt input:checked + .face{background:var(--inju);color:var(--inju-ink)}
+.batch-in{width:100%;min-height:150px;resize:vertical;font:500 16px/1.6 var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.batch-in:focus{outline:2px solid var(--focus);outline-offset:1px}
+.batch-hint{font-size:12.5px;color:var(--muted);margin:-4px 0 0}
+.batch-meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.batch-meta b{color:var(--ink);font-family:var(--f-num);font-weight:500}
+.batch-meta .warn-t{color:var(--warn)}
+.batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;max-height:310px;overflow:auto;padding:2px}
+.b-item{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:4px 3px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.b-item canvas{width:100%;max-width:64px;aspect-ratio:1/1;display:block}
+.b-item span{font-size:11.5px;color:var(--sheet-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.b-item.warn{border-color:var(--warn)}
+.g-sub{font-size:13.5px;font-weight:700;margin-top:4px}
+.sel{grid-column:1 / -1;width:100%;font:500 14px var(--f-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+footer{padding-block:18px 26px;color:var(--muted);font-size:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="seal" aria-hidden="true"><span>도</span><span>장</span><span>공</span><span>방</span></div>
+    <div>
+      <h1>이름 도장 공방</h1>
+      <p class="sub">글자와 글꼴을 고르면 3D 프린터로 바로 뽑을 수 있는 도장 파일(STL)을 만들어요.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="left" aria-label="미리보기">
+      <div class="preview">
+        <div class="pane proof">
+          <span class="pane-label" id="proofLabel">찍힌 모양</span>
+          <canvas id="proofCanvas" aria-label="종이에 찍힌 도장 모양"></canvas>
+        </div>
+        <div class="pane stage" id="stage">
+          <span class="pane-label">3D 모델 · 출력 방향</span>
+          <span class="busy" id="busy" hidden>만드는 중…</span>
+          <span class="stage-hint" id="stageHint">드래그해서 돌려 보기</span>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="notes" id="notes"></div>
+      <div class="actions">
+        <button class="btn-dl" id="dlBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+          <span class="dl-label">STL 파일 저장</span>
+        </button>
+        <p class="dl-note" id="dlNote"></p>
+        <p class="toast" id="toast" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="right" aria-label="도장 설정">
+      <fieldset class="tabs" aria-label="만들기 방식">
+        <label class="opt"><input type="radio" name="workmode" id="work-single" value="single" checked><span class="face">한 명씩 만들기</span></label>
+        <label class="opt"><input type="radio" name="workmode" id="work-batch" value="batch"><span class="face">우리 반 한꺼번에</span></label>
+      </fieldset>
+
+      <div class="group" id="batchGroup" hidden>
+        <label class="g-title" for="batchIn">이름 목록 <small>한 줄에 한 명 · 엑셀 칸을 복사해 붙여도 돼요</small></label>
+        <textarea class="batch-in" id="batchIn" rows="6" spellcheck="false" autocomplete="off"></textarea>
+        <p class="batch-hint">아래 글꼴·새김·모양·크기 설정이 모든 이름에 똑같이 들어가요.</p>
+        <div class="batch-meta" id="batchMeta"></div>
+        <div class="batch-grid" id="batchGrid" aria-label="이름별 찍힌 모양"></div>
+        <div class="g-sub">저장 방식</div>
+        <div class="seg c2">
+          <label class="opt"><input type="radio" name="batchOut" id="batchOut-plate" value="plate" checked><span class="face">출력판에 모아서<small>여러 개를 한 번에 출력<br>자리별 배치표 포함</small></span></label>
+          <label class="opt"><input type="radio" name="batchOut" id="batchOut-files" value="files"><span class="face">학생별 파일<small>이름마다 STL 하나씩<br>번호_이름.stl</small></span></label>
+        </div>
+        <div class="slider" id="bedRow"><label for="bedSel">출력판 크기</label><output id="bedOut" for="bedSel"></output>
+          <select class="sel" id="bedSel">
+            <option value="180">180 × 180 mm (뱀부랩 A1 mini 등)</option>
+            <option value="220">220 × 220 mm (엔더3 등)</option>
+            <option value="256">256 × 256 mm (뱀부랩 A1·P1S 등)</option>
+            <option value="300">300 × 300 mm (대형 프린터)</option>
+          </select></div>
+      </div>
+
+      <div class="group" id="singleGroup">
+        <label class="g-title" for="textIn">새길 글자 <small>이름 2~4글자가 가장 잘 나와요</small></label>
+        <input class="text-in" id="textIn" type="text" maxlength="8" autocomplete="off" spellcheck="false" value="김하늘">
+      </div>
+
+      <div class="group">
+        <div class="g-title">글꼴 <small>타일마다 지금 글자로 찍어 봤어요</small></div>
+        <div class="fonts" id="fontTiles" role="group" aria-label="글꼴 선택"></div>
+      </div>
+
+      <fieldset class="group">
+        <legend>새김 방식</legend>
+        <div class="seg c2">
+          <label class="opt"><input type="radio" name="mode" id="mode-relief" value="relief" checked>
+            <span class="face">
+              <svg class="mode-ico" viewBox="0 0 44 24" aria-hidden="true"><rect x="2" y="15" width="40" height="7" rx="1" fill="currentColor" opacity=".35"/><rect x="7" y="7" width="7" height="8" fill="currentColor"/><rect x="18" y="7" width="7" height="8" fill="currentColor"/><rect x="29" y="7" width="8" height="8" fill="currentColor"/></svg>
+              양각<small>글자가 튀어나와요<br>빨간 글씨로 찍혀요</small></span></label>
+          <label class="opt"><input type="radio" name="mode" id="mode-engrave" value="engrave">
+            <span class="face">
+              <svg class="mode-ico" viewBox="0 0 44 24" aria-hidden="true"><rect x="2" y="15" width="40" height="7" rx="1" fill="currentColor" opacity=".35"/><path d="M2 7h5v8h7V7h4v8h7V7h4v8h8V7h5v8H2z" fill="currentColor"/></svg>
+              음각<small>글자가 파여요<br>흰 글씨로 찍혀요</small></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>모양</legend>
+        <div class="seg c5">
+          <label class="opt"><input type="radio" name="shape" id="shape-square" value="square" checked><span class="face"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"/></svg>정사각</span></label>
+          <label class="opt"><input type="radio" name="shape" id="shape-rounded" value="rounded"><span class="face"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>둥근사각</span></label>
+          <label class="opt"><input type="radio" name="shape" id="shape-circle" value="circle"><span class="face"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>원</span></label>
+          <label class="opt"><input type="radio" name="shape" id="shape-oval" value="oval"><span class="face"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6.5" ry="9.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>타원</span></label>
+          <label class="opt"><input type="radio" name="shape" id="shape-rect" value="rect"><span class="face"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" fill="none" stroke="currentColor" stroke-width="2"/></svg>직사각</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>글자 배치</legend>
+        <div class="seg c4">
+          <label class="opt"><input type="radio" name="layout" id="layout-auto" value="auto" checked><span class="face">자동<small>성 왼쪽, 이름 오른쪽</small></span></label>
+          <label class="opt"><input type="radio" name="layout" id="layout-trad" value="trad"><span class="face">전통<small>세로쓰기, 오른쪽부터</small></span></label>
+          <label class="opt"><input type="radio" name="layout" id="layout-col" value="col"><span class="face">세로 한 줄<small>위에서 아래로</small></span></label>
+          <label class="opt"><input type="radio" name="layout" id="layout-row" value="row"><span class="face">가로 한 줄<small>왼쪽에서 오른쪽</small></span></label>
+        </div>
+      </fieldset>
+
+      <div class="group">
+        <div class="g-title">크기와 두께 <small>단위 mm</small></div>
+        <div class="slider"><label for="wIn" id="wLabel">크기</label><output id="wOut" for="wIn"></output>
+          <input type="range" id="wIn" min="10" max="50" step="1" value="20"></div>
+        <div class="slider" id="hRow" hidden><label for="hIn">세로</label><output id="hOut" for="hIn"></output>
+          <input type="range" id="hIn" min="10" max="60" step="1" value="27"></div>
+        <div class="slider"><label for="baseIn">판 두께</label><output id="baseOut" for="baseIn"></output>
+          <input type="range" id="baseIn" min="1.5" max="6" step="0.5" value="3"></div>
+        <div class="slider"><label for="reliefIn">새김 깊이</label><output id="reliefOut" for="reliefIn"></output>
+          <input type="range" id="reliefIn" min="0.6" max="3" step="0.1" value="1.2">
+          <span class="hint">글자가 튀어나오거나 파이는 깊이예요. 1~1.5mm가 잘 찍혀요.</span></div>
+        <div class="slider"><label for="borderIn">테두리</label><output id="borderOut" for="borderIn"></output>
+          <input type="range" id="borderIn" min="0" max="3" step="0.1" value="1"></div>
+        <div class="slider"><label for="boldIn">글자 굵게</label><output id="boldOut" for="boldIn"></output>
+          <input type="range" id="boldIn" min="0" max="0.6" step="0.05" value="0">
+          <span class="hint">가는 글꼴은 0.2mm 이상 올리면 획이 끊기지 않아요.</span></div>
+      </div>
+
+      <fieldset class="group">
+        <legend>손잡이</legend>
+        <div class="seg c2">
+          <label class="opt"><input type="radio" name="handle" id="handle-none" value="none" checked><span class="face">판만<small>나무 손잡이 등에 붙여 써요</small></span></label>
+          <label class="opt"><input type="radio" name="handle" id="handle-knob" value="knob"><span class="face">손잡이 일체형<small>서포트 없이 한 번에 출력</small></span></label>
+        </div>
+        <div class="slider" id="hhRow" hidden><label for="hhIn">손잡이 높이</label><output id="hhOut" for="hhIn"></output>
+          <input type="range" id="hhIn" min="10" max="40" step="1" value="22">
+          <span class="hint">손잡이 옆 세로 줄무늬가 글자 위쪽 표시예요.</span></div>
+      </fieldset>
+
+      <div class="group">
+        <div class="g-title">세부 설정</div>
+        <label class="toggle"><input type="checkbox" id="fillIn" checked><span>글자를 칸에 꽉 채우기<small>끄면 글꼴 원래 비율을 지켜요</small></span></label>
+        <label class="toggle"><input type="checkbox" id="mirrorIn" checked><span>도장용 좌우 반전<small>도장은 거꾸로 새겨야 바르게 찍혀요. 이름표·키링으로 쓸 땐 끄세요</small></span></label>
+      </div>
+
+      <div class="group">
+        <div class="g-title">출력 팁</div>
+        <ul class="tips">
+          <li>파일 그대로 <b>글자 면이 위로</b> 오게 출력해요.</li>
+          <li>노즐 0.4mm, <b>레이어 0.12~0.16mm</b>로 뽑으면 글자 모서리가 또렷해요.</li>
+          <li>타원·직사각 손잡이형은 판 끝이 조금 떠 있어 서포트를 켜면 더 깔끔해요.</li>
+          <li>인주는 PLA로도 찍히지만 <b>TPU</b>로 뽑으면 더 고르게 묻어나요.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <footer>글꼴: Google Fonts의 공개 한글 글꼴(OFL). 만든 STL은 자유롭게 출력해 써도 돼요.</footer>
+
+  <div class="mbar" id="mbar">
+    <div class="m-info" id="mInfo"></div>
+    <button class="btn-dl" id="dlBtn2" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+      <span class="dl-label">STL 저장</span>
+    </button>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- 글꼴 목록 ---------- */
+const FONTS = [
+  {id:'jua',      label:'귀여운체', family:'Jua',                weight:400},
+  {id:'dohyeon',  label:'반듯체',   family:'Do Hyeon',           weight:400},
+  {id:'myeongjo', label:'고풍체',   family:'Nanum Myeongjo',     weight:800},
+  {id:'brush',    label:'캘리체',   family:'Nanum Brush Script', weight:400, thin:true},
+  {id:'gaegu',    label:'봄날체',   family:'Gaegu',              weight:700},
+  {id:'dokdo',    label:'사인체',   family:'Dokdo',              weight:400, thin:true},
+  {id:'blackhan', label:'굵은체',   family:'Black Han Sans',     weight:400},
+  {id:'yeonsung', label:'붓글씨체', family:'Yeon Sung',          weight:400}
+];
+const fontById = id => FONTS.find(f=>f.id===id) || FONTS[0];
+const INK = '#C42B33';
+
+/* ---------- 상태 ---------- */
+const DEFAULTS = {text:'김하늘', font:'jua', mode:'relief', shape:'square', layout:'auto', w:20, h:27,
+  base:3, relief:1.2, border:1, bold:0, fill:true, mirror:true, handle:'none', handleH:22,
+  batchMode:false, batchText:'', batchOut:'plate', bed:220};
+const SAMPLE_NAMES = '김하늘\n이서준\n박지우\n최유나\n정민호\n한소율\n윤도현\n강예린';
+const S = Object.assign({}, DEFAULTS);
+try{ const saved = JSON.parse(localStorage.getItem('stamp-maker-v1')||'null'); if(saved && typeof saved==='object'){ for(const k in DEFAULTS){ if(k in saved && typeof saved[k]===typeof DEFAULTS[k]) S[k]=saved[k]; } } }catch(e){}
+if(!S.batchText.trim()) S.batchText = SAMPLE_NAMES;
+if(![180,220,256,300].includes(S.bed)) S.bed = 220;
+function persist(){ try{ localStorage.setItem('stamp-maker-v1', JSON.stringify(S)); }catch(e){} }
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const isSquareish = sh => sh==='square'||sh==='rounded'||sh==='circle';
+function dims(){ return isSquareish(S.shape) ? {w:S.w, h:S.w} : {w:S.w, h:S.h}; }
+function batchNames(){ return (S.batchText||'').split(/[\n\r,\t;]+/).map(t=>t.replace(/\s+/g,'')).filter(Boolean).slice(0,60); }
+function chars(src){ if(src===undefined) src = S.batchMode ? (batchNames()[0]||'') : S.text; return Array.from((src||'').replace(/\s+/g,'')).slice(0,8); }
+function fmt(v, d=1){ return (Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d).replace(/\.0+$/,''); }
+
+/* ---------- 글꼴 불러오기 ---------- */
+const fontCache = {};
+function ensureFont(f, text){
+  const key = f.id+'|'+text;
+  if(!fontCache[key]){
+    const spec = `${f.weight} 64px "${f.family}"`;
+    fontCache[key] = (document.fonts && document.fonts.load ? document.fonts.load(spec, text||'가') : Promise.resolve([]))
+      .then(list=>list && list.length>0).catch(()=>false);
+  }
+  return fontCache[key];
+}
+
+/* ---------- 배치 계산 ---------- */
+function layoutShape(n, layout){ // [cols, rows] (셀이 정사각일 때의 상자 비율용)
+  if(n<=1) return [1,1];
+  if(layout==='row') return [n,1];
+  if(layout==='col') return [1,n];
+  if(layout==='trad') return [Math.ceil(n/2), 2];
+  if(n===2) return [2,1];
+  return [Math.ceil(n/2), 2];
+}
+function layoutCells(n, layout, box, g){
+  const {x,y,w,h} = box; const cells=[];
+  if(n<=0) return cells;
+  if(n===1) return [{x,y,w,h}];
+  if(layout==='row'){ const cw=(w-g*(n-1))/n; for(let i=0;i<n;i++) cells.push({x:x+i*(cw+g),y,w:cw,h}); return cells; }
+  if(layout==='col'){ const ch=(h-g*(n-1))/n; for(let i=0;i<n;i++) cells.push({x,y:y+i*(ch+g),w,h:ch}); return cells; }
+  if(layout==='trad'){ // 오른쪽 열부터, 위에서 아래로. 홀수면 첫 열(성)은 한 칸을 길게
+    const cols=Math.ceil(n/2), colW=(w-g*(cols-1))/cols;
+    const per=[]; for(let c=0;c<cols;c++) per.push(2); if(n%2===1) per[0]=1;
+    for(let c=0;c<cols;c++){
+      const cx = x + w - (c+1)*colW - c*g, m=per[c], rh=(h-g*(m-1))/m;
+      for(let r=0;r<m;r++) cells.push({x:cx, y:y+r*(rh+g), w:colW, h:rh});
+    }
+    return cells;
+  }
+  // 자동: 왼쪽에서 오른쪽, 홀수면 첫 글자(성)를 왼쪽에 길게
+  if(n===2){ const cw=(w-g)/2; return [{x,y,w:cw,h},{x:x+cw+g,y,w:cw,h}]; }
+  const cols=Math.ceil(n/2), colW=(w-g*(cols-1))/cols, rh=(h-g)/2;
+  if(n%2===1){
+    cells.push({x,y,w:colW,h});
+    const rest=n-1, rc=rest/2;
+    for(let r=0;r<2;r++) for(let c=0;c<rc;c++) cells.push({x:x+(c+1)*(colW+g), y:y+r*(rh+g), w:colW, h:rh});
+  } else {
+    for(let r=0;r<2;r++) for(let c=0;c<cols;c++) cells.push({x:x+c*(colW+g), y:y+r*(rh+g), w:colW, h:rh});
+  }
+  return cells;
+}
+function contentBox(wpx, hpx, shape, insetPx, n, layout){
+  const A = wpx/2-insetPx, B = hpx/2-insetPx;
+  if(A<=1||B<=1) return null;
+  if(shape==='circle'||shape==='oval'){
+    const [c,r] = layoutShape(n, layout);
+    let ar = c/r; if(S.fill) ar = Math.pow(ar,0.5)*Math.pow(A/B,0.5);
+    const th = Math.atan2(A, B*ar), k = 1.06; // 글자 모서리는 대개 비어 있어 살짝 키움
+    return {w:Math.min(2*A, 2*A*Math.cos(th)*k), h:Math.min(2*B, 2*B*Math.sin(th)*k)};
+  }
+  return {w:2*A, h:2*B};
+}
+
+/* ---------- 2D 도장 면 그리기 ---------- */
+function roundRectPath(ctx,x,y,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+}
+function cornerR(w,h){ return Math.min(w,h)*0.2; }
+function shapePath(ctx, cx, cy, wpx, hpx, shape, inset, ppm){
+  const W=wpx-2*inset, H=hpx-2*inset; ctx.beginPath(); if(W<=0||H<=0) return false;
+  if(shape==='circle'||shape==='oval') ctx.ellipse(cx,cy,W/2,H/2,0,0,Math.PI*2);
+  else if(shape==='rounded') roundRectPath(ctx,cx-W/2,cy-H/2,W,H,cornerR(wpx,hpx)-inset);
+  else ctx.rect(cx-W/2,cy-H/2,W,H);
+  ctx.closePath(); return true;
+}
+function mkCanvas(w,h){ const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w)); c.height=Math.max(1,Math.round(h)); return c; }
+
+let lastCellMinMm = 99;
+function letterLayer(cw, ch, ppm, mirror, font, list){
+  const L = mkCanvas(cw, ch), lx = L.getContext('2d');
+  const {w,h} = dims(); const cx=cw/2, cy=ch/2;
+  const n = list.length; if(!n) return L;
+  const gapMm = Math.max(0.5, 0.05*Math.min(w,h));
+  const box = contentBox(w*ppm, h*ppm, S.shape, (S.border+gapMm)*ppm, n, S.layout);
+  if(!box) return L;
+  const g = 0.035*Math.min(box.w, box.h);
+  const cells = layoutCells(n, S.layout, {x:cx-box.w/2, y:cy-box.h/2, w:box.w, h:box.h}, g);
+  lastCellMinMm = Math.min(...cells.map(c=>Math.min(c.w,c.h)))/ppm;
+  lx.fillStyle = '#000';
+  if(mirror){ lx.translate(cw,0); lx.scale(-1,1); }
+  const fs = 200;
+  lx.font = `${font.weight} ${fs}px "${font.family}", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif`;
+  lx.textBaseline='alphabetic'; lx.textAlign='left';
+  list.forEach((chr,i)=>{
+    const cell = cells[i]; if(!cell) return;
+    const m = lx.measureText(chr);
+    const l = m.actualBoundingBoxLeft||0, r = m.actualBoundingBoxRight||0, a = m.actualBoundingBoxAscent||0, d = m.actualBoundingBoxDescent||0;
+    const gw = l+r, gh = a+d; if(gw<=0||gh<=0) return;
+    let sx = cell.w/gw, sy = cell.h/gh;
+    if(!S.fill){ const s=Math.min(sx,sy); sx=sy=s; }
+    lx.save();
+    lx.translate(cell.x+cell.w/2, cell.y+cell.h/2);
+    lx.scale(sx, sy);
+    lx.fillText(chr, -(r-l)/2, -(d-a)/2);
+    lx.restore();
+  });
+  const rad = S.bold*ppm;
+  if(rad>=0.4){ // 원형으로 번지게 해서 획을 굵게
+    const D = mkCanvas(cw,ch), dx = D.getContext('2d');
+    const N = 20;
+    for(let k=0;k<N;k++){ const t=2*Math.PI*k/N; dx.drawImage(L, rad*Math.cos(t), rad*Math.sin(t)); }
+    for(let k=0;k<10;k++){ const t=2*Math.PI*(k+0.5)/10; dx.drawImage(L, 0.6*rad*Math.cos(t), 0.6*rad*Math.sin(t)); }
+    dx.drawImage(L,0,0);
+    return D;
+  }
+  return L;
+}
+/* 도장 면에서 "튀어나온 부분"을 color로 칠함 */
+function drawFace(ctx, cw, ch, ppm, mirror, color, font, list){
+  const {w,h} = dims(); const cx=cw/2, cy=ch/2, wpx=w*ppm, hpx=h*ppm;
+  ctx.save(); ctx.clearRect(0,0,cw,ch);
+  const L = letterLayer(cw, ch, ppm, mirror, font, list || chars());
+  ctx.fillStyle = color;
+  if(S.mode==='relief'){
+    if(S.border>0.001){
+      shapePath(ctx,cx,cy,wpx,hpx,S.shape,0,ppm); ctx.fill();
+      ctx.globalCompositeOperation='destination-out';
+      if(shapePath(ctx,cx,cy,wpx,hpx,S.shape,S.border*ppm,ppm)) ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+    }
+    // 글자를 색으로 칠하기
+    const T = mkCanvas(cw,ch), tx=T.getContext('2d');
+    tx.drawImage(L,0,0); tx.globalCompositeOperation='source-in'; tx.fillStyle=color; tx.fillRect(0,0,cw,ch);
+    ctx.drawImage(T,0,0);
+  } else {
+    shapePath(ctx,cx,cy,wpx,hpx,S.shape,0,ppm); ctx.fill();
+    ctx.globalCompositeOperation='destination-out'; ctx.drawImage(L,0,0);
+    ctx.globalCompositeOperation='source-over';
+  }
+  ctx.restore();
+}
+
+/* 인주 질감 */
+let grainCanvas=null;
+function grain(ctx){
+  if(!grainCanvas){
+    grainCanvas=mkCanvas(160,160); const gx=grainCanvas.getContext('2d'), im=gx.createImageData(160,160);
+    for(let i=0;i<im.data.length;i+=4){ const r=Math.random(); im.data[i+3]= r>0.86 ? Math.floor(255*Math.pow(Math.random(),1.5)) : 0; }
+    gx.putImageData(im,0,0);
+  }
+  return ctx.createPattern(grainCanvas,'repeat');
+}
+
+function drawProof(){
+  const cv = $('proofCanvas'); const rect = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const cw = Math.max(80, Math.round(rect.width*dpr)), ch = Math.max(80, Math.round(rect.height*dpr));
+  if(cv.width!==cw||cv.height!==ch){ cv.width=cw; cv.height=ch; }
+  const ctx = cv.getContext('2d');
+  const {w,h}=dims(); const ppm = Math.min(cw/(w*1.45), ch/(h*1.45));
+  drawFace(ctx, cw, ch, ppm, false, INK, fontById(S.font));
+  ctx.save(); ctx.globalCompositeOperation='destination-out'; ctx.globalAlpha=0.55; ctx.fillStyle=grain(ctx); ctx.fillRect(0,0,cw,ch); ctx.restore();
+}
+
+/* ---------- 글꼴 타일 ---------- */
+const tilesEl = $('fontTiles');
+FONTS.forEach(f=>{
+  const b=document.createElement('button'); b.type='button'; b.className='font-tile'; b.dataset.font=f.id; b.id='font-'+f.id;
+  b.setAttribute('aria-pressed', String(f.id===S.font));
+  const c=document.createElement('canvas'); c.width=172; c.height=172;
+  const s=document.createElement('span'); s.textContent=f.label;
+  b.append(c,s); tilesEl.append(b);
+  b.addEventListener('click',()=>{ S.font=f.id; syncTiles(); changed(); });
+});
+function syncTiles(){ tilesEl.querySelectorAll('.font-tile').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.font===S.font))); }
+let tileGen=0;
+function drawTiles(){
+  const my=++tileGen; const txt=chars().join('')||'도장';
+  FONTS.forEach(f=>{
+    ensureFont(f, txt).then(()=>{
+      if(my!==tileGen) return;
+      const c = tilesEl.querySelector(`[data-font="${f.id}"] canvas`); const ctx=c.getContext('2d');
+      const {w,h}=dims(); const ppm=Math.min(c.width/(w*1.22), c.height/(h*1.22));
+      const keep = lastCellMinMm;
+      drawFace(ctx, c.width, c.height, ppm, false, INK, f);
+      lastCellMinMm = keep;
+    });
+  });
+}
+
+/* ---------- 윤곽 추출 (marching squares) ---------- */
+function traceContours(alpha, W, H, iso){
+  const N = W*H*2;
+  const n1 = new Int32Array(N).fill(-1), n2 = new Int32Array(N).fill(-1);
+  function link(a,b){ if(n1[a]<0) n1[a]=b; else n2[a]=b; if(n1[b]<0) n1[b]=a; else n2[b]=a; }
+  for(let y=0;y<H-1;y++){
+    for(let x=0;x<W-1;x++){
+      const i=y*W+x, tl=alpha[i], tr=alpha[i+1], bl=alpha[i+W], br=alpha[i+W+1];
+      const c=(tl>=iso?8:0)|(tr>=iso?4:0)|(br>=iso?2:0)|(bl>=iso?1:0);
+      if(c===0||c===15) continue;
+      const T=i*2, R=(i+1)*2+1, B=(i+W)*2, L=i*2+1;
+      switch(c){
+        case 1: case 14: link(L,B); break;
+        case 2: case 13: link(B,R); break;
+        case 3: case 12: link(L,R); break;
+        case 4: case 11: link(T,R); break;
+        case 6: case 9:  link(T,B); break;
+        case 7: case 8:  link(T,L); break;
+        case 5: { const m=(tl+tr+bl+br)/4; if(m>=iso){ link(T,L); link(B,R); } else { link(T,R); link(L,B); } break; }
+        case 10:{ const m=(tl+tr+bl+br)/4; if(m>=iso){ link(T,R); link(L,B); } else { link(T,L); link(B,R); } break; }
+      }
+    }
+  }
+  function kp(k){
+    const e=k>>1, x=e%W, y=(e-x)/W;
+    if((k&1)===0){ const a=alpha[e], b=alpha[e+1]; return [x+(iso-a)/(b-a), y]; }
+    const a=alpha[e], b=alpha[e+W]; return [x, y+(iso-a)/(b-a)];
+  }
+  const vis = new Uint8Array(N), loops=[];
+  for(let k=0;k<N;k++){
+    if(n1[k]<0||vis[k]) continue;
+    const pts=[]; let prev=-1, cur=k, ok=false;
+    for(let guard=0; guard<N; guard++){
+      vis[cur]=1; pts.push(kp(cur));
+      const nx = (n1[cur]!==prev) ? n1[cur] : n2[cur];
+      if(nx===k){ ok=true; break; }
+      if(nx<0||vis[nx]) break;
+      prev=cur; cur=nx;
+    }
+    if(ok && pts.length>=3) loops.push(pts);
+  }
+  return loops;
+}
+function rdp(pts, eps){
+  const n=pts.length; if(n<3) return pts.slice();
+  const keep=new Uint8Array(n); keep[0]=keep[n-1]=1; const st=[[0,n-1]];
+  while(st.length){
+    const [a,b]=st.pop(); const ax=pts[a][0], ay=pts[a][1], dx=pts[b][0]-ax, dy=pts[b][1]-ay; const len=Math.hypot(dx,dy);
+    let md=0, idx=-1;
+    for(let i=a+1;i<b;i++){
+      const px=pts[i][0]-ax, py=pts[i][1]-ay;
+      const d = len>1e-9 ? Math.abs(px*dy-py*dx)/len : Math.hypot(px,py);
+      if(d>md){ md=d; idx=i; }
+    }
+    if(md>eps && idx>0){ keep[idx]=1; st.push([a,idx],[idx,b]); }
+  }
+  const out=[]; for(let i=0;i<n;i++) if(keep[i]) out.push(pts[i]); return out;
+}
+function simplifyClosed(p, eps){
+  let m=0, md=-1; const x0=p[0][0], y0=p[0][1];
+  for(let i=1;i<p.length;i++){ const d=(p[i][0]-x0)**2+(p[i][1]-y0)**2; if(d>md){ md=d; m=i; } }
+  const A=rdp(p.slice(0,m+1),eps), B=rdp(p.slice(m).concat([p[0]]),eps);
+  return A.slice(0,-1).concat(B.slice(0,-1));
+}
+function area(p){ let s=0; for(let i=0,j=p.length-1;i<p.length;j=i++) s+=(p[j][0]*p[i][1]-p[i][0]*p[j][1]); return s/2; }
+function pip(pt, poly){
+  let inside=false; const x=pt[0], y=pt[1];
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
+    if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+/* 윤곽을 바깥/구멍으로 나눠 THREE.Shape 목록으로 */
+function loopsToShapes(raw, toMm){
+  const items = raw.map(p=>simplifyClosed(p,0.3)).filter(p=>p.length>=3).map(p=>{
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const q of p){ if(q[0]<x0)x0=q[0]; if(q[0]>x1)x1=q[0]; if(q[1]<y0)y0=q[1]; if(q[1]>y1)y1=q[1]; }
+    return {p, abs:Math.abs(area(p)), bb:[x0,y0,x1,y1], depth:0, parent:-1};
+  }).filter(o=>o.abs>2.5).sort((a,b)=>b.abs-a.abs);
+  for(let i=0;i<items.length;i++){
+    const it=items[i];
+    for(let j=0;j<i;j++){
+      const o=items[j];
+      if(o.bb[0]<=it.bb[0]&&o.bb[1]<=it.bb[1]&&o.bb[2]>=it.bb[2]&&o.bb[3]>=it.bb[3] && pip(it.p[0], o.p)){ it.depth++; it.parent=j; }
+    }
+  }
+  const shapes=[], map=new Map();
+  items.forEach((it,i)=>{ if(it.depth%2===0){ const s=new THREE.Shape(it.p.map(q=>new THREE.Vector2(...toMm(q)))); map.set(i,s); shapes.push(s); } });
+  items.forEach(it=>{ if(it.depth%2===1 && map.has(it.parent)) map.get(it.parent).holes.push(new THREE.Path(it.p.map(q=>new THREE.Vector2(...toMm(q))))); });
+  return shapes;
+}
+
+/* ---------- 3D 모델 만들기 ---------- */
+function plateShape(w,h){
+  const pts=[];
+  if(S.shape==='circle'||S.shape==='oval'){
+    const N=120; for(let i=0;i<N;i++){ const t=2*Math.PI*i/N; pts.push([w/2*Math.cos(t), h/2*Math.sin(t)]); }
+  } else if(S.shape==='rounded'){
+    const r=cornerR(w,h), hw=w/2, hh=h/2, seg=14;
+    const corners=[[hw-r,-hh+r,-Math.PI/2],[hw-r,hh-r,0],[-hw+r,hh-r,Math.PI/2],[-hw+r,-hh+r,Math.PI]];
+    for(const [cx,cy,a0] of corners) for(let i=0;i<=seg;i++){ const t=a0+Math.PI/2*i/seg; pts.push([cx+r*Math.cos(t), cy+r*Math.sin(t)]); }
+  } else { pts.push([-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]); }
+  const clean=pts.filter((q,i)=>{ const n=pts[(i+1)%pts.length]; return Math.hypot(q[0]-n[0],q[1]-n[1])>1e-6; });
+  return new THREE.Shape(clean.map(q=>new THREE.Vector2(q[0],q[1])));
+}
+function buildGeometries(list){
+  const {w,h}=dims(); const font=fontById(S.font);
+  const ppm = clamp(760/Math.max(w,h), 10, 48), margin = 1.5 + S.bold;
+  const cw = Math.ceil((w+2*margin)*ppm)+2, ch = Math.ceil((h+2*margin)*ppm)+2;
+  const cv = mkCanvas(cw,ch), ctx = cv.getContext('2d', {willReadFrequently:true});
+  drawFace(ctx, cw, ch, ppm, S.mirror, '#000', font, list);
+  const data = ctx.getImageData(0,0,cw,ch).data;
+  const alpha = new Float32Array(cw*ch);
+  for(let i=0,j=3;i<alpha.length;i++,j+=4) alpha[i]=data[j]/255;
+  for(let x=0;x<cw;x++){ alpha[x]=0; alpha[(ch-1)*cw+x]=0; } for(let y=0;y<ch;y++){ alpha[y*cw]=0; alpha[y*cw+cw-1]=0; }
+  const loops = traceContours(alpha, cw, ch, 0.5);
+  const ox=cw/2, oy=ch/2;
+  const shapes = loopsToShapes(loops, q=>[(q[0]-ox)/ppm, -(q[1]-oy)/ppm]);
+
+  const parts = {plate:[], relief:[]}; const EPS=0.02;
+  const m = Math.min(w,h);
+  let zPlate = 0, handleTop = 0;
+  if(S.handle==='knob'){
+    const H = S.handleH, rh = clamp(m*0.3, 3.5, 9), Rf = Math.max(rh, m/2*0.9), fh = Math.max(0, Rf-rh);
+    const sx = w/m, sy = h/m;
+    const cyl = new THREE.CylinderGeometry(rh, rh, H, 56); cyl.rotateX(Math.PI/2); cyl.translate(0,0,H/2); cyl.scale(sx,sy,1);
+    parts.plate.push(cyl);
+    if(fh>0.05){ const fl = new THREE.CylinderGeometry(Rf, rh, fh+EPS, 56); fl.rotateX(Math.PI/2); fl.translate(0,0,H-EPS/2+(fh+EPS)/2 - EPS/2); fl.scale(sx,sy,1); parts.plate.push(fl); }
+    const rib = new THREE.BoxGeometry(1.6, 1.2, Math.max(2,H-1)); rib.translate(0, rh*sy+0.4, Math.max(2,H-1)/2); parts.plate.push(rib);
+    zPlate = H + fh - EPS; handleTop = H + fh;
+  }
+  const plate = new THREE.ExtrudeGeometry(plateShape(w,h), {depth:S.base+(zPlate>0?EPS:0), bevelEnabled:false, curveSegments:72});
+  plate.translate(0,0,zPlate); parts.plate.push(plate);
+  const zTop = zPlate + S.base + (zPlate>0?EPS:0);
+  if(shapes.length){
+    const rel = new THREE.ExtrudeGeometry(shapes, {depth:S.relief+EPS, bevelEnabled:false, curveSegments:4});
+    rel.translate(0,0,zTop-EPS); parts.relief.push(rel);
+  }
+  return {parts, totalH: zTop + S.relief, w, h, handleTop};
+}
+
+/* ---------- STL / ZIP ---------- */
+function geomTris(g){ const gg = g.index ? g.toNonIndexed() : g; return gg.attributes.position.array; }
+function meshStats(list){
+  let vol=0, tris=0;
+  for(const g of list){ const p=geomTris(g); tris+=p.length/9;
+    for(let i=0;i<p.length;i+=9){ const ax=p[i],ay=p[i+1],az=p[i+2],bx=p[i+3],by=p[i+4],bz=p[i+5],cx=p[i+6],cy=p[i+7],cz=p[i+8];
+      vol += (ax*(by*cz-bz*cy) - ay*(bx*cz-bz*cx) + az*(bx*cy-by*cx))/6; } }
+  return {vol:Math.abs(vol), tris};
+}
+function toSTL(list){
+  const arrs=list.map(geomTris); const tris=arrs.reduce((s,a)=>s+a.length/9,0);
+  const buf=new ArrayBuffer(84+tris*50), dv=new DataView(buf);
+  const head='Name stamp - made with Ireum Dojang Gongbang'; for(let i=0;i<80;i++) dv.setUint8(i, i<head.length?head.charCodeAt(i):32);
+  dv.setUint32(80,tris,true); let o=84;
+  for(const p of arrs){ for(let i=0;i<p.length;i+=9){
+    const ux=p[i+3]-p[i], uy=p[i+4]-p[i+1], uz=p[i+5]-p[i+2], vx=p[i+6]-p[i], vy=p[i+7]-p[i+1], vz=p[i+8]-p[i+2];
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx; const l=Math.hypot(nx,ny,nz)||1; nx/=l; ny/=l; nz/=l;
+    dv.setFloat32(o,nx,true); dv.setFloat32(o+4,ny,true); dv.setFloat32(o+8,nz,true); o+=12;
+    for(let k=0;k<9;k++){ dv.setFloat32(o,p[i+k],true); o+=4; }
+    dv.setUint16(o,0,true); o+=2;
+  } }
+  return new Uint8Array(buf);
+}
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = (c&1) ? (0xEDB88320^(c>>>1)) : (c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function makeZip(files){
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+  const d=new Date(), tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1), dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  for(const f of files){
+    const nm=enc.encode(f.name), crc=crc32(f.data), len=f.data.length;
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true);
+    lh.setUint16(10,tm,true); lh.setUint16(12,dt,true); lh.setUint32(14,crc,true); lh.setUint32(18,len,true); lh.setUint32(22,len,true);
+    lh.setUint16(26,nm.length,true); lh.setUint16(28,0,true);
+    parts.push(new Uint8Array(lh.buffer), nm, f.data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(10,0,true);
+    c.setUint16(12,tm,true); c.setUint16(14,dt,true); c.setUint32(16,crc,true); c.setUint32(20,len,true); c.setUint32(24,len,true);
+    c.setUint16(28,nm.length,true); c.setUint16(30,0,true); c.setUint16(32,0,true); c.setUint16(34,0,true); c.setUint16(36,0,true);
+    c.setUint32(38,0,true); c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer), nm);
+    off += 30+nm.length+len;
+  }
+  const cds=central.reduce((s,a)=>s+a.length,0), e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cds,true); e.setUint32(16,off,true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], {type:'application/zip'});
+}
+
+/* ---------- 3D 화면 ---------- */
+const stage = $('stage');
+let R=null; // {renderer, scene, camera, controls, group, mats, grids}
+function cssColor(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||'#888'; }
+function init3D(){
+  if(typeof THREE==='undefined'){ const f=document.createElement('div'); f.className='fallback3d'; f.textContent='3D 엔진을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.'; stage.append(f); $('stageHint').hidden=true; return; }
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setClearColor(0x000000, 0);
+  stage.append(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 3000); camera.up.set(0,0,1);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x77736b, 0.8));
+  const d1=new THREE.DirectionalLight(0xffffff,0.85); d1.position.set(40,-60,90); scene.add(d1);
+  const d2=new THREE.DirectionalLight(0xffffff,0.3); d2.position.set(-50,40,30); scene.add(d2);
+  const grids = new THREE.Group(); scene.add(grids);
+  const group = new THREE.Group(); scene.add(group);
+  const mats = { plate:new THREE.MeshStandardMaterial({color:0xEEE7D8, roughness:0.62, metalness:0}),
+                 relief:new THREE.MeshStandardMaterial({color:0xC9333B, roughness:0.5, metalness:0}) };
+  let controls=null;
+  if(THREE.OrbitControls){ controls=new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping=true; controls.dampingFactor=0.12; controls.enablePan=false; }
+  else { $('stageHint').hidden=true; }
+  R={renderer, scene, camera, controls, group, mats, grids, fitKey:''};
+  applyGridTheme();
+  const resize=()=>{ const r=stage.getBoundingClientRect(); const w=Math.max(50,r.width), h=Math.max(50,r.height); renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
+  new ResizeObserver(resize).observe(stage); resize();
+  (function loop(){ requestAnimationFrame(loop); if(document.hidden) return; if(controls) controls.update(); else group.rotation.z += 0.004; renderer.render(scene,camera); })();
+}
+function applyGridTheme(){
+  if(!R) return;
+  R.grids.clear();
+  const minor = new THREE.GridHelper(120, 120, cssColor('--grid-minor'), cssColor('--grid-minor'));
+  const major = new THREE.GridHelper(120, 12, cssColor('--grid-major'), cssColor('--grid-major'));
+  [minor, major].forEach((g,i)=>{ g.rotation.x=Math.PI/2; g.position.z=-0.02-i*0.001; R.grids.add(g); });
+}
+if(window.matchMedia){ const mq=window.matchMedia('(prefers-color-scheme: dark)'); (mq.addEventListener?mq.addEventListener('change',applyGridTheme):mq.addListener(applyGridTheme)); }
+new MutationObserver(applyGridTheme).observe(document.documentElement,{attributes:true, attributeFilter:['data-theme']});
+
+let current=null; // {parts, totalH, ...}
+function show3D(model){
+  if(!R) return;
+  R.group.children.slice().forEach(m=>{ R.group.remove(m); m.geometry.dispose(); });
+  model.parts.plate.forEach(g=>R.group.add(new THREE.Mesh(g, R.mats.plate)));
+  model.parts.relief.forEach(g=>R.group.add(new THREE.Mesh(g, R.mats.relief)));
+  const key=[model.w,model.h,fmt(model.totalH,0),S.handle].join('|');
+  if(key!==R.fitKey){
+    R.fitKey=key;
+    const c=new THREE.Vector3(0,0,model.totalH*0.45);
+    const rad=0.5*Math.hypot(model.w, model.h, model.totalH);
+    const dist=rad/Math.sin(THREE.MathUtils.degToRad(R.camera.fov/2))*1.05;
+    const dir=new THREE.Vector3(0.5,-0.95,0.85).normalize();
+    R.camera.position.copy(c).addScaledVector(dir, dist); R.camera.near=dist/100; R.camera.far=dist*20; R.camera.updateProjectionMatrix();
+    if(R.controls){ R.controls.target.copy(c); R.controls.update(); } else R.camera.lookAt(c);
+  }
+}
+
+/* ---------- 갱신 흐름 ---------- */
+let genId=0, t3=null, tb=null, batchBusy=false;
+function changed(opts={}){
+  persist(); syncLabels(); setDlCopy();
+  const my=++genId; const f=fontById(S.font); const txt=chars().join('');
+  $('proofLabel').textContent = S.batchMode ? `찍힌 모양 · 1번 ${batchNames()[0]||''}` : '찍힌 모양';
+  if(opts.tiles) drawTiles();
+  if(S.batchMode && (opts.tiles || opts.batch)){ clearTimeout(tb); tb=setTimeout(drawBatchGrid, 220); }
+  $('busy').hidden=false;
+  ensureFont(f, txt||'가').then(()=>{
+    if(my!==genId) return;
+    drawProof();
+    clearTimeout(t3); t3=setTimeout(()=>rebuild(my), 140);
+  });
+}
+function rebuild(my){
+  if(my!==genId) return;
+  if(typeof THREE==='undefined'){ $('busy').hidden=true; updateInfo(null); return; }
+  try{
+    const model = buildGeometries();
+    const all = model.parts.plate.concat(model.parts.relief);
+    model.stats = meshStats(all);
+    if(current) current.parts.plate.concat(current.parts.relief).forEach(g=>g.dispose());
+    current = model; show3D(model); updateInfo(model);
+  }catch(err){ console.error(err); toast('모델을 만드는 중 문제가 생겼어요. 설정을 조금 바꿔 다시 시도해 주세요.'); }
+  $('busy').hidden=true;
+}
+function updateInfo(model){
+  const {w,h}=dims(); const n=chars().length; const names=batchNames();
+  const grams = model ? model.stats.vol/1000*1.24 : 0;
+  const totalH = model ? model.totalH : 0;
+  let st = model ? `<span>판 크기 <b>${fmt(w)} × ${fmt(h)}</b> mm</span><span>전체 높이 <b>${fmt(totalH)}</b> mm</span><span>필라멘트(PLA) 약 <b>${fmt(grams,1)}</b> g</span>` : '';
+  if(model && S.batchMode && names.length) st += `<span>${names.length}명 합계 약 <b>${fmt(grams*names.length,0)}</b> g</span>`;
+  $('stats').innerHTML = st;
+  if(!model) $('mInfo').innerHTML='';
+  else if(S.batchMode){
+    const L=plateLayout(w,h,S.bed);
+    $('mInfo').innerHTML = `<b>${names.length}</b>명 · ${S.batchOut==='plate' ? `출력판 <b>${Math.ceil(names.length/L.per)||0}</b>판` : '학생별 파일'}<br>${fmt(w)}×${fmt(h)} mm · ${S.mode==='relief'?'양각':'음각'} · ${fontById(S.font).label}`;
+  } else {
+    $('mInfo').innerHTML = `<b>${fmt(w)}×${fmt(h)}</b> mm · 높이 <b>${fmt(totalH)}</b> mm<br>${S.mode==='relief'?'양각':'음각'} · ${fontById(S.font).label}`;
+  }
+  const notes=[];
+  if(!n) notes.push(S.batchMode ? '이름 목록을 입력해 주세요.' : '새길 글자를 입력해 주세요.');
+  else {
+    if(lastCellMinMm < 3.6) notes.push(`글자 한 칸이 약 ${fmt(lastCellMinMm)}mm로 작아요. 도장 크기를 키우거나 글자 수를 줄이면 더 또렷하게 찍혀요.`);
+    if(fontById(S.font).thin && S.bold < 0.15) notes.push('가는 글꼴이에요. ‘글자 굵게’를 0.2mm 이상으로 올리면 획이 끊기지 않아요.');
+    if(S.mode==='engrave' && S.border < 0.6) notes.push('음각은 테두리를 0.6mm 이상 두면 글자 주변 면이 튼튼해요.');
+  }
+  $('notes').innerHTML = notes.map(t=>`<div class="note">${t}</div>`).join('');
+  if(!batchBusy) [$('dlBtn'),$('dlBtn2')].forEach(b=>b.disabled = !model || !n);
+}
+let toastT=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>{ t.textContent=''; }, 6000);
+  if(getComputedStyle($('mbar')).display!=='none'){ $('mInfo').textContent=msg; setTimeout(()=>{ if(current) updateInfo(current); }, 4000); } }
+
+/* ---------- 일괄 생성: 미리보기 ---------- */
+function plateLayout(w,h,bed){
+  const gap=5, usable=bed-10;
+  const cols=Math.max(1,Math.floor((usable+gap)/(w+gap))), rows=Math.max(1,Math.floor((usable+gap)/(h+gap)));
+  return {cols, rows, per:cols*rows, gap, fits: w<=usable && h<=usable};
+}
+function updateBatchMeta(){
+  const names=batchNames(); const {w,h}=dims(); const L=plateLayout(w,h,S.bed);
+  const long=names.filter(nm=>Array.from(nm).length>4).length;
+  const parts=[`<span><b>${names.length}</b>명</span>`];
+  if(S.batchOut==='plate' && names.length) parts.push(`<span>한 판에 <b>${L.per}</b>개씩 <b>${Math.ceil(names.length/L.per)}</b>판</span>`);
+  if(long) parts.push(`<span class="warn-t">5글자 이상 ${long}명은 글자가 작게 새겨져요</span>`);
+  if((S.batchText||'').trim()===SAMPLE_NAMES) parts.push('<span>예시 이름이에요. 우리 반 명단으로 바꿔 넣으세요.</span>');
+  if(batchNames().length===60 && (S.batchText||'').split(/[\n\r,\t;]+/).filter(t=>t.trim()).length>60) parts.push('<span class="warn-t">한 번에 60명까지 만들어요</span>');
+  $('batchMeta').innerHTML=parts.join('');
+  $('bedRow').hidden = S.batchOut!=='plate';
+  $('bedOut').textContent = L.fits ? `${L.cols} × ${L.rows}칸` : '도장이 판보다 커요';
+}
+let batchGen=0;
+function drawBatchGrid(){
+  if(!S.batchMode) return;
+  const names=batchNames(), grid=$('batchGrid'), my=++batchGen, f=fontById(S.font);
+  updateBatchMeta();
+  const frag=document.createDocumentFragment(), canv=[];
+  names.forEach((nm,i)=>{
+    const it=document.createElement('div'); it.className='b-item'+(Array.from(nm).length>4?' warn':'');
+    const c=document.createElement('canvas'); c.width=128; c.height=128; canv.push(c);
+    const sp=document.createElement('span'); sp.textContent=(i+1)+'. '+nm; it.append(c,sp); frag.append(it);
+  });
+  grid.replaceChildren(frag);
+  ensureFont(f, names.join('')||'가').then(()=>{
+    if(my!==batchGen) return;
+    const keep=lastCellMinMm, {w,h}=dims();
+    canv.forEach((c,i)=>{ const ppm=Math.min(c.width/(w*1.18), c.height/(h*1.18)); drawFace(c.getContext('2d'), c.width, c.height, ppm, false, INK, f, chars(names[i])); });
+    lastCellMinMm=keep;
+  });
+}
+
+/* ---------- 저장 ---------- */
+let dlCapPromise = (window.claude && typeof window.claude.use==='function') ? window.claude.use('downloads').catch(()=>null) : Promise.resolve(null);
+let dlCap = undefined;
+dlCapPromise.then(c=>{ dlCap=c; setDlCopy(); });
+const SHAPE_LABEL={square:'정사각',rounded:'둥근사각',circle:'원',oval:'타원',rect:'직사각'};
+const LAYOUT_LABEL={auto:'자동',trad:'전통(세로쓰기)',col:'세로 한 줄',row:'가로 한 줄'};
+function setDlCopy(){
+  if(batchBusy) return;
+  const zipMode = !!dlCap, labels=document.querySelectorAll('.dl-label');
+  if(S.batchMode){
+    const n=batchNames().length;
+    labels[0].textContent=`${n}명 한꺼번에 저장 (zip)`; labels[1].textContent=`${n}명 저장`;
+    $('dlNote').textContent = S.batchOut==='plate'
+      ? '출력판 크기에 맞춰 도장 여러 개를 STL 한 파일에 배치하고, 자리별 이름이 적힌 배치표와 함께 zip으로 저장해요.'
+      : '이름마다 STL을 하나씩 만들어 zip 하나로 묶어 저장해요. 파일 이름 앞 번호는 목록 순서예요.';
+  } else {
+    labels[0].textContent = zipMode ? 'STL 파일 저장 (zip)' : 'STL 파일 저장'; labels[1].textContent='STL 저장';
+    $('dlNote').textContent = zipMode ? '이 화면에서는 STL을 zip으로 묶어 저장해요. 압축을 풀어 슬라이서(큐라, 뱀부 스튜디오 등)에 넣으면 돼요.'
+                                      : '저장한 STL을 슬라이서(큐라, 뱀부 스튜디오 등)에 바로 넣으면 돼요.';
+  }
+}
+function baseName(){
+  const t = chars().join('') || '도장';
+  return `도장_${t}_${S.mode==='relief'?'양각':'음각'}_${fmt(dims().w)}x${fmt(dims().h)}mm`;
+}
+function settingsLines(){
+  const f=fontById(S.font), {w,h}=dims();
+  return [
+    `글꼴: ${f.label} (${f.family})`,
+    `새김: ${S.mode==='relief'?'양각 (글자가 튀어나옴)':'음각 (글자가 파임)'}`,
+    `모양: ${SHAPE_LABEL[S.shape]} ${fmt(w)} x ${fmt(h)} mm, 글자 배치 ${LAYOUT_LABEL[S.layout]}`,
+    `판 두께 ${S.base} mm, 새김 깊이 ${S.relief} mm, 테두리 ${S.border} mm, 글자 굵게 +${S.bold} mm`,
+    `손잡이: ${S.handle==='knob'?'일체형 '+S.handleH+' mm':'없음'}`,
+    `좌우 반전: ${S.mirror?'켬 (도장용)':'끔'}`,
+    '', '출력: 파일 그대로 글자 면이 위로 오게 놓고 출력하세요. 레이어 0.12~0.16mm 권장.'
+  ];
+}
+const enc = new TextEncoder();
+const textFile = lines => enc.encode('﻿'+lines.join('\r\n'));
+function plainDownload(blob, name){
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 8000);
+}
+async function saveFile(blob, filename, okMsg){
+  const cap = dlCap===undefined ? await dlCapPromise : dlCap;
+  if(cap){
+    try{ await cap.save({filename, data:blob}); toast(okMsg); }
+    catch(e){
+      const code=e&&e.code;
+      if(code==='declined') toast('저장을 취소했어요.');
+      else if(code==='rate_limited') toast('저장 창이 이미 열려 있어요. 잠시 후 다시 눌러 주세요.');
+      else if(code==='too_large') toast('파일이 너무 커요. 명단을 나눠서 저장해 주세요.');
+      else toast('이 화면에서는 저장할 수 없어요. 브라우저에서 앱을 열어 다시 시도해 주세요.');
+    }
+  } else { plainDownload(blob, filename); toast(okMsg); }
+}
+async function onDownload(){
+  if(!current){ toast('모델을 만드는 중이에요. 잠시 후 다시 눌러 주세요.'); return; }
+  const stl = toSTL(current.parts.plate.concat(current.parts.relief));
+  const name = baseName();
+  const cap = dlCap===undefined ? await dlCapPromise : dlCap;
+  if(cap){
+    const zip = makeZip([{name:name+'.stl', data:stl}, {name:'읽어주세요.txt', data:textFile(['이름 도장 공방에서 만든 도장 파일', `글자: ${chars().join('')}`, ...settingsLines()])}]);
+    await saveFile(zip, name+'.zip', '저장했어요. 압축을 풀면 STL 파일이 들어 있어요.');
+  } else {
+    await saveFile(new Blob([stl],{type:'model/stl'}), name+'.stl', 'STL 파일을 저장했어요.');
+  }
+}
+const tick = ()=>new Promise(r=>setTimeout(r,0));
+function setProgress(i,n){ document.querySelectorAll('.dl-label').forEach(el=>el.textContent=`만드는 중… ${i}/${n}`); }
+async function onBatch(){
+  if(batchBusy) return;
+  const names=batchNames();
+  if(!names.length){ toast('이름 목록을 입력해 주세요.'); return; }
+  if(typeof THREE==='undefined'){ toast('3D 엔진을 불러오지 못해 만들 수 없어요. 새로고침해 주세요.'); return; }
+  batchBusy=true; const right=document.querySelector('.right'); right.inert=true;
+  [$('dlBtn'),$('dlBtn2')].forEach(b=>b.disabled=true); setProgress(0,names.length);
+  const keep=lastCellMinMm, f=fontById(S.font), {w,h}=dims(), pad=i=>String(i).padStart(2,'0');
+  try{
+    await ensureFont(f, names.join(''));
+    const files=[];
+    if(S.batchOut==='files'){
+      for(let i=0;i<names.length;i++){
+        const m=buildGeometries(chars(names[i])), all=m.parts.plate.concat(m.parts.relief);
+        files.push({name:`${pad(i+1)}_${names[i]}.stl`, data:toSTL(all)}); all.forEach(g=>g.dispose());
+        setProgress(i+1,names.length); await tick();
+      }
+      files.push({name:'명단.txt', data:textFile(names.map((nm,i)=>`${pad(i+1)}. ${nm}`))});
+    } else {
+      const L=plateLayout(w,h,S.bed), plates=Math.ceil(names.length/L.per);
+      const lines=['출력판 배치표', '슬라이서 화면을 위에서 내려다볼 때 기준: 1행이 맨 뒤쪽, 1열이 맨 왼쪽이에요.',
+        S.mirror ? '도장 글자는 좌우가 뒤집혀 새겨져 있어요. 배치표로 주인을 찾으세요.' : '', ''];
+      for(let p=0;p<plates;p++){
+        const slice=names.slice(p*L.per,(p+1)*L.per), cols=Math.min(L.cols,slice.length), rows=Math.ceil(slice.length/L.cols);
+        const gw=cols*w+(cols-1)*L.gap, gh=rows*h+(rows-1)*L.gap, geoms=[];
+        lines.push(`[출력판 ${p+1}] ${slice.length}개`);
+        for(let k=0;k<slice.length;k++){
+          const idx=p*L.per+k, c=k%L.cols, r=Math.floor(k/L.cols);
+          const x=-gw/2+w/2+c*(w+L.gap), y=gh/2-h/2-r*(h+L.gap);
+          const m=buildGeometries(chars(slice[k]));
+          m.parts.plate.concat(m.parts.relief).forEach(g=>{ g.translate(x,y,0); geoms.push(g); });
+          lines.push(`  ${r+1}행 ${c+1}열 : ${pad(idx+1)}. ${slice[k]}`);
+          setProgress(idx+1,names.length); await tick();
+        }
+        files.push({name:`출력판${p+1}_${slice.length}개.stl`, data:toSTL(geoms)}); geoms.forEach(g=>g.dispose());
+        lines.push('');
+      }
+      files.push({name:'배치표.txt', data:textFile(lines)});
+    }
+    files.push({name:'설정.txt', data:textFile(['이름 도장 공방 일괄 생성', `인원: ${names.length}명`, ...settingsLines()])});
+    const zip=makeZip(files);
+    batchBusy=false; right.inert=false; setDlCopy();
+    await saveFile(zip, `도장_일괄_${names.length}명_${S.batchOut==='plate'?'출력판':'학생별'}.zip`,
+      S.batchOut==='plate' ? '저장했어요. 압축을 풀면 출력판 STL과 배치표가 들어 있어요.' : '저장했어요. 압축을 풀면 학생별 STL이 들어 있어요.');
+  }catch(err){ console.error(err); toast('일괄 생성 중 문제가 생겼어요. 설정을 확인하고 다시 시도해 주세요.'); }
+  finally{
+    lastCellMinMm=keep; batchBusy=false; right.inert=false; setDlCopy();
+    [$('dlBtn'),$('dlBtn2')].forEach(b=>b.disabled = !current || !chars().length);
+  }
+}
+function onDlClick(){ return S.batchMode ? onBatch() : onDownload(); }
+$('dlBtn').addEventListener('click', onDlClick);
+$('dlBtn2').addEventListener('click', onDlClick);
+
+/* ---------- 입력 연결 ---------- */
+function syncLabels(){
+  const sq=isSquareish(S.shape);
+  $('wLabel').textContent = sq ? (S.shape==='circle'?'지름':'크기') : '가로';
+  $('hRow').hidden = sq; $('hhRow').hidden = S.handle!=='knob';
+  $('wOut').textContent = fmt(S.w)+' mm'; $('hOut').textContent = fmt(S.h)+' mm';
+  $('baseOut').textContent = fmt(S.base)+' mm'; $('reliefOut').textContent = fmt(S.relief)+' mm';
+  $('borderOut').textContent = S.border>0.001 ? fmt(S.border)+' mm' : '없음';
+  $('boldOut').textContent = S.bold>0.001 ? '+'+fmt(S.bold,2)+' mm' : '기본';
+  $('hhOut').textContent = fmt(S.handleH)+' mm';
+}
+function syncMode(){ $('singleGroup').hidden=S.batchMode; $('batchGroup').hidden=!S.batchMode; }
+function applyStateToInputs(){
+  $('textIn').value=S.text; $('batchIn').value=S.batchText; $('bedSel').value=String(S.bed);
+  [['mode',S.mode],['shape',S.shape],['layout',S.layout],['handle',S.handle],['batchOut',S.batchOut],['work',S.batchMode?'batch':'single']].forEach(([n,v])=>{ const el=$(n+'-'+v); if(el) el.checked=true; });
+  $('wIn').value=S.w; $('hIn').value=S.h; $('baseIn').value=S.base; $('reliefIn').value=S.relief; $('borderIn').value=S.border; $('boldIn').value=S.bold; $('hhIn').value=S.handleH;
+  $('fillIn').checked=S.fill; $('mirrorIn').checked=S.mirror; syncTiles(); syncMode();
+}
+$('textIn').addEventListener('input', e=>{ S.text=e.target.value; changed({tiles:true}); });
+$('batchIn').addEventListener('input', e=>{ S.batchText=e.target.value; changed({tiles:true, batch:true}); });
+$('bedSel').addEventListener('change', e=>{ S.bed=parseInt(e.target.value,10)||220; persist(); updateBatchMeta(); if(current) updateInfo(current); });
+document.querySelectorAll('input[name=workmode]').forEach(r=>r.addEventListener('change', e=>{
+  S.batchMode = e.target.value==='batch'; syncMode(); changed({tiles:true, batch:true});
+}));
+document.querySelectorAll('input[type=radio]:not([name=workmode])').forEach(r=>r.addEventListener('change', e=>{
+  const n=e.target.name, v=e.target.value;
+  if(n==='batchOut'){ S.batchOut=v; persist(); setDlCopy(); updateBatchMeta(); if(current) updateInfo(current); return; }
+  if(n==='shape' && !isSquareish(v) && isSquareish(S.shape)){ S.h = clamp(Math.round(S.w*1.35), 10, 60); $('hIn').value=S.h; }
+  S[n]=v; changed({tiles: n!=='handle'});
+}));
+[['wIn','w'],['hIn','h'],['baseIn','base'],['reliefIn','relief'],['borderIn','border'],['boldIn','bold'],['hhIn','handleH']].forEach(([id,k])=>{
+  $(id).addEventListener('input', e=>{ S[k]=parseFloat(e.target.value); changed({tiles: ['w','h','border','bold'].includes(k)}); });
+});
+$('fillIn').addEventListener('change', e=>{ S.fill=e.target.checked; changed({tiles:true}); });
+$('mirrorIn').addEventListener('change', e=>{ S.mirror=e.target.checked; changed(); });
+let rz=null; window.addEventListener('resize', ()=>{ clearTimeout(rz); rz=setTimeout(drawProof, 120); });
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{ drawTiles(); if(S.batchMode){ clearTimeout(tb); tb=setTimeout(drawBatchGrid, 220); } });
+
+applyStateToInputs();
+init3D();
+changed({tiles:true, batch:true});
+})();
+</script>
+
+</body>
+</html>
