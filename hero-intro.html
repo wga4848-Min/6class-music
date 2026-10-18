@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>히어로 인트로 메이커</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gugi&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Jua&display=swap">
+<style>
+:root{
+  /* Layout: projection-booth editor — the screen and its timeline on the left, comic caption-box panels for each step on the right */
+  --ink:#0C0E15;
+  --panel:#151824;
+  --raise:#1D2131;
+  --line:#2C3247;
+  --paper:#EFEBE2;
+  --dim:#98A0B6;
+  --hi:#FFD23F;
+  --hi-ink:#1B1400;
+  --rec:#FF5B4F;
+  --warn:#FFB4A8;
+  --black:#000;
+  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--ink)}
+body{color:var(--paper);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:20px;margin-bottom:34px;border-bottom:2px solid var(--line)}
+.top>div{min-width:0}
+.brand{margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5.4vw,46px);line-height:1.05;letter-spacing:.01em;text-wrap:balance}
+.brand em{font-style:normal;color:var(--hi-ink);background:var(--hi);padding:4px 10px 0;margin-inline:3px;display:inline-block;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--black)}
+.lede{margin:12px 0 0;color:var(--dim);max-width:62ch}
+.spec{font-family:var(--f-mono);font-size:12px;color:var(--dim);letter-spacing:.04em;border:1px solid var(--line);padding:5px 9px;border-radius:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage-col{display:grid;gap:12px;min-width:0}
+@media (min-width:921px){.stage-col{position:sticky;top:16px}}
+
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:var(--black);border:2px solid var(--black);box-shadow:0 0 0 1px var(--line),0 24px 60px -24px rgba(0,0,0,.9);overflow:hidden}
+.stage.vertical{aspect-ratio:9/16;width:min(100%,calc(68vh * 9 / 16));margin-inline:auto}
+.stage canvas{display:block;width:100%;height:100%}
+.stage:fullscreen{width:100vw;height:100vh;max-width:none;aspect-ratio:auto;border:0;display:flex;align-items:center;justify-content:center}
+.stage:fullscreen canvas{object-fit:contain}
+.stage:-webkit-full-screen{width:100vw;height:100vh;max-width:none;border:0}
+.stage:-webkit-full-screen canvas{object-fit:contain}
+.bigplay{position:absolute;inset:0;margin:auto;width:76px;height:76px;border-radius:50%;border:3px solid var(--black);background:var(--hi);color:var(--hi-ink);display:grid;place-items:center;box-shadow:4px 4px 0 var(--black);cursor:pointer;padding:0}
+.bigplay svg{width:30px;height:30px;margin-left:5px}
+.bigplay:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--black)}
+.rec-badge{position:absolute;top:12px;left:12px;font:500 12px/1 var(--f-mono);background:rgba(0,0,0,.66);color:#fff;padding:6px 9px;border-radius:3px;display:flex;gap:7px;align-items:center;font-variant-numeric:tabular-nums}
+.rec-badge i{width:9px;height:9px;border-radius:50%;background:var(--rec);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+.phases{display:flex;gap:2px}
+.phases button{flex:1 1 0;min-width:0;text-align:left;background:var(--raise);border:0;border-top:3px solid var(--line);color:var(--dim);font:500 12px/1.25 var(--f-body);padding:7px 8px;cursor:pointer;white-space:nowrap}
+.phases button span{display:block;font:500 11px/1.2 var(--f-mono);opacity:.75;margin-top:2px;font-variant-numeric:tabular-nums}
+.phases button.on{border-top-color:var(--hi);color:var(--paper)}
+.phases button:hover{color:var(--paper)}
+
+.scrub{display:flex;align-items:center;gap:12px}
+.scrub input{flex:1;min-width:0;accent-color:var(--hi);height:28px}
+.tc{font:500 13px var(--f-mono);color:var(--paper);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:700 15px/1 var(--f-body);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:4px;border:2px solid var(--line);background:var(--raise);color:var(--paper);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--dim)}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.primary{background:var(--hi);color:var(--hi-ink);border-color:var(--black);box-shadow:3px 3px 0 var(--black)}
+.btn.primary:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--black)}
+.btn.small{font-size:13px;padding:8px 11px}
+.btn.recording{background:var(--rec);color:#fff;border-color:var(--black);box-shadow:3px 3px 0 var(--black)}
+.btn[disabled],.btn[aria-disabled=true]{opacity:.42;cursor:not-allowed;box-shadow:none;transform:none}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+
+.status{font-size:14px;color:var(--dim);min-height:1.55em}
+.status.warn{color:var(--warn)}
+.prog{height:6px;background:var(--raise);border-radius:3px;overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;background:var(--rec);width:0}
+
+.result{background:var(--panel);border:2px solid var(--line);border-radius:4px;padding:14px;display:grid;gap:12px}
+.result video{width:100%;max-height:52vh;background:var(--black);border-radius:2px;display:block}
+.result-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.result-row>div{min-width:0}
+.result-row strong{display:block;font-weight:700;overflow-wrap:anywhere}
+.meta{font:500 12px var(--f-mono);color:var(--dim)}
+.note{margin:0;font-size:13px;color:var(--dim)}
+
+.controls{display:grid;gap:36px;min-width:0;border:0;margin:0;padding:16px 0 0}
+.panel{position:relative;background:var(--panel);border:2px solid var(--line);border-radius:4px;padding:28px 16px 16px;display:grid;gap:14px;min-width:0}
+.cap{position:absolute;top:-18px;left:12px;margin:0;display:inline-flex;align-items:baseline;gap:8px;background:var(--hi);color:var(--hi-ink);font:400 19px/1 var(--f-display);padding:8px 12px 6px;box-shadow:3px 3px 0 var(--black);transform:rotate(-1.5deg)}
+.cap b{font:500 13px/1 var(--f-mono)}
+.cap.plain{background:var(--raise);color:var(--paper);border:2px solid var(--line);box-shadow:3px 3px 0 var(--black)}
+
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.row.between{justify-content:space-between}
+.count{font:500 12px var(--f-mono);color:var(--dim);font-variant-numeric:tabular-nums}
+.hint{margin:0;font-size:13px;color:var(--dim)}
+.drop{border:2px dashed var(--line);border-radius:4px;padding:14px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.drop.over{border-color:var(--hi);background:rgba(255,210,63,.06)}
+.drop p{margin:0;font-size:13px;color:var(--dim);flex:1 1 160px;min-width:0}
+
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px;max-height:216px;overflow:auto;padding-right:2px}
+.th{position:relative;aspect-ratio:1;max-width:100%;background:var(--black);border-radius:3px;overflow:hidden}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th .n{position:absolute;left:3px;bottom:3px;font:500 10px/1.3 var(--f-mono);background:rgba(0,0,0,.7);color:#fff;padding:1px 4px;border-radius:2px}
+.th .x{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.72);color:#fff;font:700 15px/24px var(--f-body);padding:0;cursor:pointer}
+
+.field{display:grid;gap:6px;min-width:0}
+.field>label,.label{font-size:13px;font-weight:500;color:var(--dim)}
+.input{width:100%;background:var(--raise);border:2px solid var(--line);color:var(--paper);border-radius:4px;padding:10px 12px;font:500 16px var(--f-body)}
+.input:focus{border-color:var(--hi);outline:none}
+.chips,.seg,.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.chip,.seg button{background:var(--raise);border:2px solid var(--line);color:var(--paper);border-radius:4px;cursor:pointer}
+.chip{padding:9px 12px 7px;font-size:19px;line-height:1.1}
+.seg button{padding:9px 13px;font:700 14px/1 var(--f-body)}
+.chip[aria-pressed=true],.seg button[aria-pressed=true]{background:var(--hi);color:var(--hi-ink);border-color:var(--black)}
+.sw{position:relative;width:40px;height:40px;border-radius:4px;border:2px solid var(--black);cursor:pointer;padding:0;box-shadow:0 0 0 2px transparent}
+.sw[aria-pressed=true]{box-shadow:0 0 0 3px var(--hi)}
+.sw.custom{background:conic-gradient(#ff3b3b,#ffd23f,#3bd16f,#3bb4ff,#7a3fd1,#ff3bb0,#ff3b3b);overflow:hidden}
+.sw.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.sw.custom:focus-within{outline:3px solid var(--hi);outline-offset:2px}
+.range{display:grid;gap:4px}
+.range input{width:100%;accent-color:var(--hi)}
+.range .row span{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--hi);margin-top:2px;flex:none}
+label.btn{position:relative}
+label.btn:focus-within{outline:3px solid var(--hi);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.app-tip{display:grid;gap:8px;justify-items:start;border-left:3px solid var(--hi);background:var(--raise);padding:10px 12px;border-radius:0 4px 4px 0}
+.app-tip p{margin:0;font-size:13px;color:var(--paper)}
+.app-tip .addr{font:500 12px var(--f-mono);color:var(--dim);overflow-wrap:anywhere;user-select:all}
+.tips{margin:0;padding-left:1.15em;color:var(--dim);font-size:14px;display:grid;gap:7px}
+.tips b{color:var(--paper);font-weight:500}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 class="brand">히어로 <em>인트로</em> 메이커</h1>
+      <p class="lede">사진, 음악, 글자를 넣으면 사진이 점점 빠르게 넘어가다가 글자 속으로 빨려 들어가고, 마지막에 제목이 쾅 하고 나타나는 오프닝 영상을 만들어요.</p>
+    </div>
+    <span class="spec" id="spec">1280×720 · 30fps</span>
+  </header>
+
+  <main class="grid">
+    <section class="stage-col" aria-label="미리보기">
+      <div class="stage" id="stage">
+        <canvas id="cv" width="1280" height="720" role="img" aria-label="인트로 미리보기 화면"></canvas>
+        <button class="bigplay" id="bigPlay" type="button" aria-label="처음부터 미리보기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4L20 12z" fill="currentColor"/></svg>
+        </button>
+        <div class="rec-badge" id="recBadge" hidden><i></i><span id="recTc">REC 00:00.00</span></div>
+      </div>
+
+      <div class="phases" id="phases">
+        <button type="button" data-p="0">사진 넘김<span>0.0초</span></button>
+        <button type="button" data-p="1">글자 속으로 줌아웃<span>0.0초</span></button>
+        <button type="button" data-p="2">제목 등장<span>0.0초</span></button>
+      </div>
+
+      <div class="scrub">
+        <input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="재생 위치">
+        <span class="tc" id="tc">00:00.00 / 00:10.00</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="playBtn" type="button"></button>
+        <button class="btn" id="fsBtn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+          전체 화면 재생
+        </button>
+        <button class="btn primary" id="recBtn" type="button"></button>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <div class="result" id="result" hidden>
+        <video id="outVideo" controls playsinline></video>
+        <div class="result-row">
+          <div>
+            <strong id="outName"></strong>
+            <span class="meta" id="outMeta"></span>
+          </div>
+          <button class="btn primary" id="saveBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+            영상 저장
+          </button>
+        </div>
+        <p class="note" id="fmtNote"></p>
+      </div>
+    </section>
+
+    <fieldset class="controls" id="ctrlSet">
+      <section class="panel" id="photoPanel" aria-labelledby="cap1">
+        <h2 class="cap" id="cap1"><b>1</b>사진</h2>
+        <div class="drop" id="drop">
+          <label class="btn primary">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V7m0 0l-5 5m5-5l5 5M4 4h16" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+            사진 고르기
+            <input class="sr" type="file" id="photoInput" accept="image/*" multiple>
+          </label>
+          <p>여러 장을 한 번에 고르거나 여기로 끌어다 놓으세요.</p>
+        </div>
+        <div class="app-tip" id="appTip" hidden>
+          <p>휴대폰의 Claude 앱 안에서는 사진·음악 고르기 창이 열리지 않을 수 있어요. 그럴 땐 크롬이나 삼성 인터넷 같은 브라우저에서 열어 주세요.</p>
+          <a class="btn small" href="https://wga4848-min.github.io/6class-music/hero-intro.html" target="_blank" rel="noopener">브라우저에서 열기</a>
+          <span class="addr">wga4848-min.github.io/6class-music/hero-intro.html</span>
+        </div>
+        <p class="hint" id="sampleNote">지금은 예시 이미지가 들어가 있어요. 사진을 고르면 예시는 빠져요.</p>
+        <div class="row between">
+          <span class="count" id="photoCount"></span>
+          <div class="row">
+            <button class="btn small" id="shuffleBtn" type="button">순서 섞기</button>
+            <button class="btn small" id="clearBtn" type="button" hidden>모두 빼기</button>
+          </div>
+        </div>
+        <div class="thumbs" id="thumbs"></div>
+        <p class="hint">앞 번호 사진일수록 천천히, 뒤로 갈수록 빠르게 지나가요. 10~30장이 알맞아요.</p>
+      </section>
+
+      <section class="panel" id="musicPanel" aria-labelledby="cap2">
+        <h2 class="cap" id="cap2"><b>2</b>음악</h2>
+        <div class="row">
+          <label class="btn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/></svg>
+            음악 고르기
+            <input class="sr" type="file" id="musicInput" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg">
+          </label>
+          <button class="btn small" id="musicRemove" type="button" hidden>음악 빼기</button>
+        </div>
+        <div>
+          <strong id="musicName" style="display:block;font-weight:500;overflow-wrap:anywhere"></strong>
+          <span class="hint" id="musicMeta"></span>
+        </div>
+        <div class="range" id="musicOpts" hidden>
+          <div class="row between">
+            <label class="label" for="musicStart">음악 시작 위치</label>
+            <span id="musicStartVal">0:00.0</span>
+          </div>
+          <input type="range" id="musicStart" min="0" max="0" step="0.1" value="0">
+          <div class="row between">
+            <button class="btn small" id="autoAlignBtn" type="button">강한 부분에 맞추기</button>
+          </div>
+          <p class="hint" id="alignNote">제목이 쾅 하고 나오는 순간에 곡의 강한 부분이 오도록 시작 위치를 맞췄어요.</p>
+        </div>
+        <label class="check"><input type="checkbox" id="sfxCheck" checked><span>효과음 넣기 <span class="hint">(사진 넘기는 소리, 제목이 나올 때 쾅 소리)</span></span></label>
+      </section>
+
+      <section class="panel" aria-labelledby="cap3">
+        <h2 class="cap" id="cap3"><b>3</b>글자</h2>
+        <div class="field">
+          <label for="titleIn">제목</label>
+          <input class="input" id="titleIn" type="text" maxlength="14" placeholder="예: 6학년 1반" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="subIn">부제 (비워도 돼요)</label>
+          <input class="input" id="subIn" type="text" maxlength="24" placeholder="예: HEROES" autocomplete="off">
+        </div>
+        <div class="field">
+          <span class="label" id="fontLbl">제목 글꼴</span>
+          <div class="chips" id="fontChips" role="group" aria-labelledby="fontLbl"></div>
+        </div>
+        <div class="field">
+          <span class="label" id="colorLbl">상자 색</span>
+          <div class="swatches" id="swatches" role="group" aria-labelledby="colorLbl"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="cap4">
+        <h2 class="cap" id="cap4"><b>4</b>길이와 화면</h2>
+        <div class="field">
+          <span class="label" id="durLbl">영상 길이</span>
+          <div class="seg" id="durSeg" role="group" aria-labelledby="durLbl"></div>
+        </div>
+        <div class="field">
+          <span class="label" id="ratioLbl">화면 방향</span>
+          <div class="seg" id="ratioSeg" role="group" aria-labelledby="ratioLbl"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="capTip">
+        <h2 class="cap plain" id="capTip">알아두기</h2>
+        <ul class="tips">
+          <li><b>영상 만들기</b>는 실제 길이만큼 재생하면서 녹화해요. 녹화하는 동안 화면을 끄거나 다른 앱으로 넘어가지 마세요.</li>
+          <li><b>전체 화면 재생</b>으로 교실 TV에 바로 띄울 수도 있어요. 파일로 저장하지 않아도 돼요.</li>
+          <li>사진과 음악은 이 기기 안에서만 처리돼요. 어디에도 올라가지 않아요.</li>
+        </ul>
+      </section>
+    </fieldset>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t); return t * t * (3 - 2 * t); };
+const eio = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const eout = t => { t = clamp(t); return 1 - Math.pow(1 - t, 3); };
+function rng(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hex2rgb = h => { h = String(h).replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const css = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const fmtT = s => { s = Math.max(0, s); const m = Math.floor(s / 60); const r = s - m * 60; return String(m).padStart(2, '0') + ':' + r.toFixed(2).padStart(5, '0'); };
+const fmtMin = s => { s = Math.max(0, s); const m = Math.floor(s / 60); const r = s - m * 60; return m + ':' + r.toFixed(1).padStart(4, '0'); };
+
+const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4L20 12z" fill="currentColor"/></svg>';
+const ICON_STOP = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" fill="currentColor"/></svg>';
+const ICON_REC = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>';
+
+const FONTS = [
+  { id: 'Black Han Sans', label: '블랙한산스' },
+  { id: 'Do Hyeon', label: '도현' },
+  { id: 'Gugi', label: '구기' },
+  { id: 'Jua', label: '주아' }
+];
+const COLORS = [
+  { c: '#D7262E', n: '레드' }, { c: '#1F5BD6', n: '블루' }, { c: '#DFA21A', n: '골드' },
+  { c: '#15935C', n: '그린' }, { c: '#7A3FD1', n: '퍼플' }, { c: '#161616', n: '블랙' }
+];
+const DURS = [8, 10, 12, 15];
+const RATIOS = [{ id: '16:9', label: '가로 16:9' }, { id: '9:16', label: '세로 9:16' }];
+const SUB_FONT = '"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+const MAX_PHOTOS = 40;
+const WORDS = ['쾅!', '슝!', '두둥!', '번쩍!', '짜잔!', 'POW!', 'WOW!', '팡!', 'BOOM!', '와아!'];
+const PALS = [['#FFD23F', '#E4572E'], ['#3FA7FF', '#123A8C'], ['#7BD389', '#0F6B44'], ['#FF8FB8', '#8E2C6B'], ['#F4F4F4', '#262626'], ['#FF9F1C', '#1B7F79'], ['#B48CF2', '#4A1F8C'], ['#7FDBFF', '#0B4F6C'], ['#EF476F', '#5C0F24'], ['#FFE066', '#2B59C3']];
+
+const S = {
+  photos: [], usingSamples: true,
+  title: '6학년 1반', sub: 'HEROES',
+  font: 'Black Han Sans', color: '#D7262E',
+  dur: 10, ratio: '16:9',
+  music: null, musicStart: 0, musicAuto: true, sfx: true,
+  seed: 7
+};
+const PREF_KEY = 'hero-intro-maker-v1';
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREF_KEY) || 'null');
+    if (!p) return;
+    if (typeof p.title === 'string') S.title = p.title;
+    if (typeof p.sub === 'string') S.sub = p.sub;
+    if (FONTS.some(f => f.id === p.font)) S.font = p.font;
+    if (/^#[0-9a-f]{6}$/i.test(p.color || '')) S.color = p.color;
+    if (DURS.includes(p.dur)) S.dur = p.dur;
+    if (RATIOS.some(r => r.id === p.ratio)) S.ratio = p.ratio;
+    if (typeof p.sfx === 'boolean') S.sfx = p.sfx;
+  } catch (e) { /* storage unavailable */ }
+}
+function savePrefs() {
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ title: S.title, sub: S.sub, font: S.font, color: S.color, dur: S.dur, ratio: S.ratio, sfx: S.sfx })); } catch (e) { /* ignore */ }
+}
+
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const mont = document.createElement('canvas'), mctx = mont.getContext('2d');
+const mask = document.createElement('canvas'), kctx = mask.getContext('2d');
+const stage = $('#stage');
+let grain = null, sched = null, L = null, SAMPLES = null;
+let actx = null, P = null, rec = null, out = null;
+let seekT = null, viewT = 0, curPhase = -1, rr = 0;
+
+/* ---------- sizes & timing ---------- */
+function setSize() {
+  const v = S.ratio === '9:16';
+  const W = v ? 720 : 1280, H = v ? 1280 : 720;
+  for (const c of [cv, mont, mask]) { if (c.width !== W) c.width = W; if (c.height !== H) c.height = H; }
+  stage.classList.toggle('vertical', v);
+  $('#spec').textContent = `${W}×${H} · 30fps`;
+}
+function makeGrain() {
+  const g = document.createElement('canvas'); g.width = g.height = 192;
+  const x = g.getContext('2d'); const id = x.createImageData(192, 192);
+  for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255 | 0; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  x.putImageData(id, 0, 0);
+  grain = ctx.createPattern(g, 'repeat');
+}
+function timing(D) {
+  const hold = clamp(D * 0.22, 2, 3.5);
+  const cStart = D - hold;
+  const bLen = clamp(D * 0.28, 2.2, 4);
+  const bStart = cStart - bLen;
+  return { D, hold, cStart, bLen, bStart };
+}
+function buildSchedule() {
+  const T = timing(S.dur);
+  const n = S.photos.length;
+  const r = rng(S.seed * 9973 + n * 31 + S.dur);
+  const s0 = S.dur >= 12 ? 0.55 : 0.42, s1 = 0.067;
+  const accEnd = T.bStart + T.bLen * 0.35;
+  const tEnd = T.cStart + 0.4;
+  const flips = [];
+  let t = 0, k = 0, last = -1;
+  while (t < tEnd && n) {
+    const u = clamp(t / accEnd);
+    const e = u * u * (3 - 2 * u);
+    const dt = s0 * Math.pow(s1 / s0, e);
+    let idx;
+    if (k < n) idx = k;
+    else { idx = Math.floor(r() * n); if (n > 1 && idx === last) idx = (idx + 1) % n; }
+    let fx;
+    if (dt > 0.22) fx = ['turn', 'slide', 'zoom', 'turnV'][Math.floor(r() * 4)];
+    else if (dt > 0.11) fx = r() < 0.6 ? 'slide' : 'turn';
+    else fx = 'cut';
+    if (k === 0) fx = 'cut';
+    flips.push({ t, dt, idx, fx, px: r() * 2 - 1, py: r() * 2 - 1, zs: r(), dir: r() < 0.5 ? -1 : 1 });
+    last = idx; t += dt; k++;
+  }
+  sched = { T, flips };
+}
+const posterT = () => sched.T.cStart + Math.min(1.3, sched.T.hold * 0.55);
+
+/* ---------- title layout ---------- */
+function titleFamily() { return `"${S.font}","Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif`; }
+function computeLayout() {
+  const W = cv.width, H = cv.height;
+  const text = S.title.trim() || 'HERO';
+  const fam = titleFamily();
+  kctx.setTransform(1, 0, 0, 1, 0, 0);
+  kctx.font = `400 100px ${fam}`;
+  kctx.textAlign = 'left'; kctx.textBaseline = 'alphabetic';
+  const m = kctx.measureText(text);
+  let asc = m.actualBoundingBoxAscent, desc = m.actualBoundingBoxDescent;
+  if (!(asc > 0)) { asc = 74; desc = 6; }
+  desc = Math.max(0, desc || 0);
+  const bl = m.actualBoundingBoxLeft || 0;
+  const br = m.actualBoundingBoxRight || m.width;
+  const inkW = Math.max(10, bl + br);
+  const padX = 24, padY = 20;
+  const bw = inkW + padX * 2, bh = asc + desc + padY * 2;
+  const sub = S.sub.trim();
+  const k = Math.min(W * 0.8 / bw, H * (sub ? 0.3 : 0.36) / bh);
+  const F = 100 * k;
+  const box = { w: bw * k, h: bh * k, x: 0, y: 0 };
+
+  let subSize = 0, subSpace = 0, subFont = '';
+  if (sub) {
+    subSize = Math.max(16, F * 0.24);
+    for (let i = 0; i < 12; i++) {
+      subFont = `700 ${subSize}px ${SUB_FONT}`;
+      kctx.font = subFont;
+      subSpace = subSize * 0.34;
+      const chars = Array.from(sub);
+      const w = chars.reduce((s, c) => s + kctx.measureText(c).width, 0) + subSpace * (chars.length - 1);
+      if (w <= W * 0.86) break;
+      subSize *= 0.9;
+    }
+  }
+  const gap = sub ? F * 0.2 : 0;
+  const groupH = box.h + (sub ? gap + subSize : 0);
+  box.x = (W - box.w) / 2; box.y = (H - groupH) / 2;
+  const tx = box.x + (padX + bl) * k;
+  const ty = box.y + (padY + asc) * k;
+
+  kctx.font = `400 100px ${fam}`;
+  const chars = Array.from(text);
+  let i = chars.findIndex(c => c.trim());
+  if (i < 0) i = 0;
+  const pre = kctx.measureText(chars.slice(0, i).join('')).width * k;
+  const gw = kctx.measureText(chars[i] || 'H').width * k;
+  const focal = { x: tx + pre + gw / 2, y: ty - asc * k * 0.45 };
+  const S0 = clamp(H * 1.6 / (asc * k), 3, 10);
+
+  L = { text, font: `400 ${F}px ${fam}`, F, box, tx, ty, focal, S0, sub, subSize, subSpace, subFont, subY: box.y + box.h + gap + subSize * 0.82 };
+}
+
+/* ---------- drawing ---------- */
+function flipIndex(t) {
+  const f = sched.flips; if (!f.length) return -1;
+  if (t <= f[0].t) return 0;
+  let lo = 0, hi = f.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (f[mid].t <= t) lo = mid; else hi = mid - 1; }
+  return lo;
+}
+function photoLayer(g, fl, t, W, H) {
+  const ph = S.photos[fl.idx]; if (!ph) return;
+  const lp = clamp((t - fl.t) / (fl.dt + 0.4));
+  const zoom = 1.05 + 0.05 * fl.zs + 0.05 * lp;
+  const s = Math.max(W / ph.w, H / ph.h) * zoom;
+  const dw = ph.w * s, dh = ph.h * s;
+  const mx = (dw - W) / 2, my = (dh - H) / 2;
+  const ox = fl.px * mx * 0.7 * (1 - lp * 0.6);
+  const oy = dh / dw > H / W * 1.05 ? my * (0.35 + 0.15 * fl.py) : fl.py * my * 0.6;
+  g.drawImage(ph.src, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+}
+function drawMontage(g, t, W, H) {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+  const i = flipIndex(t); if (i < 0) return;
+  const cur = sched.flips[i], prev = i > 0 ? sched.flips[i - 1] : null;
+  const td = cur.fx === 'cut' ? 0 : Math.min(0.3, cur.dt * 0.65);
+  const q = td ? clamp((t - cur.t) / td) : 1;
+  const e = eio(q);
+  if (cur.fx === 'cut') {
+    g.save(); g.translate(cur.px * W * 0.012, cur.py * H * 0.012); photoLayer(g, cur, t, W, H); g.restore();
+    if (prev && cur.zs > 0.45) {
+      const pq = clamp((t - cur.t) / Math.max(cur.dt, 0.04));
+      g.save(); g.globalAlpha = 0.32 * (1 - pq); g.translate(cur.dir * W * 0.04, 0); photoLayer(g, prev, t, W, H); g.restore();
+    }
+    return;
+  }
+  if (!prev || q >= 1) { photoLayer(g, cur, t, W, H); return; }
+  switch (cur.fx) {
+    case 'turn': case 'turnV': {
+      const v = cur.fx === 'turnV';
+      photoLayer(g, cur, t, W, H);
+      g.fillStyle = `rgba(0,0,0,${0.5 * (1 - e)})`; g.fillRect(0, 0, W, H);
+      const sx = Math.max(0.001, 1 - e);
+      g.save();
+      if (v) { if (cur.dir > 0) g.scale(1, sx); else { g.translate(0, H * (1 - sx)); g.scale(1, sx); } }
+      else { if (cur.dir > 0) g.scale(sx, 1); else { g.translate(W * (1 - sx), 0); g.scale(sx, 1); } }
+      photoLayer(g, prev, t, W, H);
+      g.fillStyle = `rgba(0,0,0,${0.55 * e})`; g.fillRect(0, 0, W, H);
+      g.restore();
+      const len = v ? H : W, sw = len * 0.08;
+      const edge = cur.dir > 0 ? len * sx : len * (1 - sx);
+      const gr = v ? g.createLinearGradient(0, edge, 0, edge + (cur.dir > 0 ? sw : -sw)) : g.createLinearGradient(edge, 0, edge + (cur.dir > 0 ? sw : -sw), 0);
+      gr.addColorStop(0, `rgba(0,0,0,${0.55 * (1 - e)})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr;
+      const a0 = cur.dir > 0 ? edge : edge - sw;
+      if (v) g.fillRect(0, a0, W, sw); else g.fillRect(a0, 0, sw, H);
+      break;
+    }
+    case 'slide': {
+      const d = cur.dir;
+      g.save(); g.translate(-d * W * 0.3 * e, 0); photoLayer(g, prev, t, W, H); g.restore();
+      const off = d * W * (1 - e);
+      for (const k of [3, 2, 1]) {
+        g.save(); g.globalAlpha = 0.16 * (1 - q); g.translate(off + d * k * W * 0.035, 0); photoLayer(g, cur, t, W, H); g.restore();
+      }
+      g.save(); g.translate(off, 0); photoLayer(g, cur, t, W, H); g.restore();
+      break;
+    }
+    default: { // zoom
+      photoLayer(g, prev, t, W, H);
+      g.save(); g.globalAlpha = e; const z = 1.3 - 0.3 * e;
+      g.translate(W / 2, H / 2); g.scale(z, z); g.translate(-W / 2, -H / 2);
+      photoLayer(g, cur, t, W, H); g.restore();
+      g.fillStyle = `rgba(255,255,255,${0.18 * (1 - q)})`; g.fillRect(0, 0, W, H);
+    }
+  }
+}
+function grade(g, t, W, H) {
+  const T = sched.T;
+  const a = t < T.bStart ? 0.1 + 0.32 * smooth(t / T.bStart) : 0.42;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = css(mix(hex2rgb(S.color), [255, 255, 255], 1 - a));
+  g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over';
+  const r = Math.hypot(W, H) / 2;
+  const vg = g.createRadialGradient(W / 2, H / 2, r * 0.35, W / 2, H / 2, r);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.58)');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+}
+function drawSpaced(g, str, cx, y, sp) {
+  const chars = Array.from(str);
+  const ws = chars.map(c => g.measureText(c).width);
+  const total = ws.reduce((a, b) => a + b, 0) + sp * (chars.length - 1);
+  let x = cx - total / 2;
+  g.textAlign = 'left';
+  chars.forEach((c, i) => { g.fillText(c, x, y); x += ws[i] + sp; });
+}
+function drawLogo(t, u) {
+  const W = cv.width, H = cv.height, T = sched.T;
+  const inC = t >= T.cStart;
+  let sc, fx, fy;
+  if (!inC) {
+    const e = eio(u);
+    sc = Math.exp(Math.log(L.S0) * (1 - e));
+    fx = lerp(L.focal.x, W / 2, e); fy = lerp(L.focal.y, H / 2, e);
+  } else {
+    sc = 1 + 0.035 * clamp((t - T.cStart) / T.hold);
+    fx = W / 2; fy = H / 2;
+  }
+  const A = [sc, 0, 0, sc, W / 2 - sc * fx, H / 2 - sc * fy];
+  const col = hex2rgb(S.color);
+  const dark = mix(col, [0, 0, 0], 0.3);
+  const boxA = inC ? 1 : smooth(u / 0.35);
+  const boxC = inC ? mix(dark, col, smooth((t - T.cStart) / 0.25)) : dark;
+  const b = L.box;
+
+  ctx.save();
+  ctx.setTransform(...A);
+  ctx.globalAlpha = boxA;
+  ctx.fillStyle = css(boxC); ctx.fillRect(b.x, b.y, b.w, b.h);
+  const gr = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
+  gr.addColorStop(0, 'rgba(255,255,255,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0.20)');
+  ctx.fillStyle = gr; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.restore();
+
+  const wA = inC ? smooth((t - T.cStart) / 0.4) : 0;
+  if (wA < 1) {
+    kctx.setTransform(1, 0, 0, 1, 0, 0);
+    kctx.globalAlpha = 1; kctx.globalCompositeOperation = 'source-over';
+    kctx.clearRect(0, 0, W, H);
+    kctx.setTransform(...A);
+    kctx.font = L.font; kctx.textAlign = 'left'; kctx.textBaseline = 'alphabetic';
+    kctx.fillStyle = '#fff'; kctx.fillText(L.text, L.tx, L.ty);
+    kctx.setTransform(1, 0, 0, 1, 0, 0);
+    kctx.globalCompositeOperation = 'source-in';
+    kctx.drawImage(mont, 0, 0);
+    kctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(mask, 0, 0);
+  }
+  if (wA > 0) {
+    ctx.save(); ctx.setTransform(...A); ctx.globalAlpha = wA;
+    ctx.font = L.font; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#fff'; ctx.fillText(L.text, L.tx, L.ty);
+    ctx.restore();
+  }
+  if (inC) {
+    const s = (t - T.cStart - 0.3) / 0.9;
+    if (s > 0 && s < 1) {
+      ctx.save(); ctx.setTransform(...A);
+      ctx.beginPath(); ctx.rect(b.x, b.y, b.w, b.h); ctx.clip();
+      const bw = b.h * 0.9, sk = b.h * 0.45;
+      const x = lerp(b.x - bw - sk, b.x + b.w + sk, eio(s));
+      const sg = ctx.createLinearGradient(x, 0, x + bw, 0);
+      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.42)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = sg;
+      ctx.beginPath(); ctx.moveTo(x + sk, b.y); ctx.lineTo(x + bw + sk, b.y); ctx.lineTo(x + bw, b.y + b.h); ctx.lineTo(x, b.y + b.h); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    if (L.sub) {
+      const a = smooth((t - T.cStart - 0.4) / 0.8);
+      if (a > 0) {
+        ctx.save(); ctx.setTransform(...A); ctx.globalAlpha = a;
+        ctx.fillStyle = '#fff'; ctx.font = L.subFont; ctx.textBaseline = 'alphabetic';
+        drawSpaced(ctx, L.sub, W / 2, L.subY, lerp(L.subSize * 0.95, L.subSpace, eout(a)));
+        ctx.restore();
+      }
+    }
+    const fl = 1 - clamp((t - T.cStart) / 0.35);
+    if (fl > 0) { ctx.save(); ctx.globalAlpha = 0.7 * fl * fl; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  }
+}
+function render(t) {
+  if (!sched || !L) return;
+  const W = cv.width, H = cv.height, T = sched.T;
+  t = clamp(t, 0, T.D);
+  drawMontage(mctx, t, W, H);
+  grade(mctx, t, W, H);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  if (t < T.bStart) {
+    ctx.drawImage(mont, 0, 0);
+  } else {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    const u = clamp((t - T.bStart) / T.bLen);
+    const bgA = 1 - smooth(u / 0.45);
+    if (bgA > 0.001) { ctx.globalAlpha = bgA; ctx.drawImage(mont, 0, 0); ctx.globalAlpha = 1; }
+    drawLogo(t, u);
+  }
+  if (grain) {
+    const f = Math.floor(t * 30);
+    const ox = (f * 37) % 192, oy = (f * 91) % 192;
+    ctx.save(); ctx.globalAlpha = 0.07; ctx.globalCompositeOperation = 'overlay';
+    ctx.translate(-ox, -oy); ctx.fillStyle = grain; ctx.fillRect(ox, oy, W, H);
+    ctx.restore();
+  }
+  const fi = 1 - clamp(t / 0.25);
+  const fo = clamp((t - (T.D - 0.5)) / 0.5);
+  const blk = Math.max(fi, fo);
+  if (blk > 0) { ctx.fillStyle = `rgba(0,0,0,${blk})`; ctx.fillRect(0, 0, W, H); }
+}
+function drawLoading() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#98A0B6'; ctx.font = `500 28px ${SUB_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('불러오는 중…', cv.width / 2, cv.height / 2);
+}
+function requestRender() {
+  if (P) return;
+  cancelAnimationFrame(rr);
+  rr = requestAnimationFrame(() => { render(viewT); updateTC(viewT); updatePhase(viewT); });
+}
+
+/* ---------- sample panels ---------- */
+function thumbOf(c) {
+  const t = document.createElement('canvas');
+  const s = 120 / Math.min(c.width, c.height);
+  t.width = Math.max(1, Math.round(c.width * s)); t.height = Math.max(1, Math.round(c.height * s));
+  t.getContext('2d').drawImage(c, 0, 0, t.width, t.height);
+  return t.toDataURL('image/jpeg', 0.72);
+}
+function genSample(i) {
+  const W = 1024, H = 576;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const r = rng(1000 + i * 77);
+  const [A, B] = PALS[i % PALS.length];
+  g.fillStyle = A; g.fillRect(0, 0, W, H);
+  const fx = W * (0.32 + r() * 0.36), fy = H * (0.38 + r() * 0.24);
+  const R = Math.hypot(W, H);
+  g.fillStyle = B; g.globalAlpha = 0.5;
+  for (let k = 0; k < 40; k += 2) {
+    const a = k / 40 * Math.PI * 2 + r() * 0.05, a2 = a + 0.05 + r() * 0.05;
+    g.beginPath(); g.moveTo(fx + Math.cos(a) * 80, fy + Math.sin(a) * 80);
+    g.lineTo(fx + Math.cos(a) * R, fy + Math.sin(a) * R); g.lineTo(fx + Math.cos(a2) * R, fy + Math.sin(a2) * R);
+    g.closePath(); g.fill();
+  }
+  g.globalAlpha = 0.32;
+  const step = 18;
+  for (let y = step / 2, row = 0; y < H + step; y += step, row++) {
+    for (let x = (row % 2 ? step / 2 : 0); x < W + step; x += step) {
+      const d = Math.hypot(x - fx, y - fy) / R;
+      const rad = step * 0.48 * clamp(d * 1.8 - 0.12);
+      if (rad > 0.7) { g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill(); }
+    }
+  }
+  g.globalAlpha = 1;
+  const spikes = 14, R1 = 190 + r() * 40, R0 = 120;
+  g.beginPath();
+  for (let k = 0; k < spikes * 2; k++) {
+    const a = k / (spikes * 2) * Math.PI * 2 - Math.PI / 2;
+    const rr2 = k % 2 ? R0 + r() * 12 : R1 + r() * 30;
+    const x = fx + Math.cos(a) * rr2 * 1.25, y = fy + Math.sin(a) * rr2;
+    if (k) g.lineTo(x, y); else g.moveTo(x, y);
+  }
+  g.closePath(); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 9; g.lineJoin = 'round'; g.strokeStyle = '#111'; g.stroke();
+  const word = WORDS[i % WORDS.length];
+  g.save(); g.translate(fx, fy); g.rotate(-0.14 + r() * 0.12);
+  let fs = 130; g.font = `400 ${fs}px "Black Han Sans",sans-serif`;
+  const ww = g.measureText(word).width; if (ww > 330) { fs *= 330 / ww; g.font = `400 ${fs}px "Black Han Sans",sans-serif`; }
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 14; g.strokeStyle = '#111'; g.lineJoin = 'round'; g.strokeText(word, 0, 6);
+  g.fillStyle = B; g.fillText(word, 0, 6);
+  g.restore();
+  const label = `예시 이미지 ${i + 1}`;
+  g.font = `700 26px ${SUB_FONT}`;
+  const lw = g.measureText(label).width + 28;
+  g.fillStyle = '#FFD23F'; g.fillRect(34, 34, lw, 46);
+  g.lineWidth = 4; g.strokeStyle = '#111'; g.strokeRect(34, 34, lw, 46);
+  g.fillStyle = '#111'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(label, 48, 58);
+  g.lineWidth = 16; g.strokeStyle = '#111'; g.strokeRect(8, 8, W - 16, H - 16);
+  return { src: c, w: W, h: H, thumb: thumbOf(c), sample: true };
+}
+function useSamples() {
+  if (!SAMPLES) SAMPLES = Array.from({ length: 10 }, (_, i) => genSample(i));
+  S.photos = SAMPLES.slice(); S.usingSamples = true;
+}
+
+/* ---------- photos ---------- */
+async function loadPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url;
+    if (img.decode) await img.decode(); else await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+    const w0 = img.naturalWidth, h0 = img.naturalHeight;
+    if (!w0 || !h0) throw new Error('empty');
+    const s = Math.min(1, 1100 / Math.max(w0, h0));
+    const w = Math.max(1, Math.round(w0 * s)), h = Math.max(1, Math.round(h0 * s));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
+    return { src: c, w, h, thumb: thumbOf(c), sample: false };
+  } finally { URL.revokeObjectURL(url); }
+}
+const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|gif|webp|bmp|heic|heif|avif)$/i.test(f.name);
+const isAudio = f => /^audio\//.test(f.type) || /\.(mp3|m4a|aac|wav|ogg|oga|flac)$/i.test(f.name);
+async function addFiles(list) {
+  const files = Array.from(list || []);
+  const aud = files.find(isAudio);
+  if (aud) loadMusic(aud);
+  const imgs = files.filter(isImage);
+  if (!imgs.length) { if (!aud && files.length) setStatus('사진 파일만 넣을 수 있어요.', true); return; }
+  stopIfPreviewing();
+  const wasSamples = S.usingSamples;
+  const keep = wasSamples ? [] : S.photos.slice();
+  const room = MAX_PHOTOS - keep.length;
+  if (room <= 0) { setStatus(`사진은 최대 ${MAX_PHOTOS}장까지 넣을 수 있어요.`, true); return; }
+  const take = imgs.slice(0, room);
+  setStatus(`사진 ${take.length}장을 불러오는 중…`);
+  let ok = 0, fail = 0;
+  for (const f of take) { try { keep.push(await loadPhoto(f)); ok++; } catch (e) { fail++; } }
+  if (keep.length) { S.photos = keep; S.usingSamples = false; } else useSamples();
+  buildSchedule(); renderThumbs(); viewT = posterT(); seekT = null; requestRender();
+  let msg = ok ? `사진 ${ok}장을 넣었어요. 지금 ${S.photos.length}장이에요.` : '사진을 열지 못했어요.';
+  if (fail) msg += ` ${fail}장은 열 수 없는 형식이라 뺐어요.`;
+  if (imgs.length > take.length) msg += ` 최대 ${MAX_PHOTOS}장이라 ${imgs.length - take.length}장은 넣지 않았어요.`;
+  setStatus(msg, !ok);
+}
+function removePhoto(i) {
+  stopIfPreviewing();
+  S.photos.splice(i, 1);
+  if (!S.photos.length) useSamples();
+  buildSchedule(); renderThumbs(); requestRender();
+}
+function renderThumbs() {
+  const box = $('#thumbs'); box.textContent = '';
+  S.photos.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'th';
+    const im = document.createElement('img'); im.src = p.thumb; im.alt = p.sample ? `예시 이미지 ${i + 1}` : `${i + 1}번 사진`;
+    d.appendChild(im);
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1; d.appendChild(n);
+    if (!S.usingSamples) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'x';
+      b.setAttribute('aria-label', `${i + 1}번 사진 빼기`); b.textContent = '×';
+      b.addEventListener('click', () => removePhoto(i));
+      d.appendChild(b);
+    }
+    box.appendChild(d);
+  });
+  $('#photoCount').textContent = S.usingSamples ? `예시 이미지 ${S.photos.length}장` : `${S.photos.length}장 / 최대 ${MAX_PHOTOS}장`;
+  $('#sampleNote').hidden = !S.usingSamples;
+  $('#clearBtn').hidden = S.usingSamples;
+  $('#shuffleBtn').disabled = S.photos.length < 2;
+}
+
+/* ---------- music ---------- */
+function getCtx() {
+  if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) { try { actx = new AC(); } catch (e) { actx = null; } } }
+  return actx;
+}
+async function loadMusic(file) {
+  const ac = getCtx();
+  if (!ac) { setStatus('이 브라우저에서는 음악을 넣을 수 없어요.', true); return; }
+  setStatus('음악을 불러오는 중…');
+  try {
+    const ab = await file.arrayBuffer();
+    const buf = await new Promise((res, rej) => { const p = ac.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+    stopIfPreviewing();
+    S.music = { buffer: buf, name: file.name, dur: buf.duration };
+    S.musicAuto = true;
+    autoAlign();
+    renderMusic(); requestRender();
+    setStatus(`음악을 넣었어요. ${fmtMin(buf.duration)} 길이의 곡이에요.`);
+  } catch (e) {
+    setStatus('이 음악 파일은 열 수 없어요. mp3나 m4a 파일로 다시 골라 주세요.', true);
+  }
+}
+function findHit(buf, cStart) {
+  const sr = buf.sampleRate, a = buf.getChannelData(0), b = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
+  const win = Math.max(1, Math.floor(sr * 0.1)), n = Math.floor(a.length / win);
+  const env = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    let s = 0, c = 0; const o = i * win;
+    for (let j = 0; j < win; j += 8) { const v = a[o + j] + (b ? b[o + j] : 0); s += v * v; c++; }
+    env[i] = Math.sqrt(s / Math.max(1, c));
+  }
+  const A = 15, minI = Math.ceil(cStart / 0.1);
+  let best = -Infinity, bi = -1;
+  for (let i = Math.max(A, minI); i < n - A; i++) {
+    let pre = 0, post = 0;
+    for (let k = 1; k <= A; k++) { pre += env[i - k]; post += env[i + k - 1]; }
+    const score = (post - pre) / A + 0.3 * post / A;
+    if (score > best) { best = score; bi = i; }
+  }
+  return bi < 0 ? 0 : Math.max(0, bi * 0.1 - cStart);
+}
+function autoAlign() {
+  if (!S.music) return;
+  const T = timing(S.dur);
+  const max = Math.max(0, S.music.dur - S.dur);
+  S.musicStart = Math.min(max, findHit(S.music.buffer, T.cStart));
+  S.musicAuto = true;
+}
+function renderMusic() {
+  const m = S.music;
+  $('#musicName').textContent = m ? m.name : '아직 고른 음악이 없어요';
+  $('#musicMeta').textContent = m ? `길이 ${fmtMin(m.dur)}` : '음악을 안 넣으면 기본 배경음과 효과음으로 만들어요.';
+  $('#musicOpts').hidden = !m;
+  $('#musicRemove').hidden = !m;
+  if (m) {
+    const max = Math.max(0, m.dur - S.dur);
+    const r = $('#musicStart');
+    r.max = max.toFixed(1);
+    S.musicStart = Math.min(S.musicStart, max);
+    r.value = S.musicStart.toFixed(1);
+    r.disabled = max <= 0;
+    $('#musicStartVal').textContent = fmtMin(S.musicStart);
+    $('#alignNote').hidden = !S.musicAuto;
+  }
+}
+
+/* ---------- audio scheduling ---------- */
+let noiseBuf = null;
+function getNoise(ac) {
+  if (noiseBuf && noiseBuf.sampleRate === ac.sampleRate) return noiseBuf;
+  const len = ac.sampleRate * 2, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  noiseBuf = b; return b;
+}
+function scheduleAudio(ac, t0, startAt, out) {
+  const nodes = [];
+  const T = sched.T, D = T.D;
+  const at = tt => startAt + Math.max(0, tt - t0);
+  const endAt = at(D);
+  const hasMusic = !!S.music;
+
+  if (hasMusic) {
+    const buf = S.music.buffer;
+    const off = S.musicStart + t0;
+    if (off < buf.duration) {
+      const src = ac.createBufferSource(); src.buffer = buf;
+      const g = ac.createGain();
+      src.connect(g); g.connect(out);
+      if (t0 < 0.3) { g.gain.setValueAtTime(0.0001, startAt); g.gain.linearRampToValueAtTime(1, at(0.3)); }
+      else g.gain.setValueAtTime(1, startAt);
+      const fo = Math.max(t0 + 0.01, 0.31, D - 1.3);
+      g.gain.setValueAtTime(1, at(fo));
+      g.gain.linearRampToValueAtTime(0.0001, endAt);
+      src.start(startAt, off);
+      src.stop(endAt + 0.05);
+      nodes.push(src);
+    }
+  } else {
+    const g = ac.createGain();
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 3;
+    const oscs = [[55, 'sawtooth'], [55.5, 'sawtooth'], [82.4, 'sawtooth'], [110, 'triangle']];
+    for (const [f, type] of oscs) {
+      const o = ac.createOscillator(); o.type = type; o.frequency.value = f;
+      o.connect(lp); o.start(startAt); o.stop(endAt + 0.1); nodes.push(o);
+    }
+    lp.connect(g); g.connect(out);
+    const lvl = tt => tt < T.cStart ? lerp(0.05, 0.15, smooth(tt / T.cStart)) : 0.13 * (1 - smooth((tt - T.cStart) / T.hold));
+    g.gain.setValueAtTime(t0 < 0.3 ? 0.0001 : Math.max(0.0001, lvl(t0)), startAt);
+    for (let tt = Math.ceil(t0 * 4 + 0.001) / 4; tt <= D; tt += 0.25) g.gain.linearRampToValueAtTime(Math.max(0.0001, lvl(tt)), at(tt));
+    lp.frequency.setValueAtTime(lerp(260, 1500, smooth(t0 / T.cStart)), startAt);
+    if (t0 < T.cStart) lp.frequency.linearRampToValueAtTime(1500, at(T.cStart));
+    lp.frequency.linearRampToValueAtTime(320, endAt);
+  }
+
+  if (S.sfx) {
+    const nb = getNoise(ac);
+    const k = hasMusic ? 0.55 : 1;
+    for (const f of sched.flips) {
+      if (f.t < t0 || f.t > T.cStart) continue;
+      const s = ac.createBufferSource(); s.buffer = nb;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2200 + f.zs * 2600; bp.Q.value = 0.8;
+      const g = ac.createGain();
+      const st = at(f.t), len = Math.min(0.09, Math.max(0.03, f.dt * 0.6));
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.linearRampToValueAtTime(0.3 * k * (0.6 + 0.4 * f.zs), st + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + len);
+      s.connect(bp); bp.connect(g); g.connect(out);
+      s.start(st, f.zs * 1.5, len + 0.02); nodes.push(s);
+    }
+    if (T.cStart > t0) {
+      const s0 = Math.max(t0, T.bStart), st = at(s0), en = at(T.cStart);
+      const u0 = clamp((s0 - T.bStart) / T.bLen);
+      const n = ac.createBufferSource(); n.buffer = nb; n.loop = true;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1;
+      bp.frequency.setValueAtTime(lerp(300, 3600, u0), st); bp.frequency.exponentialRampToValueAtTime(3600, en);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(Math.max(0.0001, lerp(0.02, 0.24, u0) * k), st);
+      g.gain.linearRampToValueAtTime(0.24 * k, Math.max(st + 0.01, en - 0.02));
+      g.gain.linearRampToValueAtTime(0.0001, en);
+      n.connect(bp); bp.connect(g); g.connect(out);
+      n.start(st); n.stop(en + 0.05); nodes.push(n);
+    }
+    if (T.cStart >= t0) {
+      const st = at(T.cStart);
+      const o = ac.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(120, st); o.frequency.exponentialRampToValueAtTime(36, st + 1.2);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, st); g.gain.linearRampToValueAtTime(0.95 * k, st + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, st + 2.2);
+      o.connect(g); g.connect(out); o.start(st); o.stop(st + 2.3); nodes.push(o);
+      const n = ac.createBufferSource(); n.buffer = nb;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+      const ng = ac.createGain(); ng.gain.setValueAtTime(0.55 * k, st); ng.gain.exponentialRampToValueAtTime(0.0001, st + 0.6);
+      n.connect(lp); lp.connect(ng); ng.connect(out); n.start(st, 0, 0.7); nodes.push(n);
+    }
+    if (T.cStart + 0.3 >= t0) {
+      const st = at(T.cStart + 0.3);
+      for (const [fq, v] of [[1568, 0.05], [2349, 0.035], [3136, 0.02]]) {
+        const so = ac.createOscillator(); so.type = 'sine'; so.frequency.value = fq;
+        const sg = ac.createGain();
+        sg.gain.setValueAtTime(0.0001, st); sg.gain.linearRampToValueAtTime(v * k, st + 0.05); sg.gain.exponentialRampToValueAtTime(0.0001, st + 1.6);
+        so.connect(sg); sg.connect(out); so.start(st); so.stop(st + 1.7); nodes.push(so);
+      }
+    }
+  }
+  return nodes;
+}
+
+/* ---------- playback ---------- */
+function startPlayback(t0, recording) {
+  stopPlayback();
+  const ac = getCtx();
+  const p = { t0, recording: !!recording, nodes: [], raf: 0, master: null, comp: null, recDest: null };
+  if (ac) {
+    try { if (ac.state !== 'running') ac.resume(); } catch (e) { /* ignore */ }
+    p.master = ac.createGain(); p.master.gain.value = 0.9;
+    p.comp = ac.createDynamicsCompressor(); p.comp.threshold.value = -10; p.comp.ratio.value = 4;
+    p.master.connect(p.comp); p.comp.connect(ac.destination);
+    if (recording && ac.createMediaStreamDestination) { p.recDest = ac.createMediaStreamDestination(); p.comp.connect(p.recDest); }
+    p.startAt = ac.currentTime + 0.12;
+    p.clock = () => ac.currentTime;
+    try { p.nodes = scheduleAudio(ac, t0, p.startAt, p.master); } catch (e) { p.nodes = []; }
+    const wall0 = performance.now() / 1000, ac0 = ac.currentTime;
+    p.clock = () => (ac.state === 'running' || ac.currentTime > ac0) ? ac.currentTime : ac0 + (performance.now() / 1000 - wall0);
+  } else {
+    p.clock = () => performance.now() / 1000;
+    p.startAt = p.clock() + 0.05;
+  }
+  P = p;
+  setPlayingUI(true);
+  const T = sched.T;
+  const tick = () => {
+    if (P !== p) return;
+    const t = p.t0 + Math.max(0, p.clock() - p.startAt);
+    if (t >= T.D) { render(T.D); updateTC(T.D); endPlayback(); return; }
+    render(t); viewT = t; updateTC(t); updatePhase(t);
+    if (p.recording) updateRecProgress(t);
+    p.raf = requestAnimationFrame(tick);
+  };
+  render(t0); updateTC(t0);
+  p.raf = requestAnimationFrame(tick);
+}
+function stopPlayback() {
+  if (!P) return;
+  const p = P; P = null;
+  cancelAnimationFrame(p.raf);
+  for (const n of p.nodes) { try { n.stop(); } catch (e) { /* already stopped */ } }
+  try { p.master && p.master.disconnect(); p.comp && p.comp.disconnect(); } catch (e) { /* ignore */ }
+  setPlayingUI(false);
+}
+function endPlayback() {
+  const wasRec = P && P.recording;
+  stopPlayback();
+  if (wasRec && rec) rec.finish();
+  else { viewT = posterT(); seekT = null; render(viewT); updateTC(viewT); updatePhase(viewT); }
+}
+function stopIfPreviewing() {
+  if (P && !P.recording) { stopPlayback(); }
+}
+function togglePlay(fromStart) {
+  if (rec) return;
+  if (P) { const t = viewT; stopPlayback(); seekT = t; return; }
+  let t0 = fromStart ? 0 : (seekT == null ? 0 : seekT);
+  if (t0 >= sched.T.D - 0.05) t0 = 0;
+  seekT = null;
+  startPlayback(t0, false);
+}
+
+/* ---------- recording ---------- */
+function pickMime() {
+  if (!window.MediaRecorder) return null;
+  const c = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  for (const m of c) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) { /* ignore */ } }
+  return '';
+}
+function startRecording() {
+  const mime = pickMime();
+  if (mime === null || !cv.captureStream) {
+    setStatus('이 화면에서는 영상 만들기가 안 돼요. PC의 크롬이나 엣지 브라우저에서 열어 주세요. 전체 화면 재생은 여기서도 돼요.', true);
+    return;
+  }
+  stopPlayback();
+  getCtx();
+  render(0);
+  let vStream;
+  try { vStream = cv.captureStream(30); } catch (e) { setStatus('화면을 녹화할 수 없어요. PC의 크롬이나 엣지 브라우저에서 열어 주세요.', true); return; }
+  startPlayback(0, true);
+  const tracks = vStream.getVideoTracks().slice();
+  if (P && P.recDest) tracks.push(...P.recDest.stream.getAudioTracks());
+  const stream = new MediaStream(tracks);
+  let mr;
+  const opts = { videoBitsPerSecond: 8000000, audioBitsPerSecond: 192000 };
+  if (mime) opts.mimeType = mime;
+  try { mr = new MediaRecorder(stream, opts); }
+  catch (e) { try { mr = new MediaRecorder(stream); } catch (e2) { stopPlayback(); vStream.getTracks().forEach(t => t.stop()); setStatus('이 브라우저에서는 영상 만들기가 안 돼요. PC의 크롬이나 엣지에서 열어 주세요.', true); return; } }
+  const chunks = [];
+  const r = { mr, chunks, vStream, mime, cancelled: false, left: false, done: false,
+    finish() { setTimeout(() => { try { if (mr.state !== 'inactive') mr.stop(); } catch (e) { /* ignore */ } }, 250); } };
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => {
+    if (r.done) return; r.done = true;
+    rec = null;
+    vStream.getTracks().forEach(t => t.stop());
+    setRecUI(false);
+    viewT = posterT(); seekT = null; render(viewT); updateTC(viewT); updatePhase(viewT);
+    if (r.cancelled) { setStatus('녹화를 멈췄어요.'); return; }
+    const type = ((mr.mimeType || mime || 'video/webm').split(';')[0]) || 'video/webm';
+    const blob = new Blob(chunks, { type });
+    if (!blob.size) { setStatus('영상이 비어 있어요. 다시 만들어 주세요.', true); return; }
+    showResult(blob, type, r.left);
+  };
+  rec = r;
+  try { mr.start(250); }
+  catch (e) { rec = null; stopPlayback(); vStream.getTracks().forEach(t => t.stop()); setStatus('녹화를 시작하지 못했어요. 다시 눌러 주세요.', true); return; }
+  setRecUI(true);
+  updateRecProgress(0);
+}
+function cancelRecording() {
+  if (!rec) return;
+  rec.cancelled = true;
+  stopPlayback();
+  try { if (rec.mr.state !== 'inactive') rec.mr.stop(); } catch (e) { /* ignore */ }
+}
+function updateRecProgress(t) {
+  const D = sched.T.D;
+  $('#recTc').textContent = `REC ${fmtT(t)}`;
+  const bar = $('#recBar'); if (bar) bar.style.width = (clamp(t / D) * 100).toFixed(1) + '%';
+  const txt = $('#recTxt'); if (txt) txt.textContent = `녹화 중 ${t.toFixed(1)} / ${D.toFixed(1)}초 · 화면을 끄거나 다른 앱으로 넘어가지 마세요.`;
+}
+function setRecUI(on) {
+  const b = $('#recBtn');
+  b.innerHTML = on ? `${ICON_STOP} 녹화 멈추기` : `${ICON_REC} 영상 만들기`;
+  b.classList.toggle('primary', !on); b.classList.toggle('recording', on);
+  $('#ctrlSet').disabled = on;
+  $('#playBtn').disabled = on; $('#fsBtn').disabled = on; $('#scrub').disabled = on;
+  $$('#phases button').forEach(x => x.disabled = on);
+  $('#recBadge').hidden = !on;
+  $('#bigPlay').hidden = on || !!P;
+  if (on) {
+    const st = $('#status'); st.classList.remove('warn');
+    st.innerHTML = '<span id="recTxt"></span><div class="prog"><i id="recBar"></i></div>';
+  }
+}
+function showResult(blob, type, leftWarn) {
+  if (out && out.url) URL.revokeObjectURL(out.url);
+  const ext = /mp4/.test(type) ? 'mp4' : 'webm';
+  const base = ((S.title.trim() || '히어로') + '_인트로').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_').slice(0, 60);
+  const name = `${base}.${ext}`;
+  const url = URL.createObjectURL(blob);
+  out = { blob, url, name, ext };
+  const v = $('#outVideo'); v.src = url;
+  $('#outName').textContent = name;
+  $('#outMeta').textContent = `${ext.toUpperCase()} · ${(blob.size / 1048576).toFixed(1)}MB · ${S.dur}초 · ${cv.width}×${cv.height}`;
+  $('#fmtNote').textContent = ext === 'mp4'
+    ? 'MP4 파일이라 파워포인트, 카카오톡, 유튜브에 바로 쓸 수 있어요.'
+    : '이 브라우저는 WebM 형식으로 저장해요. 크롬과 유튜브에서는 바로 재생되지만, 파워포인트에 넣으려면 MP4로 바꿔야 할 수 있어요.';
+  $('#result').hidden = false;
+  setStatus(leftWarn ? '녹화 중에 화면을 벗어나서 영상이 끊겼을 수 있어요. 확인해 보고 이상하면 다시 만들어 주세요.' : '영상이 완성됐어요. 아래에서 확인하고 저장하세요.', leftWarn);
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('#result').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+/* ---------- saving ---------- */
+const dlReady = (async () => {
+  try { if (window.claude && typeof window.claude.use === 'function') return await window.claude.use('downloads'); } catch (e) { /* ignore */ }
+  return null;
+})();
+function linkDownload() {
+  const a = document.createElement('a'); a.href = out.url; a.download = out.name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function saveVideo() {
+  if (!out) return;
+  const btn = $('#saveBtn'); btn.disabled = true;
+  try {
+    const dl = await dlReady;
+    if (!dl) { linkDownload(); setStatus('저장을 시작했어요. 다운로드 폴더를 확인하세요.'); return; }
+    try {
+      await dl.save({ filename: out.name, data: out.blob });
+      setStatus('영상을 저장했어요.');
+    } catch (e) {
+      const c = e && e.code;
+      if (c === 'declined') setStatus('저장을 취소했어요.');
+      else if (c === 'rate_limited') setStatus('저장 창이 이미 열려 있어요. 잠시 뒤에 다시 눌러 주세요.', true);
+      else if (c === 'too_large') setStatus('파일이 너무 커서 저장하지 못했어요. 길이를 줄여 다시 만들어 주세요.', true);
+      else setStatus('여기서는 저장이 안 돼요. 위 영상에서 오른쪽 버튼을 누르고 "동영상을 다른 이름으로 저장"을 골라 주세요.', true);
+    }
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- UI ---------- */
+function setStatus(msg, warn) {
+  const st = $('#status');
+  if (rec) return;
+  st.classList.toggle('warn', !!warn);
+  st.textContent = msg || '';
+}
+function setPlayingUI(on) {
+  $('#playBtn').innerHTML = on ? `${ICON_STOP} 멈추기` : `${ICON_PLAY} 미리보기`;
+  $('#bigPlay').hidden = on || !!rec;
+}
+function updateTC(t) {
+  const D = sched.T.D;
+  $('#tc').textContent = `${fmtT(t)} / ${fmtT(D)}`;
+  $('#scrub').value = Math.round(clamp(t / D) * 1000);
+}
+function updatePhase(t) {
+  const T = sched.T;
+  const p = t < T.bStart ? 0 : t < T.cStart ? 1 : 2;
+  if (p === curPhase) return;
+  curPhase = p;
+  $$('#phases button').forEach((b, i) => b.classList.toggle('on', i === p));
+}
+function updatePhaseStrip() {
+  const T = sched.T;
+  const w = [T.bStart, T.bLen, T.hold], st = [0, T.bStart, T.cStart];
+  $$('#phases button').forEach((b, i) => {
+    b.style.flexGrow = w[i].toFixed(3);
+    b.dataset.t = st[i];
+    b.querySelector('span').textContent = `${st[i].toFixed(1)}초`;
+  });
+  curPhase = -1;
+}
+function pressGroup(sel, val, attr) {
+  $$(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val))));
+}
+function buildControls() {
+  const fc = $('#fontChips');
+  FONTS.forEach(f => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+    b.dataset.font = f.id; b.textContent = f.label; b.style.fontFamily = `"${f.id}",var(--f-display)`;
+    b.addEventListener('click', () => { S.font = f.id; savePrefs(); pressGroup('#fontChips .chip', S.font, 'font'); refreshTitle(); });
+    fc.appendChild(b);
+  });
+  const sw = $('#swatches');
+  COLORS.forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'sw';
+    b.dataset.color = c.c; b.style.background = c.c; b.setAttribute('aria-label', c.n); b.title = c.n;
+    b.addEventListener('click', () => setColor(c.c));
+    sw.appendChild(b);
+  });
+  const cl = document.createElement('label'); cl.className = 'sw custom'; cl.title = '직접 고르기';
+  cl.innerHTML = '<span class="sr">상자 색 직접 고르기</span><input type="color" id="customColor">';
+  sw.appendChild(cl);
+  $('#customColor').addEventListener('input', e => setColor(e.target.value));
+  const ds = $('#durSeg');
+  DURS.forEach(d => {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.dur = d; b.textContent = `${d}초`;
+    b.addEventListener('click', () => {
+      if (S.dur === d) return;
+      stopIfPreviewing(); S.dur = d; savePrefs(); pressGroup('#durSeg button', d, 'dur');
+      buildSchedule(); updatePhaseStrip();
+      if (S.music && S.musicAuto) autoAlign();
+      renderMusic(); viewT = posterT(); seekT = null; requestRender();
+    });
+    ds.appendChild(b);
+  });
+  const rs = $('#ratioSeg');
+  RATIOS.forEach(r => {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.ratio = r.id; b.textContent = r.label;
+    b.addEventListener('click', () => {
+      if (S.ratio === r.id) return;
+      stopIfPreviewing(); S.ratio = r.id; savePrefs(); pressGroup('#ratioSeg button', r.id, 'ratio');
+      setSize(); computeLayout(); requestRender();
+    });
+    rs.appendChild(b);
+  });
+}
+function setColor(c) {
+  S.color = c.toUpperCase(); savePrefs();
+  const preset = COLORS.some(x => x.c.toUpperCase() === S.color);
+  $$('#swatches .sw').forEach(b => {
+    if (b.classList.contains('custom')) b.setAttribute('aria-pressed', String(!preset));
+    else b.setAttribute('aria-pressed', String(b.dataset.color.toUpperCase() === S.color));
+  });
+  const cc = $('#customColor'); if (cc && cc.value.toUpperCase() !== S.color) cc.value = S.color.toLowerCase();
+  requestRender();
+}
+async function ensureFonts() {
+  const txt = S.title + S.sub + 'HERO';
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load(`400 100px "${S.font}"`, txt),
+        document.fonts.load(`700 40px "IBM Plex Sans KR"`, S.sub || 'A')
+      ]),
+      new Promise(r => setTimeout(r, 3500))
+    ]);
+  } catch (e) { /* fall back to system font */ }
+}
+let fontTimer = 0;
+function refreshTitle() {
+  computeLayout(); requestRender();
+  clearTimeout(fontTimer);
+  fontTimer = setTimeout(() => ensureFonts().then(() => { computeLayout(); requestRender(); }), 120);
+}
+
+function wire() {
+  $('#playBtn').addEventListener('click', () => togglePlay(false));
+  $('#bigPlay').addEventListener('click', () => togglePlay(true));
+  $('#fsBtn').addEventListener('click', async () => {
+    if (rec) return;
+    const ac = getCtx(); try { ac && ac.resume(); } catch (e) { /* ignore */ }
+    const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+    if (!req) { setStatus('이 화면에서는 전체 화면을 쓸 수 없어요. 미리보기로 재생해 주세요.', true); return; }
+    try { const r = req.call(stage); if (r && r.then) await r; }
+    catch (e) { setStatus('이 화면에서는 전체 화면을 쓸 수 없어요. 미리보기로 재생해 주세요.', true); return; }
+    seekT = null; startPlayback(0, false);
+  });
+  $('#recBtn').addEventListener('click', () => { if (rec) cancelRecording(); else startRecording(); });
+  $('#saveBtn').addEventListener('click', saveVideo);
+  $('#scrub').addEventListener('input', e => {
+    if (P) stopPlayback();
+    const t = (+e.target.value / 1000) * sched.T.D;
+    seekT = t; viewT = t; render(t); updateTC(t); updatePhase(t);
+  });
+  $$('#phases button').forEach(b => b.addEventListener('click', () => {
+    if (rec) return;
+    if (P) stopPlayback();
+    const t = +b.dataset.t || 0; seekT = t; viewT = t; render(t); updateTC(t); updatePhase(t);
+  }));
+
+  $('#photoInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+  $('#musicInput').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) loadMusic(f); e.target.value = ''; });
+  for (const id of ['#photoPanel', '#musicPanel']) {
+    const el = $(id), dz = id === '#photoPanel' ? $('#drop') : el;
+    el.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+    el.addEventListener('dragleave', e => { if (!el.contains(e.relatedTarget)) dz.classList.remove('over'); });
+    el.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if (!rec) addFiles(e.dataTransfer && e.dataTransfer.files); });
+  }
+  $('#shuffleBtn').addEventListener('click', () => {
+    stopIfPreviewing();
+    const a = S.photos;
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    S.seed = (Math.random() * 1e6) | 0;
+    buildSchedule(); renderThumbs(); requestRender();
+    setStatus('사진 순서를 섞었어요.');
+  });
+  $('#clearBtn').addEventListener('click', () => {
+    stopIfPreviewing(); useSamples(); buildSchedule(); renderThumbs(); requestRender();
+    setStatus('넣은 사진을 모두 뺐어요. 예시 이미지로 돌아왔어요.');
+  });
+  $('#musicRemove').addEventListener('click', () => {
+    stopIfPreviewing(); S.music = null; S.musicStart = 0; renderMusic();
+    setStatus('음악을 뺐어요. 기본 배경음으로 만들어요.');
+  });
+  $('#musicStart').addEventListener('input', e => {
+    stopIfPreviewing();
+    S.musicStart = +e.target.value; S.musicAuto = false;
+    $('#musicStartVal').textContent = fmtMin(S.musicStart);
+    $('#alignNote').hidden = true;
+  });
+  $('#autoAlignBtn').addEventListener('click', () => {
+    stopIfPreviewing(); autoAlign(); renderMusic();
+    setStatus(`곡의 ${fmtMin(S.musicStart + sched.T.cStart)} 지점이 제목 등장 순간에 오도록 맞췄어요.`);
+  });
+  $('#sfxCheck').addEventListener('change', e => { S.sfx = e.target.checked; savePrefs(); });
+  $('#titleIn').addEventListener('input', e => { S.title = e.target.value; savePrefs(); refreshTitle(); });
+  $('#subIn').addEventListener('input', e => { S.sub = e.target.value; savePrefs(); refreshTitle(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && rec) rec.left = true; });
+}
+
+async function init() {
+  loadPrefs();
+  const inClaude = !!(window.claude && typeof window.claude.use === 'function');
+  const touch = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  $('#appTip').hidden = !(inClaude && touch);
+  buildControls();
+  wire();
+  setSize();
+  makeGrain();
+  drawLoading();
+  $('#titleIn').value = S.title;
+  $('#subIn').value = S.sub;
+  $('#sfxCheck').checked = S.sfx;
+  pressGroup('#fontChips .chip', S.font, 'font');
+  pressGroup('#durSeg button', S.dur, 'dur');
+  pressGroup('#ratioSeg button', S.ratio, 'ratio');
+  setPlayingUI(false); setRecUI(false);
+  setColor(S.color);
+  renderMusic();
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load('400 100px "Black Han Sans"', WORDS.join('') + S.title + S.sub + 'HERO'),
+        document.fonts.load(`400 100px "${S.font}"`, S.title + S.sub + 'HERO'),
+        document.fonts.load('700 30px "IBM Plex Sans KR"', '예시 이미지 0123456789' + S.sub)
+      ]),
+      new Promise(r => setTimeout(r, 4000))
+    ]);
+  } catch (e) { /* system fonts */ }
+  useSamples();
+  buildSchedule();
+  computeLayout();
+  updatePhaseStrip();
+  renderThumbs();
+  viewT = posterT();
+  render(viewT); updateTC(viewT); updatePhase(viewT);
+  setStatus('예시 이미지로 만든 미리보기예요. 사진과 음악을 넣고 제목을 바꿔 보세요.');
+}
+init();
+})();
+</script>
+
+</body>
+</html>
