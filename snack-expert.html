@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>간식 전문가 카드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Jua&display=swap">
+<style>
+/* 레이아웃: 편의점 진열대 — 분야(매대)마다 색 띠, 제품은 가격표 모양 카드 */
+:root{
+  --bg:#EDF0F4;
+  --surface:#FFFFFF;
+  --ink:#1A1E26;
+  --muted:#596273;
+  --line:#D6DCE5;
+  --snack:#D9651A;
+  --ramen:#CF3528;
+  --drink:#1B7CBC;
+  --ice:#C93C83;
+  --white:#FFFFFF;
+  --ok:#1E8A55;
+  --scrim:rgba(10,12,16,.55);
+  --font-display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#111419;--surface:#1B1F27;--ink:#ECEFF4;--muted:#A0A9B7;--line:#2E3440;--ok:#2F9E66;--scrim:rgba(0,0,0,.7);color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#111419;--surface:#1B1F27;--ink:#ECEFF4;--muted:#A0A9B7;--line:#2E3440;--ok:#2F9E66;--scrim:rgba(0,0,0,.7);color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;margin:0;line-height:1.2;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0}
+.ctext{color:color-mix(in srgb,var(--c) 78%,var(--ink))}
+
+/* 처음 화면 */
+.hero{display:flex;flex-direction:column;gap:6px}
+.hero h1{font-size:clamp(36px,6vw,54px)}
+.hero p{margin:0;color:var(--muted);max-width:60ch}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;list-style:none;margin:0;padding:0}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:start}
+.step .num{grid-row:span 2;width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--font-display);font-size:20px}
+.step b{font-family:var(--font-display);font-weight:400;font-size:21px}
+.step span{color:var(--muted);font-size:14px;line-height:1.5}
+.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.group-tile{position:relative;border:0;border-radius:18px;background:var(--c);color:var(--white);text-align:left;padding:22px 22px 32px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 -10px 0 rgba(0,0,0,.2);transition:transform .15s}
+.group-tile:hover{transform:translateY(-3px)}
+.group-tile .emojis{font-size:32px;letter-spacing:4px;line-height:1.2}
+.group-tile .gname{font-family:var(--font-display);font-size:36px;line-height:1.15}
+.group-tile .gsub{font-size:14px;opacity:.95}
+.group-tile .go{position:absolute;right:18px;top:18px;font-family:var(--font-display);font-size:16px;background:rgba(255,255,255,.22);padding:4px 12px;border-radius:999px}
+.teacher-link{align-self:flex-start;background:transparent;border:1px dashed var(--muted);border-radius:10px;padding:10px 14px;color:var(--muted);font-size:14px;font-weight:500}
+
+/* 전문가 화면 */
+.band{background:var(--c);color:var(--white);border-radius:20px;padding:18px 22px 28px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 -10px 0 rgba(0,0,0,.2)}
+.band-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.back{background:rgba(255,255,255,.22);border:0;border-radius:999px;padding:6px 14px;color:var(--white);font-size:14px;font-weight:700}
+.band .emojis{font-size:28px;letter-spacing:3px}
+.band h2{font-size:clamp(34px,5.5vw,48px)}
+.band p{margin:0;max-width:62ch;font-size:16px}
+.mission{background:var(--surface);border:2px dashed color-mix(in srgb,var(--c) 55%,var(--line));border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.mission h3{font-size:22px}
+.mission ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:2px;font-size:17px}
+.mission .note{font-size:14px;color:var(--muted);margin:0}
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;overflow-x:auto}
+.tab{flex:1 0 auto;border:0;background:transparent;border-radius:10px;padding:10px 14px;font-family:var(--font-display);font-size:19px;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--c);color:var(--white)}
+
+.facts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.facts li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px 14px 46px;position:relative;font-size:18px;line-height:1.55}
+.facts li::before{content:"";position:absolute;left:18px;top:23px;width:12px;height:12px;border-radius:3px;transform:rotate(45deg);background:var(--c)}
+
+.tags{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.tag{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.tag-top{background:var(--c);color:var(--white);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tag-top .cho{font-family:var(--font-display);font-size:30px;letter-spacing:.1em;line-height:1.1}
+.tag-top .em{font-size:30px;line-height:1}
+.tag-body{padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tag-body h3{font-size:27px}
+.meta{font-size:14px;color:var(--muted);font-weight:500}
+.tag-body ul{margin:0;padding-left:18px;font-size:15.5px;line-height:1.55;display:flex;flex-direction:column;gap:3px}
+.tag-foot{border-top:1px dashed var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:14px;line-height:1.45}
+.tag-foot div{min-width:0}
+.tag-foot b{display:block;font-size:12px;letter-spacing:.06em}
+.barcode{margin-left:auto;width:42px;height:22px;flex:none;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 5px,transparent 5px 8px);opacity:.3}
+
+.practice{max-width:600px;width:100%;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;text-align:center}
+.p-top{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted);font-weight:700}
+.p-cho{background:var(--c);color:var(--white);border-radius:16px;padding:30px 12px;font-family:var(--font-display);font-size:clamp(52px,12vw,88px);letter-spacing:.12em;line-height:1}
+.p-hint{font-size:19px;margin:0}
+.p-hint small{display:block;font-size:13px;color:var(--muted);letter-spacing:.06em;font-weight:700}
+.p-answer{font-family:var(--font-display);font-size:42px;line-height:1.2;animation:pop .3s ease-out}
+.p-answer + .meta{margin-top:-10px}
+@keyframes pop{from{transform:scale(.85);opacity:.3}to{transform:scale(1);opacity:1}}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 22px;font-family:var(--font-display);font-size:21px;background:var(--c);color:var(--white)}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.btn.ok{background:var(--ok)}
+.p-result{font-family:var(--font-display);font-size:34px;margin:0}
+
+.howto{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0;counter-reset:h}
+.howto li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:16px;line-height:1.5;counter-increment:h}
+.howto li::before{content:counter(h);display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--c);color:var(--white);font-family:var(--font-display);margin-right:8px;font-size:16px;vertical-align:1px}
+.check-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.check-head h3{font-size:24px}
+.check-head .count{font-family:var(--font-display);font-size:22px;margin-left:auto}
+.progress{height:12px;background:var(--line);border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--c);transition:width .3s}
+.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.check{display:flex;align-items:center;gap:12px;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;min-width:0}
+.check input{width:24px;height:24px;accent-color:var(--c);flex:none}
+.check .em{font-size:26px;line-height:1}
+.check .nm{font-family:var(--font-display);font-size:21px;line-height:1.2}
+.check .ch{display:block;font-size:13px;color:var(--muted);letter-spacing:.08em;font-family:var(--font-body)}
+.check.done{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface))}
+.reset{align-self:flex-start;background:transparent;border:0;color:var(--muted);font-size:14px;text-decoration:underline;padding:4px 0}
+.panel{display:flex;flex-direction:column;gap:14px}
+
+.modal{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50;overflow:auto}
+.sheet{background:var(--surface);border-radius:20px;max-width:900px;width:100%;padding:22px;display:flex;flex-direction:column;gap:16px}
+.sheet-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.sheet-head h2{font-size:30px}
+.sheet p{margin:0;color:var(--muted);font-size:14px}
+.qrs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.qr{border-radius:14px;border:2px solid var(--c);padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;min-width:0}
+.qr h3{font-size:22px}
+.qbox{background:#FFFFFF;padding:8px;border-radius:8px;width:100%;max-width:176px}
+.qbox img,.qbox canvas{width:100%!important;height:auto!important;display:block}
+.qr .url{font-size:11px;word-break:break-all;color:var(--muted);line-height:1.4}
+.copy{border:1px solid var(--line);background:transparent;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700}
+
+@media (max-width:760px){.qrs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.steps,.groups,.howto,.checklist{grid-template-columns:1fr}.tab{font-size:17px;padding:9px 12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<div class="modal" id="teacher" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="t-title">
+    <div class="sheet-head">
+      <div>
+        <p class="eyebrow">선생님용</p>
+        <h2 id="t-title">전문가 조직 QR 코드</h2>
+      </div>
+      <button class="btn ghost" id="t-close" type="button">닫기</button>
+    </div>
+    <p>QR을 찍으면 그 분야 전문가 카드가 바로 열림. 전자칠판에 띄우거나 모둠 책상에 붙여서 사용함.</p>
+    <div class="qrs" id="qrs"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const PAGES_URL = 'https://wga4848-min.github.io/6class-music/snack-expert.html';
+
+const GROUPS = [
+  { id:'snack', name:'과자', color:'var(--snack)', emojis:'🍪🦐🥔🐋',
+    intro:'오래 사랑받은 과자 8가지를 맡음. 회사, 나온 해, 모양과 맛을 익혀서 모둠 친구들에게 알려 줌.',
+    facts:[
+      '과자는 만드는 방법에 따라 스낵, 비스킷, 파이, 초콜릿 등으로 나눔',
+      '우리나라 최초의 스낵은 1971년에 나온 새우깡임',
+      '과자 이름에는 모양(꼬깔콘·고래밥), 재료(새우깡·포카칩), 맛(허니버터칩)이 담긴 경우가 많음',
+      '포카칩 같은 생감자칩은 감자를 얇게 썰어 튀겨 만들고, 여름에는 햇감자로 만들기도 함'
+    ],
+    items:[
+      {n:'새우깡', e:'🦐', m:'농심', y:'1971년', f:['우리나라 최초의 스낵 과자임','진짜 새우를 넣어 짭짤한 새우 맛이 남'], h:'1971년에 나온 우리나라 최초의 스낵임'},
+      {n:'초코파이', e:'🍫', m:'오리온', y:'1974년', f:['부드러운 빵 사이에 마시멜로를 넣고 초콜릿을 입힘','상자에 \'정(情)\'이라는 글자가 쓰여 있음'], h:'\'정(情)\'으로 유명한 초콜릿 파이임'},
+      {n:'꼬북칩', e:'🐢', m:'오리온', y:'2017년', f:['얇은 칩 네 겹이 겹쳐 있어 아주 바삭함','모양이 거북이 등껍질을 닮음'], h:'네 겹으로 겹친 거북이 등 모양 칩임'},
+      {n:'허니버터칩', e:'🍯', m:'해태제과', y:'2014년', f:['꿀과 버터로 달콤짭짤한 맛을 낸 감자칩임','처음 나왔을 때 가게에서 구하기 힘들 만큼 인기였음'], h:'꿀과 버터 맛이 나는 달콤한 감자칩임'},
+      {n:'빼빼로', e:'🥢', m:'롯데', y:'1983년', f:['가느다란 막대 과자에 초콜릿을 입힘','11월 11일에 많이 주고받는 과자로 알려짐'], h:'11월 11일에 많이 주고받는 막대 과자임'},
+      {n:'꼬깔콘', e:'🌽', m:'롯데', y:'1983년', f:['옥수수로 만든 고깔(원뿔) 모양 과자임','손가락에 끼워 먹는 사람도 많음'], h:'손가락에 끼울 수 있는 원뿔 모양 옥수수 과자임'},
+      {n:'포카칩', e:'🥔', m:'오리온', y:'1988년', f:['생감자를 얇게 썰어 튀긴 감자칩임','여름에는 햇감자로 만든 제품이 나옴'], h:'생감자를 얇게 썰어 튀긴 오리온의 감자칩임'},
+      {n:'고래밥', e:'🐋', m:'오리온', y:'', f:['고래를 비롯한 바다 동물 모양 과자가 들어 있음','볶음양념맛이 대표 맛임'], h:'상자 속에 바다 동물들이 가득한 과자임'}
+    ]},
+  { id:'ramen', name:'라면', color:'var(--ramen)', emojis:'🍜🌶️🦝🔥',
+    intro:'우리나라 대표 라면 8가지를 맡음. 국물 라면, 볶음면, 비빔면의 차이까지 설명할 수 있어야 함.',
+    facts:[
+      '인스턴트 라면은 1958년 일본에서 처음 만들어짐',
+      '우리나라 첫 라면은 1963년에 나온 삼양라면임',
+      '면을 기름에 튀겨 말리기 때문에 오래 보관하고 빨리 끓일 수 있음',
+      '국물 라면, 볶음면(짜파게티·불닭볶음면), 비빔면처럼 먹는 방법이 다양함',
+      '우리나라는 세계에서 라면을 가장 많이 먹는 나라 중 하나임'
+    ],
+    items:[
+      {n:'삼양라면', e:'🍜', m:'삼양식품', y:'1963년', f:['우리나라에서 처음 만든 인스턴트 라면임','회사 이름이 그대로 라면 이름이 됨'], h:'1963년에 나온 우리나라 최초의 라면임'},
+      {n:'신라면', e:'🌶️', m:'농심', y:'1986년', f:['이름의 \'신\'은 맵다는 뜻의 한자 \'辛\'임','빨간 봉지에 한자가 크게 쓰여 있음'], h:'매울 신(辛) 자가 크게 쓰인 빨간 봉지 라면임'},
+      {n:'짜파게티', e:'🍝', m:'농심', y:'1984년', f:['까만 짜장 소스에 비벼 먹는 라면임','이름은 \'짜장면\'과 \'스파게티\'를 합쳐 만듦'], h:'짜장면과 스파게티를 합친 이름의 짜장 라면임'},
+      {n:'너구리', e:'🦝', m:'농심', y:'1982년', f:['면발이 굵고 통통함','봉지 안에 다시마 한 조각이 들어 있음'], h:'굵은 면과 다시마가 들어 있는 동물 이름 라면임'},
+      {n:'진라면', e:'🍲', m:'오뚜기', y:'1988년', f:['순한맛과 매운맛 두 가지가 있음','오뚜기를 대표하는 라면임'], h:'순한맛과 매운맛이 있는 오뚜기의 대표 라면임'},
+      {n:'불닭볶음면', e:'🔥', m:'삼양식품', y:'2012년', f:['아주 매운 소스에 비벼 먹는 볶음면임','외국에서도 매운맛 도전 음식으로 인기가 많음'], h:'매운맛 도전으로 세계에 알려진 볶음면임'},
+      {n:'안성탕면', e:'🥣', m:'농심', y:'1983년', f:['경기도의 지역 이름 \'안성\'이 들어감','구수한 된장 맛 국물이 특징임'], h:'경기도 지역 이름이 들어간 구수한 국물 라면임'},
+      {n:'팔도비빔면', e:'🧊', m:'팔도', y:'1984년', f:['국물 없이 새콤달콤한 양념에 비벼 먹음','삶은 면을 찬물에 헹궈 차갑게 먹음'], h:'찬물에 헹궈 새콤달콤하게 비벼 먹는 라면임'}
+    ]},
+  { id:'drink', name:'음료', color:'var(--drink)', emojis:'🥤🍌⭐💧',
+    intro:'종류가 서로 다른 음료 8가지를 맡음. 탄산음료, 이온음료, 우유, 쌀 음료를 구분해서 설명함.',
+    facts:[
+      '탄산음료는 이산화탄소를 녹여 톡 쏘는 맛을 냄 (칠성사이다·밀키스·데미소다)',
+      '이온음료는 땀으로 빠져나간 물과 몸에 필요한 성분을 빨리 채워 줌 (포카리스웨트)',
+      '우유·쌀·엿기름·과일로 만든 음료도 있음 (바나나맛우유·아침햇살·식혜·갈아만든배)',
+      '단맛을 내는 당이 많이 들어 있어 물 대신 마시지 않는 것이 좋음'
+    ],
+    items:[
+      {n:'칠성사이다', e:'⭐', m:'롯데칠성음료', y:'1950년', f:['맑고 투명하며 톡 쏘는 탄산음료임','이름의 \'칠성\'은 별 일곱 개를 뜻함'], h:'1950년에 나온 맑고 투명한 탄산음료임'},
+      {n:'바나나맛우유', e:'🍌', m:'빙그레', y:'1974년', f:['노란 단지(항아리) 모양 통에 담겨 있음','바나나 맛을 더한 달콤한 우유임'], h:'노란 단지 모양 통에 담긴 과일 맛 우유임'},
+      {n:'밀키스', e:'🥛', m:'롯데칠성음료', y:'1989년', f:['우유 성분이 들어간 부드러운 탄산음료임','하얀색이라 \'우유 탄산\'으로 불림'], h:'우유가 들어간 하얀 탄산음료임'},
+      {n:'포카리스웨트', e:'💧', m:'동아오츠카', y:'1987년', f:['우리나라에 처음 나온 이온음료임','땀으로 빠져나간 물과 몸에 필요한 성분을 채워 줌'], h:'운동 뒤 땀을 흘렸을 때 많이 마시는 이온음료임'},
+      {n:'데미소다', e:'🍏', m:'동아오츠카', y:'', f:['과즙이 들어간 과일 탄산음료임','사과·복숭아·레몬·청포도 맛이 있음'], h:'사과·복숭아·청포도 맛이 있는 과일 탄산음료임'},
+      {n:'아침햇살', e:'🌅', m:'웅진식품', y:'1999년', f:['우리 쌀로 만든 하얀 쌀 음료임','이름처럼 아침에 든든하게 마시기 좋음'], h:'우리 쌀로 만든 하얀 곡물 음료임'},
+      {n:'비락식혜', e:'🍚', m:'팔도', y:'', f:['엿기름과 쌀로 만드는 전통 음료 식혜를 캔에 담음','음료 속에 밥알이 들어 있음'], h:'밥알이 동동 떠 있는 전통 음료를 캔에 담음'},
+      {n:'갈아만든배', e:'🍐', m:'해태htb', y:'', f:['배를 갈아 넣어 과육이 씹히는 음료임','시원하고 달콤한 배 맛이 남'], h:'과일을 갈아 넣어 씹히는 맛이 있는 과즙 음료임'}
+    ]},
+  { id:'icecream', name:'아이스크림', color:'var(--ice)', emojis:'🍦🍈🍉🦈',
+    intro:'막대, 샌드, 떠먹는 통, 짜 먹는 파우치까지 아이스크림 8가지를 맡음. 모양을 잘 설명하는 것이 핵심임.',
+    facts:[
+      '모양에 따라 막대(바), 콘, 샌드, 떠먹는 통, 짜 먹는 파우치로 나눔',
+      '투게더(1974년)와 비비빅(1975년)은 50년 넘게 팔리고 있음',
+      '죠스바·스크류바·수박바는 \'죠크박 3형제\'로 불리고, 셋을 섞은 \'죠크박바\'가 나오기도 함',
+      '메로나는 외국 여러 나라에 수출되는 인기 아이스크림임'
+    ],
+    items:[
+      {n:'메로나', e:'🍈', m:'빙그레', y:'1992년', f:['멜론 맛이 나는 연두색 막대 아이스크림임','외국 여러 나라에 수출될 만큼 인기가 많음'], h:'멜론 맛이 나는 연두색 막대 아이스크림임'},
+      {n:'붕어싸만코', e:'🐟', m:'빙그레', y:'1991년', f:['붕어빵 모양 과자 속에 아이스크림과 팥이 들어 있음','샌드 아이스크림을 대표하는 제품임'], h:'붕어빵 모양 과자 속에 아이스크림이 든 제품임'},
+      {n:'비비빅', e:'🍡', m:'빙그레', y:'1975년', f:['팥이 알알이 박힌 막대 아이스크림임','50년 넘게 팔리고 있는 장수 아이스크림임'], h:'팥이 알알이 박힌 구수한 막대 아이스크림임'},
+      {n:'투게더', e:'🍨', m:'빙그레', y:'1974년', f:['큰 통에 담아 숟가락으로 떠먹는 바닐라 아이스크림임','이름처럼 가족이 함께 먹기 좋음'], h:'가족이 함께 떠먹는 큰 통 바닐라 아이스크림임'},
+      {n:'설레임', e:'🧃', m:'롯데', y:'2003년', f:['주머니(파우치)에 담겨 짜 먹는 아이스크림임','손에 묻지 않아 들고 다니며 먹기 편함'], h:'주머니에 담아 짜 먹는 아이스크림임'},
+      {n:'수박바', e:'🍉', m:'롯데', y:'1986년', f:['빨간색과 초록색으로 수박 모양을 본뜸','초코 수박씨가 박혀 있음'], h:'빨강·초록으로 과일 모양을 본뜬 막대 아이스크림임'},
+      {n:'죠스바', e:'🦈', m:'롯데', y:'1980년대', f:['무서운 상어가 나오는 영화 제목에서 이름을 따옴','겉은 짙은 회색, 속은 빨간색이고 먹으면 혀가 물듦'], h:'바다의 무서운 동물 이름이 붙은 막대 아이스크림임'},
+      {n:'스크류바', e:'🌀', m:'롯데', y:'1980년대', f:['꽈배기처럼 비비 꼬인 모양임','\'스크류\'는 나사처럼 꼬였다는 뜻임'], h:'꽈배기처럼 비비 꼬인 막대 아이스크림임'}
+    ]}
+];
+
+const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function chosung(s){
+  return Array.from(s).map(ch => {
+    const c = ch.charCodeAt(0);
+    return (c >= 0xAC00 && c <= 0xD7A3) ? CHO[Math.floor((c - 0xAC00) / 588)] : ch;
+  }).join('');
+}
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function load(k){ try{ return JSON.parse(localStorage.getItem(k) || 'null'); }catch(e){ return null; } }
+function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function meta(it){ return it.y ? `${it.m} · ${it.y} 출시` : it.m; }
+
+const app = document.getElementById('app');
+let state = { group:null, tab:'facts', p:null };
+
+function renderHome(){
+  state.group = null;
+  app.style.removeProperty('--c');
+  app.innerHTML = `
+    <header class="hero">
+      <p class="eyebrow">6학년 1반 · 전문가 활동</p>
+      <h1>간식 전문가 카드</h1>
+      <p>내가 맡은 분야를 눌러 전문가 카드를 열어 보세요. 같은 분야 친구들과 공부한 뒤, 모둠으로 돌아가 설명하고 함께 초성퀴즈에 도전해요.</p>
+    </header>
+    <ol class="steps">
+      <li class="step"><span class="num">1</span><b>전문가 모임</b><span>같은 분야 친구들과 카드를 읽고 초성 연습을 함</span></li>
+      <li class="step"><span class="num">2</span><b>모둠에 설명</b><span>내 모둠으로 돌아가 제품 8개를 모두 설명함</span></li>
+      <li class="step"><span class="num">3</span><b>초성퀴즈</b><span>모둠마다 8문제씩, 네 분야가 고루 나옴</span></li>
+    </ol>
+    <div class="groups">
+      ${GROUPS.map(g => `
+        <button class="group-tile" type="button" data-go="${g.id}" style="--c:${g.color}">
+          <span class="go">열기</span>
+          <span class="emojis" aria-hidden="true">${g.emojis}</span>
+          <span class="gname">${g.name} 전문가</span>
+          <span class="gsub">${g.items.slice(0,3).map(i=>i.n).join(' · ')} 외 ${g.items.length-3}개</span>
+        </button>`).join('')}
+    </div>
+    <button class="teacher-link" type="button" id="open-teacher">선생님용 · 분야별 QR 코드 보기</button>
+  `;
+  app.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => openGroup(b.dataset.go, true)));
+  document.getElementById('open-teacher').addEventListener('click', openTeacher);
+}
+
+function openGroup(id, push){
+  const g = GROUPS.find(x => x.id === id);
+  if(!g){ renderHome(); return; }
+  state.group = g; state.tab = 'facts'; state.p = null;
+  if(push){ try{ history.replaceState(null,'','#'+id); }catch(e){} }
+  renderGroup();
+  window.scrollTo({top:0});
+}
+
+function renderGroup(){
+  const g = state.group;
+  app.style.setProperty('--c', g.color);
+  const tabs = [['facts','배경지식'],['cards','제품 카드'],['practice','초성 연습'],['check','설명 체크']];
+  app.innerHTML = `
+    <section class="band">
+      <div class="band-row">
+        <button class="back" type="button" id="back">← 처음으로</button>
+        <span class="emojis" aria-hidden="true">${g.emojis}</span>
+      </div>
+      <h2>${g.name} 전문가</h2>
+      <p>${g.intro}</p>
+    </section>
+    <section class="mission">
+      <h3 class="ctext">전문가 미션</h3>
+      <ol>
+        <li>배경지식과 제품 8개의 특징을 익힘</li>
+        <li>초성만 보고 제품 이름을 말하는 연습을 함</li>
+        <li>모둠으로 돌아가 8개 제품을 모두 설명함</li>
+      </ol>
+      <p class="note">초성퀴즈에는 우리 분야 제품 8개가 모두 나옴 (모둠마다 2개씩). 내가 설명한 만큼 우리 모둠이 맞힐 수 있음!</p>
+    </section>
+    <div class="tabs" role="tablist">
+      ${tabs.map(([k,l]) => `<button class="tab" role="tab" type="button" data-tab="${k}" aria-selected="${state.tab===k}">${l}</button>`).join('')}
+    </div>
+    <div id="panel" class="panel"></div>
+  `;
+  document.getElementById('back').addEventListener('click', () => { try{ history.replaceState(null,'',location.pathname + location.search); }catch(e){} renderHome(); window.scrollTo({top:0}); });
+  app.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
+    state.tab = b.dataset.tab;
+    app.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === state.tab));
+    renderPanel();
+  }));
+  renderPanel();
+}
+
+function renderPanel(){
+  const g = state.group, el = document.getElementById('panel');
+  if(state.tab === 'facts'){
+    el.innerHTML = `<ul class="facts">${g.facts.map(f => `<li>${f}</li>`).join('')}</ul>`;
+  } else if(state.tab === 'cards'){
+    el.innerHTML = `<div class="tags">${g.items.map(it => `
+      <article class="tag">
+        <div class="tag-top"><span class="cho">${chosung(it.n)}</span><span class="em" aria-hidden="true">${it.e}</span></div>
+        <div class="tag-body">
+          <h3>${it.n}</h3>
+          <span class="meta">${meta(it)}</span>
+          <ul>${it.f.map(x => `<li>${x}</li>`).join('')}</ul>
+        </div>
+        <div class="tag-foot"><div><b class="ctext">퀴즈 힌트</b>${it.h}</div><span class="barcode" aria-hidden="true"></span></div>
+      </article>`).join('')}</div>`;
+  } else if(state.tab === 'practice'){
+    if(!state.p) startPractice(g.items);
+    renderPractice();
+  } else {
+    renderCheck();
+  }
+}
+
+function startPractice(list){ state.p = { order: shuffle(list), i:0, score:0, wrong:[], shown:false }; }
+
+function renderPractice(){
+  const el = document.getElementById('panel'), p = state.p;
+  if(p.i >= p.order.length){
+    el.innerHTML = `<div class="practice">
+      <p class="p-result">${p.order.length}문제 중 ${p.score}개 맞힘</p>
+      <p class="p-hint">${p.wrong.length ? '헷갈린 제품: ' + p.wrong.map(w => w.n).join(', ') : '모두 맞힘! 이제 모둠 친구들에게 설명할 준비가 됨'}</p>
+      <div class="btns">
+        ${p.wrong.length ? '<button class="btn" type="button" id="retry-wrong">틀린 것만 다시</button>' : ''}
+        <button class="btn ghost" type="button" id="retry-all">처음부터 섞어서</button>
+      </div></div>`;
+    const rw = document.getElementById('retry-wrong');
+    if(rw) rw.addEventListener('click', () => { startPractice(p.wrong); renderPractice(); });
+    document.getElementById('retry-all').addEventListener('click', () => { startPractice(state.group.items); renderPractice(); });
+    return;
+  }
+  const it = p.order[p.i];
+  el.innerHTML = `<div class="practice">
+    <div class="p-top"><span>${p.i+1} / ${p.order.length}</span><span>맞힌 개수 ${p.score}</span></div>
+    <div class="p-cho" aria-label="초성">${chosung(it.n)}</div>
+    <p class="p-hint"><small>힌트</small>${it.h}</p>
+    ${p.shown ? `
+      <div class="p-answer ctext">${it.e} ${it.n}</div>
+      <span class="meta">${meta(it)}</span>
+      <div class="btns">
+        <button class="btn ok" type="button" id="got">맞혔어요</button>
+        <button class="btn ghost" type="button" id="miss">틀렸어요</button>
+      </div>` : `
+      <div class="btns"><button class="btn" type="button" id="show">정답 보기</button></div>`}
+  </div>`;
+  if(p.shown){
+    document.getElementById('got').addEventListener('click', () => { p.score++; next(); });
+    document.getElementById('miss').addEventListener('click', () => { p.wrong.push(it); next(); });
+  } else {
+    document.getElementById('show').addEventListener('click', () => { p.shown = true; renderPractice(); });
+  }
+  function next(){ p.i++; p.shown = false; renderPractice(); }
+}
+
+function renderCheck(){
+  const g = state.group, key = 'snack-expert-check-' + g.id;
+  const done = load(key) || {};
+  const count = g.items.filter(it => done[it.n]).length;
+  const el = document.getElementById('panel');
+  el.innerHTML = `
+    <ol class="howto">
+      <li>제품의 <b>초성</b>을 먼저 보여 주거나 말해 줌</li>
+      <li><b>회사·나온 해·모양·맛</b> 같은 특징을 설명함</li>
+      <li>친구들이 이름을 맞히면 아래에 <b>체크</b>함</li>
+    </ol>
+    <div class="check-head"><h3>모둠에 설명한 제품</h3><span class="count ctext">${count} / ${g.items.length}</span></div>
+    <div class="progress" aria-hidden="true"><i style="width:${count / g.items.length * 100}%"></i></div>
+    <div class="checklist">
+      ${g.items.map((it,i) => `
+        <label class="check ${done[it.n] ? 'done' : ''}" for="ck-${g.id}-${i}">
+          <input type="checkbox" id="ck-${g.id}-${i}" data-n="${it.n}" ${done[it.n] ? 'checked' : ''}>
+          <span class="em" aria-hidden="true">${it.e}</span>
+          <span class="nm">${it.n}<span class="ch">${chosung(it.n)}</span></span>
+        </label>`).join('')}
+    </div>
+    <button class="reset" type="button" id="reset">체크 모두 지우기</button>
+  `;
+  el.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+    done[cb.dataset.n] = cb.checked; save(key, done); renderCheck();
+  }));
+  document.getElementById('reset').addEventListener('click', () => { save(key, {}); renderCheck(); });
+}
+
+function baseUrl(){
+  return /github\.io$/.test(location.hostname) ? location.origin + location.pathname : PAGES_URL;
+}
+function openTeacher(){
+  const m = document.getElementById('teacher'), box = document.getElementById('qrs');
+  box.innerHTML = GROUPS.map(g => `
+    <div class="qr" style="--c:${g.color}">
+      <h3 class="ctext">${g.name} 전문가</h3>
+      <div class="qbox" id="qr-${g.id}"></div>
+      <span class="url" id="url-${g.id}">${baseUrl()}#${g.id}</span>
+      <button class="copy" type="button" data-copy="${g.id}">주소 복사</button>
+    </div>`).join('');
+  GROUPS.forEach(g => {
+    const target = document.getElementById('qr-' + g.id);
+    if(window.QRCode){
+      new QRCode(target, { text: baseUrl() + '#' + g.id, width: 320, height: 320, colorDark:'#000000', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
+    } else {
+      target.textContent = 'QR 생성 실패';
+    }
+  });
+  box.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+    const span = document.getElementById('url-' + b.dataset.copy), text = span.textContent;
+    const done = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '주소 복사', 1500); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(span); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '선택됨 · 복사하세요'; };
+    try{ navigator.clipboard.writeText(text).then(done, fallback); }catch(e){ fallback(); }
+  }));
+  m.hidden = false;
+  document.getElementById('t-close').focus();
+}
+document.getElementById('t-close').addEventListener('click', () => { document.getElementById('teacher').hidden = true; });
+document.getElementById('teacher').addEventListener('click', e => { if(e.target.id === 'teacher') e.target.hidden = true; });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') document.getElementById('teacher').hidden = true; });
+
+function route(){
+  const id = (location.hash || '').slice(1);
+  if(GROUPS.some(g => g.id === id)) openGroup(id, false); else renderHome();
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+
+</body>
+</html>
