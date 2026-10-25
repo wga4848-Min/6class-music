@@ -154,7 +154,8 @@ const firebaseConfig = {
 };
 const ROOM        = "room-6-1";      // 기존 신청곡 앱과 같은 방
 const SURVEY_ID   = "survey-1027";   // 설문 묶음 이름 (다른 설문을 하려면 바꾸기)
-const CLASS_SIZE  = 16;              // 학생 수
+const STUDENT_NOS = [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17]; // 우리 반 번호 (13번 전학)
+const CLASS_SIZE  = STUDENT_NOS.length; // 학생 수
 const TEACHER_PW  = "4876";          // 교사 페이지 비밀번호
 /* ────────────────────────────────────────────────────── */
 
@@ -209,7 +210,7 @@ function demoApi(){
   const rnd = (w) => { let r = Math.random() * w.reduce((a,b)=>a+b,0); for (let i=0;i<w.length;i++){ if ((r -= w[i]) < 0) return i; } return w.length-1; };
   const W = [[2,5,6,3],[3,5,5,3],[2,4,6,4],[3,6,4,3],[1,3,6,6],[3,5,5,3]];
   const sample = ["기후변화는 정말 우리나라에도 영향을 줘요?", "난민은 왜 생기는지 궁금해요", "", "아마존 숲이 계속 줄어들면 어떻게 돼요?", ""];
-  [1,2,3,5,6,8,9,11,12,14,15].forEach((no,i) => data.set(String(no), { no, a: W.map(rnd), c: sample[i % sample.length], at: Date.now() - i*60000 }));
+  [1,2,3,5,6,8,9,11,12,14,17].forEach((no,i) => data.set(String(no), { no, a: W.map(rnd), c: sample[i % sample.length], at: Date.now() - i*60000 }));
   const emit = () => subs.forEach(f => f([...data.values()]));
   return {
     async save(no, rec){ await new Promise(r => setTimeout(r, 300)); data.set(String(no), { ...rec, at: Date.now() }); emit(); },
@@ -257,7 +258,7 @@ const GLOBE = `<svg class="globe" viewBox="0 0 52 52" aria-hidden="true"><circle
 const header = (sub) => `<div class="top">${GLOBE}<div><h1 class="display">지구촌 문제, 내 생각은?${DEMO ? '<span class="demo-badge">데모 · 저장 안 됨</span>' : ""}</h1><div class="sub">${sub}</div></div></div>`;
 
 function renderStart(){
-  const nums = Array.from({length:CLASS_SIZE}, (_,i) => i+1)
+  const nums = STUDENT_NOS
     .map(n => `<button class="num ${S.no===n?"sel":""}" data-no="${n}" aria-pressed="${S.no===n}">${n}</button>`).join("");
   $("#app").innerHTML = `
     ${header("사회 3단원 수업 전 설문 · 6학년 1반")}
@@ -460,7 +461,7 @@ function drawTeacher(){
     </div>`;
   }).join("");
 
-  const chips = Array.from({length:CLASS_SIZE}, (_,i) => i+1).map(k => `<div class="chip ${answered.has(k)?"on":""}">${k}</div>`).join("");
+  const chips = STUDENT_NOS.map(k => `<div class="chip ${answered.has(k)?"on":""}">${k}</div>`).join("");
   $("#app").innerHTML = `
     <div class="tbar">
       <h1 class="display">실태 분석 설문 결과${DEMO ? '<span class="demo-badge">데모</span>' : ""}</h1>
