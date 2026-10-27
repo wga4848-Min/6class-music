@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘 수업 자기평가</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#1A2233; --muted:#5A6476; --line:#DCE1E8;
+  --main:#2463A8; --deep:#173F6B; --tint:#E3ECF7; --ok:#1E8A55; --warn:#B4441C;
+  /* 응답 척도 (diverging: 동의 파랑 → 중립 회색 → 비동의 빨강) */
+  --s0:#184F95; --s1:#5598E7; --s2:#D6D4CE; --s3:#E34948;
+  --r:20px;
+  --font-display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 48px}
+.display{font-family:var(--font-display);font-weight:400;letter-spacing:-.01em}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.globe{width:52px;height:52px;flex:none}
+.top h1{font-size:30px;margin:0;line-height:1.15}
+.top .sub{color:var(--muted);font-size:16px;margin-top:2px}
+.demo-badge{display:inline-block;background:#FFF1C2;color:#6B4E00;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;margin-left:6px;vertical-align:middle}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.lead{font-size:20px;line-height:1.6;margin:0 0 6px}
+.hint{color:var(--muted);font-size:17px;line-height:1.6;margin:0}
+
+/* ---------- number picker ---------- */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.num{height:78px;border-radius:18px;border:2px solid var(--line);background:var(--surface);font-family:var(--font-display);font-size:32px;transition:transform .08s, border-color .15s, background .15s}
+.num:active{transform:scale(.97)}
+.num.sel{border-color:var(--main);background:var(--tint);color:var(--deep)}
+.cta{display:block;width:100%;margin-top:18px;height:70px;border:0;border-radius:18px;background:var(--main);color:#fff;font-family:var(--font-display);font-size:28px}
+.cta:disabled{background:#B7C3D3;cursor:default}
+.teacher-link{display:block;margin:26px auto 0;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;text-underline-offset:3px;padding:10px}
+
+/* ---------- question ---------- */
+.progress{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar{flex:1;height:12px;background:#E1E6EE;border-radius:999px;overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--main);border-radius:999px;transition:width .3s}
+.step{font-family:var(--font-display);font-size:22px;color:var(--muted);min-width:64px;text-align:right}
+.who{font-size:16px;color:var(--muted)}
+.qcard{padding:28px 24px}
+.qno{font-family:var(--font-display);color:var(--main);font-size:24px}
+.qtext{font-size:29px;line-height:1.5;font-weight:700;margin:8px 0 0;word-break:keep-all}
+.opts{display:grid;gap:12px;margin-top:20px}
+.opt{display:flex;align-items:center;gap:16px;width:100%;min-height:80px;padding:12px 20px;border-radius:18px;border:2px solid var(--line);background:var(--surface);text-align:left;font-size:25px;font-weight:700;transition:border-color .15s, background .15s, transform .08s}
+.opt:active{transform:scale(.985)}
+.opt .emo{font-size:36px;line-height:1;width:44px;text-align:center}
+.opt .dot{width:16px;height:16px;border-radius:50%;margin-left:auto;flex:none;border:2px solid var(--line)}
+.opt.sel{border-color:var(--main);background:var(--tint)}
+.opt.sel .dot{background:var(--main);border-color:var(--main)}
+.nav{display:flex;gap:12px;margin-top:18px}
+.ghost{height:62px;padding:0 24px;border-radius:16px;border:2px solid var(--line);background:var(--surface);font-family:var(--font-display);font-size:23px}
+.nav .cta{margin-top:0;flex:1;height:62px;font-size:25px}
+textarea{width:100%;min-height:150px;margin-top:18px;padding:16px;border-radius:16px;border:2px solid var(--line);font:inherit;font-size:22px;line-height:1.5;resize:vertical}
+textarea:focus{outline:none;border-color:var(--main)}
+
+/* ---------- done ---------- */
+.done{text-align:center;padding:40px 24px}
+.done .big{font-size:76px;line-height:1}
+.done h2{font-size:34px;margin:16px 0 8px}
+
+/* ---------- teacher ---------- */
+.tbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
+.tbar h1{font-size:28px;margin:0;flex:1;min-width:220px}
+.btn{height:46px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px}
+.btn.primary{background:var(--main);border-color:var(--main);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.stat .k{color:var(--muted);font-size:14px}
+.stat .v{font-family:var(--font-display);font-size:34px;line-height:1.2}
+.stat .v small{font-size:18px;color:var(--muted)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ok);font-weight:700}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(30,138,85,.18)}
+.live.off{color:var(--warn)} .live.off::before{background:var(--warn);box-shadow:0 0 0 3px rgba(180,68,28,.18)}
+.chips{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px}
+.chip{height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;background:#EEF1F5;color:#8A93A3}
+.chip.on{background:var(--tint);color:var(--deep);box-shadow:inset 0 0 0 2px var(--main)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);margin:4px 0 12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.qres{margin-top:12px}
+.qres .head{display:flex;align-items:flex-start;gap:10px}
+.tag{flex:none;font-size:13px;font-weight:700;padding:3px 9px;border-radius:999px;background:#EEF1F5;color:var(--muted)}
+.tag.low{background:#FDE7E3;color:var(--warn)}
+.qres h3{font-size:17px;line-height:1.5;margin:0;font-weight:700;flex:1}
+.stack{display:flex;gap:2px;height:30px;margin:14px 0 10px;border-radius:6px;overflow:hidden;background:#F1F3F6}
+.seg{height:100%;min-width:0;position:relative;transition:width .4s}
+.seg:first-child{border-radius:4px 0 0 4px}.seg:last-child{border-radius:0 4px 4px 0}
+.rows{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.row{border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.row .l{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.row .p{font-size:20px;font-weight:700}
+.row .n{font-size:13px;color:var(--muted)}
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.pos{font-size:15px}.pos b{font-size:20px}
+.foot .btn{margin-left:auto;height:40px}
+.cmts{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.cmts li{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.5}
+.cmts li b{color:var(--main);margin-right:8px}
+.danger{margin-top:26px;border:1px dashed #E3B4A6;border-radius:16px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.danger p{margin:0;flex:1;min-width:200px;color:var(--muted);font-size:14px}
+.btn.del{color:var(--warn);border-color:#E3B4A6}
+.btn.del.arm{background:var(--warn);color:#fff;border-color:var(--warn)}
+.empty{color:var(--muted);font-size:15px;padding:6px 0}
+.err{background:#FFF4F0;border:1px solid #F0C4B6;color:#7A2E14;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.6;margin-bottom:14px}
+.err code{background:#fff;border:1px solid #F0C4B6;border-radius:6px;padding:1px 6px;font-size:13px}
+.err pre{background:#fff;border:1px solid #F0C4B6;border-radius:8px;padding:10px;font-size:13px;overflow:auto;margin:8px 0 0}
+#tip{position:fixed;pointer-events:none;background:#1A2233;color:#fff;font-size:14px;padding:6px 10px;border-radius:8px;opacity:0;transition:opacity .1s;z-index:30;white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1A2233;color:#fff;padding:12px 20px;border-radius:12px;font-size:16px;opacity:0;transition:.25s;z-index:40;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal{position:fixed;inset:0;background:rgba(10,14,22,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal .card{width:100%;max-width:380px}
+.modal input{width:100%;height:58px;border-radius:14px;border:2px solid var(--line);font-size:26px;text-align:center;letter-spacing:.3em;margin-top:14px}
+.modal input:focus{outline:none;border-color:var(--main)}
+.modal .row2{display:flex;gap:10px;margin-top:12px}
+.modal .row2 button{flex:1;height:52px;border-radius:14px;font-weight:700;font-size:18px}
+@media (max-width:560px){
+  .qtext{font-size:24px} .opt{font-size:21px;min-height:68px} .opt .emo{font-size:30px}
+  .num{height:64px;font-size:26px} .rows{grid-template-columns:repeat(2,1fr)} .chips{grid-template-columns:repeat(4,1fr)}
+  .top h1{font-size:25px}
+}
+@media print{ .btn,.danger,.teacher-link{display:none!important} body{background:#fff} .card{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="hint">불러오는 중…</p></div>
+<div id="tip"></div>
+<div id="toast"></div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════
+   설정 — 필요하면 여기만 바꾸면 됩니다
+   ══════════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyAK8-ZwVkqI083bsbt9f562YndB--bpa_4",
+  authDomain: "class-6-1.firebaseapp.com",
+  projectId: "class-6-1",
+  storageBucket: "class-6-1.firebasestorage.app",
+  messagingSenderId: "938931431076",
+  appId: "1:938931431076:web:d0c35fdc6beac22ffde831"
+};
+const ROOM        = "room-6-1";      // 기존 신청곡 앱과 같은 방
+const SURVEY_ID   = "selfcheck-1027";   // 설문 묶음 이름 (다른 설문을 하려면 바꾸기)
+const STUDENT_NOS = [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17]; // 우리 반 번호 (13번 전학)
+const CLASS_SIZE  = STUDENT_NOS.length; // 학생 수
+const TEACHER_PW  = "4876";          // 교사 페이지 비밀번호
+/* ────────────────────────────────────────────────────── */
+
+const QUESTIONS = [
+  { dom:"과정 · 기능",
+    kid:"내가 맡은 주제의 문제와 원인을 원래 모둠 친구들에게 책임감 있게 설명했다.",
+    plan:"① 맡은 주제를 책임감 있게 설명했다." },
+  { dom:"가치 · 태도",
+    kid:"친구의 의견을 끝까지 듣고 존중하며 토의에 참여했다.",
+    plan:"② 친구의 의견을 존중하며 토의했다." },
+  { dom:"지식 · 이해",
+    kid:"지구촌 문제가 서로 연결되어 있어 여러 나라가 함께 해결해야 하는 까닭을 말할 수 있다.",
+    plan:"③ 지구촌 문제가 서로 연결되어 있음을 말할 수 있다." },
+];
+const SCALE = [
+  { k:"잘했어요",   e:"😆", c:"var(--s0)" },
+  { k:"보통이에요", e:"🙂", c:"var(--s1)" },
+  { k:"더 노력할래요", e:"💪", c:"var(--s3)" },
+];
+const COMMENT_Q = "오늘 ○○을/를 알게 되었고, ○○을/를 실천하고 싶다. (소감을 한 문장으로 써 보세요)";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = (n, t) => t ? (Math.round(n / t * 1000) / 10).toString() : "0";
+const ss = {
+  get(k){ try { return sessionStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { sessionStorage.setItem(k, v); } catch {} },
+};
+const DEMO = new URLSearchParams(location.search).has("demo");
+
+let toastT;
+function toast(msg, ms = 2200){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+/* ══════════════ 저장소 (Firebase / 데모) ══════════════ */
+let api = null, apiError = null;
+
+function demoApi(){
+  const data = new Map(); const subs = new Set();
+  const rnd = (w) => { let r = Math.random() * w.reduce((a,b)=>a+b,0); for (let i=0;i<w.length;i++){ if ((r -= w[i]) < 0) return i; } return w.length-1; };
+  const W = [[6,4,1],[5,5,1],[4,5,2]];
+  const sample = ["오늘 지구촌 문제가 서로 연결되어 있다는 것을 알게 되었고, 에너지 아끼기를 실천하고 싶다.", "오늘 난민이 왜 생기는지 알게 되었고, 음식을 남기지 않기를 실천하고 싶다.", "", "오늘 꿀벌이 사라지는 까닭을 알게 되었고, 가족에게 알려 주고 싶다.", ""];
+  [1,2,3,5,6,8,9,11,12,14,17].forEach((no,i) => data.set(String(no), { no, a: W.map(rnd), c: sample[i % sample.length], at: Date.now() - i*60000 }));
+  const emit = () => subs.forEach(f => f([...data.values()]));
+  return {
+    async save(no, rec){ await new Promise(r => setTimeout(r, 300)); data.set(String(no), { ...rec, at: Date.now() }); emit(); },
+    subscribe(cb){ subs.add(cb); setTimeout(() => cb([...data.values()]), 50); return () => subs.delete(cb); },
+    async clear(){ data.clear(); emit(); },
+  };
+}
+
+async function firebaseApi(){
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  const app = appMod.initializeApp(firebaseConfig);
+  const db = fs.getFirestore(app);
+  const col = fs.collection(db, ROOM, SURVEY_ID, "responses");
+  return {
+    async save(no, rec){
+      const w = fs.setDoc(fs.doc(col, String(no)), { ...rec, at: fs.serverTimestamp() });
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error("timeout"), { code:"timeout" })), 12000));
+      await Promise.race([w, timeout]);
+    },
+    subscribe(cb, onErr){
+      return fs.onSnapshot(col, snap => cb(snap.docs.map(d => {
+        const x = d.data(); return { ...x, at: x.at?.toMillis ? x.at.toMillis() : (x.at || 0) };
+      })), onErr);
+    },
+    async clear(){
+      const snap = await fs.getDocs(col);
+      const b = fs.writeBatch(db); snap.forEach(d => b.delete(d.ref)); await b.commit();
+    },
+  };
+}
+
+function errText(e){
+  const code = e?.code || "";
+  if (code.includes("permission-denied")) return "perm";
+  if (code === "timeout" || code.includes("unavailable")) return "net";
+  return "etc";
+}
+
+/* ══════════════ 학생 화면 ══════════════ */
+const S = { no:null, step:0, a:Array(QUESTIONS.length).fill(null), c:"", sending:false };
+function resetStudent(){ S.no=null; S.step=0; S.a=Array(QUESTIONS.length).fill(null); S.c=""; S.sending=false; }
+
+const GLOBE = `<svg class="globe" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="#2463A8"/><path d="M14 15c5 1 6 5 10 5s4 5 1 7-1 6-4 7-6 5-8 3-1-6-3-8-4-4-2-7 3-8 6-7zM33 10c3 2 7 2 9 6s-1 6-4 6-4 3-2 6 5 3 6 7-3 8-7 8-4-4-3-8-4-5-3-9 0-7 4-7z" fill="#7FC29B"/><circle cx="26" cy="26" r="24" fill="none" stroke="#173F6B" stroke-width="2"/></svg>`;
+const header = (sub) => `<div class="top">${GLOBE}<div><h1 class="display">오늘 수업, 나는 어땠나요?${DEMO ? '<span class="demo-badge">데모 · 저장 안 됨</span>' : ""}</h1><div class="sub">${sub}</div></div></div>`;
+
+function renderStart(){
+  const nums = STUDENT_NOS
+    .map(n => `<button class="num ${S.no===n?"sel":""}" data-no="${n}" aria-pressed="${S.no===n}">${n}</button>`).join("");
+  $("#app").innerHTML = `
+    ${header("사회 지구촌 문제 · 자기평가 · 6학년 1반")}
+    ${!api && !DEMO ? '<div class="err"><b>저장 서버에 연결하지 못했어요.</b> 인터넷 연결을 확인하고 새로고침해 주세요. 계속 안 되면 선생님께 알려 주세요.</div>' : ""}
+    <div class="card">
+      <p class="lead"><b>정답이 없는 자기평가임.</b> 오늘 내 모습과 가장 가까운 것을 솔직하게 고르면 됨.</p>
+      <p class="hint">체크 3개 + 소감 1문장 · 약 2분 · 다시 제출하면 새 답으로 바뀜</p>
+      <div class="nums">${nums}</div>
+      <button class="cta" id="go" ${S.no ? "" : "disabled"}>${S.no ? `${S.no}번, 시작하기` : "내 번호를 눌러요"}</button>
+    </div>
+    <button class="teacher-link" id="tlink">교사 페이지</button>`;
+  $("#app").querySelectorAll(".num").forEach(b => b.onclick = () => { S.no = +b.dataset.no; renderStart(); });
+  $("#go").onclick = () => { if (S.no){ S.step = 0; renderQuestion(); } };
+  $("#tlink").onclick = () => { location.hash = "teacher"; };
+}
+
+function progress(){
+  const total = QUESTIONS.length + 1;
+  return `<div class="progress"><div class="bar"><i style="width:${(S.step+1)/total*100}%"></i></div><div class="step">${S.step+1} / ${total}</div></div>`;
+}
+
+function renderQuestion(){
+  const i = S.step, q = QUESTIONS[i];
+  const opts = SCALE.map((s,k) => `<button class="opt ${S.a[i]===k?"sel":""}" data-k="${k}" aria-pressed="${S.a[i]===k}"><span class="emo">${s.e}</span>${s.k}<span class="dot"></span></button>`).join("");
+  $("#app").innerHTML = `
+    ${progress()}
+    <div class="card qcard">
+      <div class="who">${S.no}번</div>
+      <div class="qno display">질문 ${i+1}</div>
+      <p class="qtext">${esc(q.kid)}</p>
+      <div class="opts">${opts}</div>
+    </div>
+    <div class="nav">
+      <button class="ghost" id="back">← 이전</button>
+      <button class="cta" id="next" ${S.a[i]===null ? "disabled" : ""}>다음 →</button>
+    </div>`;
+  $("#app").querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    S.a[i] = +b.dataset.k;
+    $("#app").querySelectorAll(".opt").forEach(x => { const on = x === b; x.classList.toggle("sel", on); x.setAttribute("aria-pressed", on); });
+    $("#next").disabled = false;
+    clearTimeout(renderQuestion.t);
+    renderQuestion.t = setTimeout(() => { if (S.step === i) goNext(); }, 380);
+  });
+  $("#back").onclick = () => { clearTimeout(renderQuestion.t); if (S.step === 0) renderStart(); else { S.step--; renderQuestion(); } };
+  $("#next").onclick = () => { clearTimeout(renderQuestion.t); goNext(); };
+  window.scrollTo(0, 0);
+}
+function goNext(){
+  if (S.a[S.step] === null) return;
+  S.step++;
+  if (S.step < QUESTIONS.length) renderQuestion(); else renderComment();
+}
+
+function renderComment(){
+  S.step = QUESTIONS.length;
+  $("#app").innerHTML = `
+    ${progress()}
+    <div class="card qcard">
+      <div class="who">${S.no}번</div>
+      <div class="qno display">마지막 · 소감</div>
+      <p class="qtext">${esc(COMMENT_Q)}</p>
+      <textarea id="cmt" maxlength="200" placeholder="예) 오늘 지구촌 문제가 서로 연결되어 있다는 것을 알게 되었고, 에너지 아끼기를 실천하고 싶다.">${esc(S.c)}</textarea>
+      <p class="hint" style="margin-top:8px">시간이 없으면 비워 두고 제출해도 됨 · 패들렛이나 사회 공책에 써도 됨</p>
+    </div>
+    <div class="nav">
+      <button class="ghost" id="back">← 이전</button>
+      <button class="cta" id="send">제출하기</button>
+    </div>`;
+  const ta = $("#cmt");
+  ta.oninput = () => { S.c = ta.value; };
+  $("#back").onclick = () => { S.c = ta.value; S.step = QUESTIONS.length - 1; renderQuestion(); };
+  $("#send").onclick = submit;
+}
+
+async function submit(){
+  if (S.sending) return;
+  if (S.a.some(v => v === null)){ toast("답하지 않은 질문이 있어요"); S.step = S.a.findIndex(v => v === null); renderQuestion(); return; }
+  if (!api){ toast("지금은 저장할 수 없어요. 선생님께 알려 주세요.", 3500); return; }
+  S.sending = true;
+  const btn = $("#send"); btn.disabled = true; btn.textContent = "보내는 중…";
+  try {
+    await api.save(S.no, { no:S.no, a:S.a.slice(), c:S.c.trim().slice(0,200), v:1 });
+    renderDone();
+  } catch (e){
+    console.error(e);
+    const k = errText(e);
+    toast(k === "perm" ? "저장 권한이 없어요. 선생님께 알려 주세요." : k === "net" ? "인터넷 연결을 확인하고 다시 눌러 주세요." : "저장하지 못했어요. 다시 눌러 주세요.", 3500);
+    btn.disabled = false; btn.textContent = "다시 제출하기"; S.sending = false;
+  }
+}
+
+function renderDone(){
+  const no = S.no;
+  $("#app").innerHTML = `
+    <div class="card done">
+      <div class="big">🌏</div>
+      <h2 class="display">${no}번, 제출 완료!</h2>
+      <p class="hint">솔직하게 답해 줘서 고마워요. 내일 사회 시간에 만나요.</p>
+      <button class="cta" id="again" style="max-width:360px;margin:26px auto 0">다음 친구 차례 (처음으로)</button>
+    </div>`;
+  $("#again").onclick = () => { resetStudent(); renderStart(); };
+}
+
+/* ══════════════ 교사 화면 ══════════════ */
+let unsub = null, rows = [], live = false, delArm = 0;
+
+function askPassword(){
+  const m = document.createElement("div");
+  m.className = "modal";
+  m.innerHTML = `<div class="card"><h2 class="display" style="margin:0;font-size:26px">교사 페이지</h2>
+    <p class="hint" style="margin-top:6px">비밀번호를 입력하세요</p>
+    <input id="pw" type="password" inputmode="numeric" autocomplete="off" aria-label="비밀번호">
+    <div class="row2"><button id="pwc" style="border:1px solid var(--line);background:#fff">취소</button><button id="pwo" style="border:0;background:var(--main);color:#fff">들어가기</button></div></div>`;
+  document.body.appendChild(m);
+  const inp = m.querySelector("#pw"); setTimeout(() => inp.focus(), 50);
+  const ok = () => {
+    if (inp.value === TEACHER_PW){ ss.set("gs_teacher", "1"); m.remove(); renderTeacher(); }
+    else { inp.value = ""; inp.style.borderColor = "var(--s3)"; toast("비밀번호가 달라요"); }
+  };
+  m.querySelector("#pwo").onclick = ok;
+  inp.onkeydown = e => { if (e.key === "Enter") ok(); };
+  m.querySelector("#pwc").onclick = () => { m.remove(); location.hash = ""; };
+}
+
+function summarize(list){
+  const counts = QUESTIONS.map(() => [0,0,0,0]);
+  list.forEach(r => (r.a || []).forEach((v, i) => { if (counts[i] && v >= 0 && v <= 3) counts[i][v]++; }));
+  return counts.map(c => {
+    const t = c.reduce((a,b)=>a+b,0);
+    return { c, t, p: c.map(n => pct(n,t)), pos: pct(c[0]+c[1], t) };
+  });
+}
+
+function planText(sum, i){
+  const s = sum[i];
+  return SCALE.map((x,k) => `${x.k} ${s.p[k]}%`).join("\n") + `\n(긍정 응답 ${s.pos}%)`;
+}
+function allText(sum, n){
+  return `[수업을 위한 실태 분석] 응답 ${n}명 / ${CLASS_SIZE}명\n\n` +
+    QUESTIONS.map((q,i) => `${q.plan}\n${planText(sum,i)}`).join("\n\n");
+}
+
+async function copy(text){
+  try { await navigator.clipboard.writeText(text); toast("복사했어요 — 세안 표에 붙여 넣으면 돼요"); return; } catch {}
+  const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast("복사했어요"); } catch { toast("복사하지 못했어요. 직접 선택해 복사해 주세요."); }
+  ta.remove();
+}
+
+function downloadCSV(list){
+  const head = ["번호", ...QUESTIONS.map((_,i) => `문항${i+1}`), "소감", "제출 시각"];
+  const lines = [head, ...list.slice().sort((a,b) => a.no - b.no).map(r => [
+    r.no, ...QUESTIONS.map((_,i) => SCALE[r.a?.[i]]?.k ?? ""), r.c || "",
+    r.at ? new Date(r.at).toLocaleString("ko-KR") : ""
+  ])].map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type:"text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "자기평가_결과.csv";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+function errBox(){
+  if (!apiError) return "";
+  const k = apiError;
+  if (k === "perm") return `<div class="err"><b>Firebase 저장 권한이 없어요.</b> Firebase 콘솔 → Firestore Database → 규칙에서 아래처럼 <code>${ROOM}</code> 경로를 열어 주세요. (신청곡 앱과 같은 방을 씁니다)
+    <pre>match /${ROOM}/{document=**} {\n  allow read, write: if true;\n}</pre></div>`;
+  if (k === "load") return `<div class="err"><b>Firebase를 불러오지 못했어요.</b> 인터넷 연결을 확인하거나, 주소 끝에 <code>?demo</code>를 붙여 데모로 화면만 확인할 수 있어요.</div>`;
+  return `<div class="err"><b>연결에 문제가 있어요.</b> 잠시 후 새로고침해 주세요.</div>`;
+}
+
+function renderTeacher(){
+  if (ss.get("gs_teacher") !== "1"){ askPassword(); return; }
+  if (!unsub && api){
+    unsub = api.subscribe(list => { rows = list; live = true; apiError = null; drawTeacher(); },
+      e => { console.error(e); live = false; apiError = errText(e) === "perm" ? "perm" : "etc"; drawTeacher(); });
+  }
+  drawTeacher();
+}
+
+function drawTeacher(){
+  if (location.hash !== "#teacher") return;
+  const n = rows.length;
+  const sum = summarize(rows);
+  const answered = new Set(rows.map(r => +r.no));
+  const posVals = sum.map(s => s.t ? (s.c[0]+s.c[1]) / s.t : 1);
+  const lowIdx = n ? posVals.indexOf(Math.min(...posVals)) : -1;
+  const cm = rows.filter(r => (r.c || "").trim()).sort((a,b) => a.no - b.no);
+  const legend = `<div class="legend">${SCALE.map(s => `<span><i class="sw" style="background:${s.c}"></i>${s.k}</span>`).join("")}</div>`;
+
+  const qcards = QUESTIONS.map((q,i) => {
+    const s = sum[i];
+    const segs = s.t ? SCALE.map((x,k) => s.c[k] ? `<div class="seg" style="width:${s.c[k]/s.t*100}%;background:${x.c}" data-tip="${x.k} · ${s.c[k]}명 · ${s.p[k]}%"></div>` : "").join("") : "";
+    const cells = SCALE.map((x,k) => `<div class="row"><div class="l"><i class="sw" style="background:${x.c}"></i>${x.k}</div><div class="p">${s.p[k]}%</div><div class="n">${s.c[k]}명</div></div>`).join("");
+    return `<div class="card qres">
+      <div class="head"><span class="tag">${q.dom}</span>${i===lowIdx ? '<span class="tag low">긍정 응답 가장 낮음</span>' : ""}</div>
+      <h3 style="margin-top:8px">${esc(q.plan)}</h3>
+      <div class="stack" role="img" aria-label="${esc(SCALE.map((x,k)=>`${x.k} ${s.p[k]}%`).join(", "))}">${segs}</div>
+      <div class="rows">${cells}</div>
+      <div class="foot"><span class="pos">잘했어요+보통이에요 <b>${s.pos}%</b></span><button class="btn" data-copy="${i}">세안용 복사</button></div>
+    </div>`;
+  }).join("");
+
+  const chips = STUDENT_NOS.map(k => `<div class="chip ${answered.has(k)?"on":""}">${k}</div>`).join("");
+  $("#app").innerHTML = `
+    <div class="tbar">
+      <h1 class="display">자기평가 결과${DEMO ? '<span class="demo-badge">데모</span>' : ""}</h1>
+      <span class="live ${live ? "" : "off"}">${live ? "실시간 연결됨" : "연결 안 됨"}</span>
+      <button class="btn primary" id="cpAll">전체 결과 복사</button>
+      <button class="btn" id="csv">CSV 저장</button>
+      <button class="btn" id="out">학생 화면</button>
+    </div>
+    ${errBox()}
+    <div class="stats">
+      <div class="stat"><div class="k">응답 인원</div><div class="v">${n}<small> / ${CLASS_SIZE}명</small></div></div>
+      <div class="stat"><div class="k">응답률</div><div class="v">${pct(n, CLASS_SIZE)}<small>%</small></div></div>
+      <div class="stat"><div class="k">소감 작성</div><div class="v">${cm.length}<small>명</small></div></div>
+    </div>
+    <div class="card"><div class="k" style="font-weight:700">제출한 번호</div><div class="chips">${chips}</div></div>
+    <div style="margin-top:18px">${legend}${qcards}</div>
+    <div class="card" style="margin-top:12px"><h3 style="margin:0;font-size:18px">소감 (오늘 알게 된 것 · 실천하고 싶은 것)</h3>
+      ${cm.length ? `<ul class="cmts">${cm.map(r => `<li><b>${r.no}번</b>${esc(r.c)}</li>`).join("")}</ul>` : '<p class="empty">아직 없음</p>'}
+    </div>
+    <div class="danger"><p>새 평가를 시작하거나 연습 응답을 지울 때 사용 · 되돌릴 수 없음</p>
+      <button class="btn del ${delArm ? "arm" : ""}" id="del">${delArm ? "한 번 더 누르면 모두 삭제됨" : "전체 응답 삭제"}</button></div>`;
+
+  $("#cpAll").onclick = () => copy(allText(sum, n));
+  $("#csv").onclick = () => rows.length ? downloadCSV(rows) : toast("아직 응답이 없어요");
+  $("#out").onclick = () => { location.hash = ""; };
+  $("#app").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copy(`${QUESTIONS[+b.dataset.copy].plan}\n${planText(sum, +b.dataset.copy)}`));
+  $("#del").onclick = async () => {
+    if (!delArm){ delArm = 1; drawTeacher(); setTimeout(() => { if (delArm){ delArm = 0; drawTeacher(); } }, 4000); return; }
+    delArm = 0;
+    try { await api.clear(); toast("모든 응답을 지웠어요"); } catch (e){ console.error(e); toast("삭제하지 못했어요"); }
+    drawTeacher();
+  };
+  bindTips();
+}
+
+/* 막대 툴팁 (마우스·터치) */
+function bindTips(){
+  const tip = $("#tip");
+  $("#app").querySelectorAll(".seg").forEach(el => {
+    const show = (x, y) => { tip.textContent = el.dataset.tip; tip.style.left = Math.min(x + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (y - 38) + "px"; tip.style.opacity = 1; };
+    el.onpointermove = e => show(e.clientX, e.clientY);
+    el.onpointerdown = e => show(e.clientX, e.clientY);
+    el.onpointerleave = () => { tip.style.opacity = 0; };
+  });
+}
+
+/* ══════════════ 라우팅 ══════════════ */
+function route(){
+  if (location.hash === "#teacher"){ renderTeacher(); }
+  else { delArm = 0; if (S.step > 0 || S.no) { /* 진행 중이던 학생 화면 유지 */ if (S.step >= QUESTIONS.length) renderComment(); else if (S.no && S.step > 0) renderQuestion(); else renderStart(); } else renderStart(); }
+}
+addEventListener("hashchange", route);
+
+(async () => {
+  if (DEMO) api = demoApi();
+  else {
+    try { api = await firebaseApi(); }
+    catch (e){ console.error(e); apiError = "load"; }
+  }
+  route();
+  if (!api && location.hash !== "#teacher") toast("저장 서버에 연결하지 못했어요. 선생님께 알려 주세요.", 4000);
+})();
+</script>
+</body>
+</html>
