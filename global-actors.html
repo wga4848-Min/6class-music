@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#173F6B">
+<title>지구촌 문제 해결 조사단</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1d2433; --muted:#5b6475; --line:#e2e5eb; --bg:#f4f5f8; --card:#fff;
+  --navy:#173F6B; --ok:#1f8a4c; --ok-bg:#e6f5ec; --no:#c2410c; --no-bg:#fff1e6;
+  --tc:#173F6B; --tt:#DDE8F6; --ton:#fff;      /* 모둠 문제 색 */
+  --ac:#364FC7; --at:#E3E8FB;                  /* 주체 색 */
+  --r:18px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:19px;line-height:1.6;word-break:keep-all;overflow-wrap:break-word}
+@media (min-width:760px){body{font-size:20px}}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 40px}
+.wide{max-width:1500px}
+.display{font-family:"Jua",sans-serif;font-weight:400;letter-spacing:-.01em}
+.hidden{display:none!important}
+.btn{border:0;border-radius:14px;padding:10px 18px;min-height:54px;font-weight:800;background:var(--line);display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--navy);color:#fff}
+.btn.ghost{background:#fff;border:2px solid var(--line)}
+.btn.small{min-height:44px;font-size:16px;padding:6px 14px}
+.btn:disabled{opacity:.4;cursor:default}
+.cta{display:flex;width:100%;min-height:68px;font-size:24px;font-family:"Jua",sans-serif;font-weight:400;border-radius:18px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:0 1px 8px rgba(20,30,60,.08);padding:16px 18px;margin:0 0 14px}
+.muted{color:var(--muted)}
+.err{background:var(--no-bg);color:#7c2d12;border-radius:14px;padding:12px 16px;margin:12px 0;font-weight:600}
+.err pre{background:#fff;border-radius:8px;padding:8px;font-size:14px;white-space:pre-wrap}
+.demo-badge{display:inline-block;font-size:14px;background:#FFE58A;color:#5a4300;border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:middle;font-family:"Pretendard Variable",sans-serif;font-weight:800}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1A2233;color:#fff;padding:12px 20px;border-radius:12px;font-size:17px;opacity:0;transition:.25s;z-index:40;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;padding:22px 0 12px}
+.top svg{flex:none;width:54px;height:54px}
+.top h1{margin:0;font-size:clamp(28px,4.5vw,40px);line-height:1.15;color:var(--navy)}
+.top .sub{color:var(--muted);font-size:16px;font-weight:600}
+.sec-t{font-family:"Jua",sans-serif;font-size:24px;margin:4px 0 10px;color:var(--navy)}
+.sec-t small{font-family:"Pretendard Variable",sans-serif;font-size:15px;color:var(--muted);font-weight:600;margin-left:6px}
+
+/* start */
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.num{height:64px;border-radius:14px;border:2px solid var(--line);background:#fff;font-family:"Jua",sans-serif;font-size:28px}
+.num.sel{border-color:var(--navy);background:var(--navy);color:#fff}
+.groups{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:760px){.groups{grid-template-columns:repeat(4,1fr)}}
+.grp{border:3px solid var(--line);background:#fff;border-radius:16px;padding:10px 8px;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25}
+.grp b{font-family:"Jua",sans-serif;font-weight:400;font-size:26px}
+.grp span{font-size:15px;font-weight:800;border-radius:999px;padding:2px 10px;margin-top:4px}
+.grp.sel{border-color:var(--navy);box-shadow:0 0 0 3px var(--navy) inset}
+.actors{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:640px){.actors{grid-template-columns:1fr 1fr}}
+.act{border:3px solid var(--line);background:#fff;border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:12px;text-align:left;min-height:84px}
+.act .ic{flex:none;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff}
+.act .ic svg{width:32px;height:32px}
+.act b{display:block;font-size:22px;line-height:1.2}
+.act small{display:block;font-size:14px;color:var(--muted);font-weight:600;line-height:1.35}
+.act .taken{font-size:13px;font-weight:800;color:var(--no);margin-top:2px}
+.act.sel{box-shadow:0 0 0 3px var(--ac) inset;border-color:var(--ac)}
+
+/* student steps */
+.who{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:14px 0 6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap}
+.stepbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 14px}
+.stepbar div{border:2px solid var(--line);background:#fff;border-radius:12px;text-align:center;font-weight:800;font-size:15px;padding:6px 4px;color:var(--muted);line-height:1.25}
+.stepbar div.on{border-color:var(--ac);background:var(--ac);color:#fff}
+.stepbar div.done{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.case{border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:0 1px 8px rgba(20,30,60,.08);margin:0 0 14px}
+.case-h{background:var(--ac);color:#fff;padding:10px 16px;font-weight:800;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.case-h .tp{font-size:14px;border-radius:999px;padding:2px 10px;background:#fff;color:var(--ac)}
+.case-b{padding:14px 16px 16px}
+.case-t{margin:0 0 4px;font-size:1.3em;line-height:1.35;letter-spacing:-.02em}
+.place{font-size:15px;font-weight:800;color:var(--ac);margin-bottom:8px}
+.case-b p{margin:0 0 8px;font-size:1.04em}
+.src{font-size:13px;color:var(--muted);margin-top:4px}
+.others{display:grid;gap:8px;margin:0 0 14px}
+.oth{background:#fff;border:2px solid var(--line);border-radius:14px;overflow:hidden}
+.oth > button{width:100%;border:0;background:transparent;text-align:left;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:800;min-height:52px}
+.oth > button i{font-style:normal;font-size:13px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.oth .in{padding:0 14px 12px;font-size:.92em}
+.oth .in p{margin:0 0 6px}
+.q{background:#fff;border-radius:var(--r);padding:16px 18px;margin:0 0 14px;box-shadow:0 1px 8px rgba(20,30,60,.08);border-top:6px solid var(--ac)}
+.q h3{margin:0 0 4px;font-size:1.1em;line-height:1.45}
+.q h3 em{font-style:normal;color:var(--ac)}
+.q .guide{font-size:15px;color:var(--muted);font-weight:600;margin:0 0 10px}
+textarea{width:100%;min-height:110px;border:2px solid var(--line);border-radius:14px;padding:12px 14px;resize:vertical;background:#fbfbfc;line-height:1.5}
+textarea:focus,input[type=text]:focus{outline:none;border-color:var(--ac);background:#fff}
+input[type=text]{width:100%;min-height:52px;border:2px solid var(--line);border-radius:14px;padding:8px 14px;background:#fbfbfc}
+.count{font-size:14px;color:var(--muted);text-align:right;margin-top:4px;font-weight:600}
+.frame{background:#fffbea;border:1px dashed #e8c95a;border-radius:12px;padding:8px 12px;font-size:15px;color:#3b3200;font-weight:600;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.pick{border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;min-height:46px;font-weight:700;font-size:16px}
+.pick.sel{border-color:var(--ac);background:var(--ac);color:#fff}
+.hintbtn{border:0;background:transparent;color:var(--ac);font-weight:800;text-decoration:underline;padding:6px 0;min-height:40px;font-size:16px}
+.hint{background:var(--at);border-radius:12px;padding:10px 14px;font-size:15px;font-weight:600;margin-top:8px}
+.hint div{margin:2px 0}
+.partners{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.partner{border:2px solid var(--line);background:#fff;border-radius:14px;min-height:60px;font-weight:800;font-size:16px;line-height:1.2;padding:6px}
+.partner.sel{color:#fff}
+.nav{display:flex;gap:10px;margin-top:6px}
+.nav .btn{flex:1}
+.nav .btn.back{flex:0 0 120px}
+.done-hero{text-align:center;padding:24px 16px}
+.done-hero .big{font-size:64px;line-height:1}
+.done-hero h2{margin:8px 0 4px;font-family:"Jua",sans-serif;font-weight:400;font-size:34px;color:var(--navy)}
+.sum dt{font-size:14px;font-weight:800;color:var(--ac);margin-top:10px}
+.sum dd{margin:0;font-weight:600}
+
+.exbox{display:grid;gap:6px}
+.exr{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.exr:last-child{border-bottom:0}
+.exk{font-size:14px;font-weight:800;color:var(--ac);background:var(--at);border-radius:8px;padding:2px 8px;text-align:center}
+.kws{display:grid;gap:8px}
+.kw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f6f7fa;border-radius:12px;padding:6px 10px}
+.kw b{flex:1;min-width:160px}
+.tips{margin:10px 0 0;padding-left:20px;font-size:15px;color:var(--muted);font-weight:600}
+.fl{display:block;margin:0 0 12px}
+.fl > span{display:block;font-weight:800;margin-bottom:4px}
+.req,.opt{font-style:normal;font-size:12px;border-radius:999px;padding:1px 8px;margin-left:4px;vertical-align:middle}
+.req{background:var(--ac);color:#fff}
+.opt{background:#eef0f4;color:var(--muted)}
+.srcl{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}
+.srcl a{color:var(--c)}
+.matrix td .cs2{font-size:13px;color:var(--muted);margin-top:4px}
+@media (max-width:520px){.exr{grid-template-columns:1fr;gap:2px}}
+/* group board */
+.gh{border-radius:var(--r);padding:16px 18px;margin:14px 0;background:var(--tc);color:var(--ton)}
+.gh h1{margin:0;font-family:"Jua",sans-serif;font-weight:400;font-size:clamp(28px,4vw,42px);line-height:1.2}
+.gh p{margin:2px 0 0;font-weight:700;opacity:.95}
+.board{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:700px){.board{grid-template-columns:1fr 1fr}}
+@media (min-width:1150px){.board{grid-template-columns:repeat(4,1fr)}}
+.col{background:#fff;border-radius:var(--r);box-shadow:0 1px 8px rgba(20,30,60,.08);overflow:hidden;display:flex;flex-direction:column;border-top:8px solid var(--c)}
+.col-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--t)}
+.col-h .ic{width:40px;height:40px;border-radius:12px;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.col-h .ic svg{width:26px;height:26px}
+.col-h b{font-size:20px;line-height:1.2;display:block}
+.col-h small{font-size:14px;font-weight:700;color:var(--muted)}
+.col-b{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:8px}
+.lab{font-size:13px;font-weight:800;color:var(--c)}
+.idea{font-size:1.08em;font-weight:800;line-height:1.45}
+.eff{font-size:.9em;font-weight:600;color:#333}
+.mini-chips{display:flex;flex-wrap:wrap;gap:4px}
+.mini-chips span{font-size:13px;font-weight:800;border-radius:999px;padding:2px 9px;background:var(--t);color:var(--c)}
+.mini-chips span.lim{background:#f1f3f7;color:#555}
+.with{font-size:15px;font-weight:700;background:#f6f7fa;border-radius:10px;padding:6px 10px}
+.empty{color:var(--muted);font-weight:700;text-align:center;padding:24px 8px}
+.star{margin-top:auto;border:2px solid var(--line);background:#fff;border-radius:12px;min-height:48px;font-weight:800;font-size:16px}
+.star.on{background:#FFE58A;border-color:#E8B90E;color:#5a4300}
+.talk{display:grid;gap:12px;margin-top:14px}
+@media (min-width:900px){.talk{grid-template-columns:.9fr 1.1fr}}
+.order{list-style:none;margin:0;padding:0;counter-reset:o}
+.order li{counter-increment:o;display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-weight:700}
+.order li:last-child{border-bottom:0}
+.order li::before{content:counter(o);flex:none;width:30px;height:30px;border-radius:50%;background:var(--tc);color:var(--ton);display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:2px}
+.order li small{display:block;color:var(--muted);font-weight:600;font-size:.82em}
+.saved{font-size:14px;color:var(--muted);font-weight:700;margin-top:6px}
+
+/* teacher */
+.tbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:18px 0 8px}
+.tbar h1{margin:0;font-family:"Jua",sans-serif;font-weight:400;font-size:clamp(26px,3.4vw,38px);color:var(--navy)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:14px;padding:8px 14px;box-shadow:0 1px 6px rgba(20,30,60,.06);font-weight:800}
+.stat b{font-size:26px;color:var(--navy);margin-left:4px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.flow span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:800;font-size:15px}
+.flow span i{font-style:normal;color:var(--muted);margin-left:4px}
+.matrix{width:100%;border-collapse:separate;border-spacing:6px;table-layout:fixed}
+.matrix th{font-weight:800;font-size:16px;padding:8px;border-radius:12px}
+.matrix th.rowh{width:130px;text-align:left}
+.matrix td{background:#fff;border-radius:12px;vertical-align:top;padding:8px 10px;font-size:15px;line-height:1.45;box-shadow:0 1px 4px rgba(20,30,60,.06)}
+.matrix td .no{font-size:13px;font-weight:800;color:var(--muted)}
+.matrix td .ti{font-weight:800}
+.matrix td .st{font-size:13px;font-weight:800;color:#8a6d00}
+.matrix td.wait{color:#aab;text-align:center;vertical-align:middle;font-weight:700}
+body.tv .matrix td{font-size:19px}
+body.tv .matrix th{font-size:20px}
+.agg{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:900px){.agg{grid-template-columns:repeat(4,1fr)}}
+.agg .box{background:#fff;border-radius:16px;padding:12px 14px;border-top:6px solid var(--c);box-shadow:0 1px 6px rgba(20,30,60,.06)}
+.agg h3{margin:0 0 6px;font-size:18px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin:4px 0;font-size:15px;font-weight:700}
+.bar .tr{grid-column:1/-1;height:8px;background:#eef0f4;border-radius:99px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:var(--c);border-radius:99px}
+.sentences .s{background:#fff;border-radius:14px;padding:10px 14px;margin:0 0 8px;border-left:8px solid var(--c);font-weight:700}
+.sentences .s small{display:block;color:var(--muted);font-size:13px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.modal{position:fixed;inset:0;background:rgba(10,14,22,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.modal .box2{background:#fff;border-radius:18px;padding:20px;width:min(360px,100%)}
+.modal input{width:100%;min-height:54px;border:2px solid var(--navy);border-radius:12px;padding:8px 12px;font-size:22px;margin:10px 0}
+
+/* print (#print) */
+.pp{display:none}
+body.pmode{background:#e6e8ee}
+body.pmode .pp{display:block}
+body.pmode #app{display:none}
+.pbar{position:sticky;top:0;z-index:5;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;padding:10px;background:rgba(29,36,51,.92);color:#fff;font-size:16px}
+.pbar a{color:#cfd6e6}
+.pg{width:210mm;height:297mm;margin:12px auto;background:#fff;padding:9mm 10mm;box-shadow:0 2px 14px rgba(20,30,60,.12);font-size:10pt;line-height:1.45;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;flex-direction:column}
+.pg .band{background:var(--c);color:#fff;border-radius:3mm;padding:2.5mm 5mm;display:flex;justify-content:space-between;align-items:center}
+.pg .band b{font-size:19pt;font-family:"Jua",sans-serif;font-weight:400}
+.pg .band span{font-size:9.5pt;font-weight:700}
+.pg .info{display:flex;gap:6mm;margin:2.5mm 0;font-weight:700;font-size:10.5pt}
+.pg .info span{border-bottom:1px solid #999;min-width:22mm;display:inline-block}
+.pg .cg{display:grid;grid-template-columns:1fr 1fr;gap:2.5mm;margin-bottom:3mm}
+.pg .cs{border:1.4px solid var(--t);border-radius:2.5mm;overflow:hidden}
+.pg .cs .h{font-weight:800;font-size:8.6pt;padding:.8mm 2.5mm;display:flex;justify-content:space-between}
+.pg .cs .b{padding:1.6mm 2.5mm}
+.pg .cs .tt{font-weight:800;font-size:10pt;margin-bottom:.8mm;line-height:1.3}
+.pg .cs p{margin:0 0 .6mm;font-size:8.8pt;line-height:1.4}
+.pg .cs .sr{font-size:7pt;color:#666}
+.pg .qq{border:1px solid #d5d9e1;border-radius:2.5mm;padding:2mm 3mm;margin-bottom:2.2mm}
+.pg .qq .x{font-weight:800;font-size:10.5pt;margin-bottom:1mm}
+.pg .ln{height:var(--h);background:repeating-linear-gradient(transparent 0 7.2mm,#b9bec9 7.2mm 7.5mm)}
+.pg .ck{display:flex;flex-wrap:wrap;gap:1mm 5mm;font-size:9.5pt;font-weight:600}
+.pg .gcols{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;flex:1;margin:3mm 0}
+.pg .gc{border:1.6px solid var(--c);border-radius:3mm;display:flex;flex-direction:column;overflow:hidden}
+.pg .gc .h{background:var(--c);color:#fff;font-weight:800;padding:1.5mm 2.5mm;font-size:11pt}
+.pg .gc .b{padding:2mm 2.5mm;flex:1;display:flex;flex-direction:column;gap:1.5mm;font-size:9pt;font-weight:700}
+.pg .exp,.pg .srch{border:1.4px solid var(--c);border-radius:2.5mm;padding:2mm 3mm;margin-bottom:2.2mm}
+.pg .eh{font-weight:800;font-size:10.5pt;margin-bottom:1mm;color:var(--c)}
+.pg .eh i{font-style:normal;font-size:8.5pt;border-radius:9px;padding:0 2mm;margin-left:2mm}
+.pg .eh small{font-size:8.5pt;color:#555;margin-left:2mm}
+.pg .er{display:grid;grid-template-columns:26mm 1fr;gap:2mm;font-size:9pt;padding:.5mm 0;border-bottom:1px dashed #ddd}
+.pg .er:last-child{border-bottom:0}
+.pg .k{font-weight:800;font-size:8.8pt;color:var(--c)}
+.pg .srch table{width:100%;border-collapse:collapse;font-size:9pt}
+.pg .srch th{width:30mm;text-align:left;padding:.6mm 2mm;font-weight:800;border-radius:1.5mm}
+.pg .srch td{padding:.6mm 2mm;font-weight:600}
+.pg .tp2{font-size:8pt;color:#555;margin-top:1mm}
+.pg .fr{display:grid;grid-template-columns:28mm 1fr;gap:2mm;align-items:end}
+@media print{
+  @page{size:A4;margin:0}
+  body.pmode{background:#fff}
+  .pbar{display:none!important}
+  .pg{margin:0;box-shadow:none;break-after:page}
+  .pg:last-child{break-after:auto}
+  #toast{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="pp" id="pp"></div>
+<div id="toast"></div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════
+   설정 — 필요하면 여기만 바꾸면 됩니다
+   ══════════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyAK8-ZwVkqI083bsbt9f562YndB--bpa_4",
+  authDomain: "class-6-1.firebaseapp.com",
+  projectId: "class-6-1",
+  storageBucket: "class-6-1.firebasestorage.app",
+  messagingSenderId: "938931431076",
+  appId: "1:938931431076:web:d0c35fdc6beac22ffde831"
+};
+const ROOM        = "room-6-1";        // 기존 앱과 같은 방
+const ACT_ID      = "actors-2026";     // 이번 조사 묶음 이름 (새로 하려면 바꾸기)
+const STUDENT_NOS = [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17]; // 우리 반 번호 (13번 전학)
+const TEACHER_PW  = "4876";            // 교사 화면 비밀번호
+const GROUP_TOPIC = { 1: 1, 2: 2, 3: 3, 4: 4 }; // 모둠 → 맡을 지구촌 문제 (1 기후변화, 2 생물 다양성, 3 분쟁과 난민, 4 빈곤과 기아)
+/* ────────────────────────────────────────────────────── */
+
+/* ── 지구촌 문제(모둠) · 주체(개인) · 실제 사례 16개 ── */
+const TOPICS = [
+  { n: 1, name: "기후변화",         c: "#C0392B", t: "#FBE4E1", on: "#fff" },
+  { n: 2, name: "생물 다양성 감소", c: "#1E8449", t: "#DDF1E4", on: "#fff" },
+  { n: 3, name: "분쟁과 난민",      c: "#2463A8", t: "#DDE8F6", on: "#fff" },
+  { n: 4, name: "빈곤과 기아",      c: "#F4C430", t: "#FDF3D0", on: "#3A2A00" },
+];
+const ACTORS = [
+  { n: 1, name: "개인·시민단체", short: "개인", c: "#D6336C", t: "#FCE4EC", icon: "person",
+    q: "나와 시민들", hint: "한 사람, 친구들, 시민단체가 함께 할 수 있는 일" },
+  { n: 2, name: "기업", short: "기업", c: "#7048E8", t: "#EDE7FD", icon: "factory",
+    q: "회사", hint: "물건을 만들고 파는 회사가 할 수 있는 일" },
+  { n: 3, name: "국가", short: "국가", c: "#0B7285", t: "#DDF1F4", icon: "flag",
+    q: "나라(정부)", hint: "법을 만들고 예산을 쓰는 나라가 할 수 있는 일" },
+  { n: 4, name: "국제기구", short: "국제기구", c: "#364FC7", t: "#E3E8FB", icon: "globe",
+    q: "여러 나라가 함께 만든 기구", hint: "여러 나라가 힘을 모은 기구가 할 수 있는 일" },
+];
+const POWERS = ["많은 사람의 참여", "알리고 목소리 내기", "물건을 고르는 힘(소비)", "기술과 아이디어",
+  "물건을 만들고 파는 힘", "돈(예산·후원)", "법과 제도", "나라 사이의 약속·협력", "전문 지식(의료·과학)"];
+const LIMITS = ["혼자서는 힘이 작음", "이익을 먼저 생각할 수 있음", "다른 나라에 강제할 수 없음",
+  "돈(지원금)이 부족할 수 있음", "법을 직접 만들 수 없음", "시간이 오래 걸림", "문제의 원인을 직접 없애기 어려움"];
+
+// CASES[actor-1][topic-1]
+const CASES = [
+  [ // 개인·시민단체
+    { title: "법정에 선 청소년들의 기후 소송", place: "대한민국",
+      body: ["2020년 청소년기후행동의 청소년들이 “정부의 온실가스 감축 목표가 부족해 미래 세대의 권리를 침해한다”며 헌법소원을 냄.",
+             "2024년 8월 헌법재판소가 2031년 이후 감축 목표가 없는 법은 헌법에 맞지 않는다고 결정함(아시아 첫 기후 소송 결정)."],
+      power: "목소리를 모아 법과 제도를 바꾸도록 요구함", src: "법률신문 · 2024. 8. 29." },
+    { title: "바다로 돌아간 남방큰돌고래 제돌이", place: "대한민국 제주",
+      body: ["제주 바다에서 불법으로 잡혀 공연하던 남방큰돌고래 제돌이를 바다로 돌려보내자는 시민과 시민단체의 목소리가 이어짐.",
+             "2013년 제돌이가 제주 바다로 돌아갔고, 함께 풀려난 돌고래들이 야생에서 새끼를 낳는 데 성공함."],
+      power: "많은 사람의 목소리로 결정을 바꿈", src: "서울신문 · 2014. 1. 24. / 데일리벳" },
+    { title: "전쟁터로 달려가는 국경없는의사회", place: "전 세계 70여 개 나라",
+      body: ["국경없는의사회는 1971년 의사와 기자들이 만든 민간 의료 단체로, 전쟁·재난 지역과 난민촌에서 다친 사람을 치료함.",
+             "1999년 노벨평화상을 받았고, 활동비 대부분을 개인 후원으로 마련함."],
+      power: "전문 지식(의료)과 개인 후원으로 현장을 도움", src: "국경없는의사회 한국 누리집" },
+    { title: "퀴즈를 풀면 쌀이 쌓이는 ‘프리라이스’", place: "온라인 · 전 세계",
+      body: ["세계식량계획이 운영하는 누리집 ‘프리라이스’는 퀴즈를 맞힐 때마다 광고 수익으로 굶주린 사람들에게 쌀을 기부함.",
+             "2007년 시작한 뒤 몇 달 만에 쌀 210억 톨이 모였고, 지금도 세계의 학생들이 참여함."],
+      power: "누구나 쉽게 참여해 작은 실천을 모음", src: "유엔 뉴스 · 2008. 3." },
+  ],
+  [ // 기업
+    { title: "공장을 재생에너지로, RE100", place: "세계 · 대한민국",
+      body: ["RE100은 기업이 쓰는 전기를 2050년까지 100% 태양광·풍력 같은 재생에너지로 바꾸겠다고 약속하는 국제 캠페인임(2014년 시작).",
+             "우리나라 기업들도 가입했지만, 2025년 RE100 보고서는 우리나라를 재생에너지를 사기 가장 어려운 시장으로 꼽음."],
+      power: "공장과 제품을 바꾸는 기술과 돈", src: "아시아경제 · 2022. 4. 25. / 다음뉴스 · 2025. 7. 3." },
+    { title: "숲을 지키는 팜유 인증(RSPO)", place: "동남아시아 · 세계",
+      body: ["과자·라면·화장품에 쓰이는 팜유를 숲과 야생동물을 해치지 않고 생산했는지 확인하는 국제 인증이 2004년에 만들어짐.",
+             "많은 기업이 인증 팜유를 쓰겠다고 약속했지만, 인증 농장에서도 숲이 파괴된 사례가 있어 감시가 필요함."],
+      power: "어떤 원료를 쓸지 고르는 힘", src: "퀸즐랜드대학교 · 2018. 6. 13." },
+    { title: "가구 회사가 만든 난민 쉼터", place: "스웨덴 → 난민촌",
+      body: ["가구 회사 이케아의 재단은 유엔난민기구와 함께 납작한 상자로 옮겨 약 4시간 만에 조립하는 난민 쉼터 ‘베터 셸터’를 개발함.",
+             "2015년부터 만들어져 난민촌과 재난 지역에 보내졌고, 천막보다 튼튼하고 오래 쓸 수 있음."],
+      power: "제품을 설계하고 많이 만드는 기술", src: "디진 · 2015. 3. 24." },
+    { title: "공정무역 초콜릿과 커피", place: "아프리카·남아메리카 → 세계",
+      body: ["공정무역 인증 제품은 카카오·커피 농부에게 정해진 최저가격 이상을 주고, 마을의 학교·우물 등에 쓸 돈(공정무역 프리미엄)을 따로 줌.",
+             "어린이 노동을 금지하며, 소비자가 공정무역 제품을 고르면 가난한 생산자의 생활에 도움이 됨."],
+      power: "거래 방법을 바꾸고 소비자와 이어 주는 힘", src: "국제공정무역기구 누리집" },
+  ],
+  [ // 국가
+    { title: "대한민국의 2050 탄소중립", place: "대한민국",
+      body: ["우리나라는 2020년 10월, 2050년까지 탄소 배출을 ‘0’으로 만드는 탄소중립을 선언함.",
+             "2021년에는 2030년까지 온실가스를 2018년보다 40% 줄이는 목표를 정하고 탄소중립기본법을 만듦."],
+      power: "법을 만들고 나라 전체의 목표를 정함", src: "데일리안 · 2021. 10." },
+    { title: "동해 명태 살리기", place: "대한민국 동해",
+      body: ["명태가 사라지자 정부는 2014년 ‘명태 살리기 프로젝트’를 시작해 2016년 세계 처음으로 명태 완전양식에 성공하고 어린 명태를 바다에 풀어 줌.",
+             "2019년부터는 명태잡이를 1년 내내 금지함."],
+      power: "연구 예산과 법(포획 금지)", src: "뉴스토마토 · 2016. 10. / 경향신문 · 2023. 6. 18." },
+    { title: "아시아 첫 재정착 난민 제도", place: "타이 난민촌 → 대한민국",
+      body: ["우리나라는 2015년 아시아에서 처음으로, 다른 나라 난민촌에 머물던 난민을 데려와 정착을 돕는 ‘재정착 난민’ 제도를 시작함.",
+             "타이 난민촌에 있던 미얀마 난민 가족들이 인천 부평 등에 자리 잡고 한국어 교육과 일자리 지원을 받음."],
+      power: "법과 제도로 살 곳과 교육을 마련함", src: "유엔난민기구 · 2015. / 코리아중앙데일리" },
+    { title: "원조받던 나라에서 쌀을 나누는 나라로", place: "대한민국 → 17개 나라",
+      body: ["6·25 전쟁 뒤 원조를 받던 우리나라는 2009년 원조를 주는 나라들의 모임(OECD 개발원조위원회)에 가입함.",
+             "2025년에는 역대 가장 많은 쌀 15만 톤을 세계식량계획을 통해 17개 나라에 보냈고, 로힝야 난민촌에도 우리 쌀이 전달됨."],
+      power: "나라 예산으로 다른 나라를 도움", src: "농림축산식품부 · 2025. 2. 18." },
+  ],
+  [ // 국제기구
+    { title: "우리나라에 본부가 있는 녹색기후기금", place: "인천 송도 → 개발도상국",
+      body: ["녹색기후기금(GCF)은 개발도상국이 기후변화에 대응하도록 돈을 지원하는 국제기구로, 2013년 인천 송도에 본부를 열었음.",
+             "2015년 파리협정에서 여러 나라가 지구 기온 상승을 1.5℃ 안으로 막도록 노력하자고 약속했고, GCF는 이 약속을 돕는 역할을 함."],
+      power: "나라 사이의 약속을 이끌고 돈을 모아 나눔", src: "이투데이 · 2013. 12. 3." },
+    { title: "지구의 30%를 지키자, ‘30×30’ 약속", place: "유엔 · 세계",
+      body: ["2022년 유엔 생물다양성 회의(COP15)에서 190여 개 나라가 2030년까지 육지와 바다의 30%를 보호구역으로 지키기로 약속함.",
+             "지금 보호되는 바다는 아직 10%도 안 되어, 약속을 지키려면 나라들의 노력이 더 필요함."],
+      power: "나라 사이의 약속과 공동 목표", src: "퓨 자선기금 · 2022. 12. 20." },
+    { title: "난민을 지키는 유엔난민기구", place: "차드 등 전 세계",
+      body: ["유엔난민기구(UNHCR)는 1950년 만들어져 난민에게 쉼터·식수·생활용품을 주고 보호하는 국제기구로, 노벨평화상을 두 번 받음.",
+             "수단 전쟁을 피해 차드로 온 난민이 100만 명을 넘었지만, 지원금이 크게 줄어 도움이 부족하다고 유엔이 알림(2026년 4월)."],
+      power: "여러 나라의 지원을 모아 국경을 넘어 도움", src: "더스타(로이터) · 2026. 4. 9." },
+    { title: "굶주림과 싸우는 세계식량계획", place: "전 세계 120여 개 나라",
+      body: ["세계식량계획(WFP)은 굶주린 사람들에게 식량을 전하는 유엔 기구로, 2020년 한 해에 1억 명이 넘는 사람을 돕고 노벨평화상을 받음.",
+             "전쟁 지역에도 식량을 나르며, 우리나라가 보낸 쌀도 세계식량계획을 통해 여러 나라에 전달됨."],
+      power: "세계를 잇는 운송망과 여러 나라의 지원", src: "쿠키뉴스 · 2020. 10. 9." },
+  ],
+];
+// 막힐 때 보는 예시 (주체별)
+const IDEA_EX = [
+  "나는 시민으로서 친구들과 ○○ 캠페인을 열겠다. 그러면 많은 사람이 알게 되어 ○○이 줄어든다.",
+  "나는 기업으로서 ○○을 쓰지 않는 제품을 만들겠다. 그러면 ○○ 때문에 생기는 피해가 줄어든다.",
+  "나는 국가로서 ○○을 지키는 법을 만들고 예산을 쓰겠다. 그러면 나라 전체가 함께 ○○을 줄인다.",
+  "나는 국제기구로서 여러 나라가 ○○을 약속하도록 이끌고 돈을 모아 돕겠다. 그러면 힘이 약한 나라도 ○○을 이겨 낸다.",
+];
+
+/* ── 예시 사례 (주체마다 1개, 모둠 문제와 겹치면 alt를 보여 줌) ── */
+const EXAMPLES = [
+  { main: { topic: 1, title: "법정에 선 청소년들의 기후 소송", who: "청소년기후행동(청소년 시민단체)",
+            what: "정부의 온실가스 감축 목표가 부족해 미래 세대의 권리를 침해한다며 2020년 헌법소원을 냄.",
+            res: "2024년 8월 헌법재판소가 2031년 이후 감축 목표가 없는 법은 헌법에 맞지 않는다고 결정함.", src: "법률신문, 2024. 8. 29." },
+    alt:  { topic: 2, title: "바다로 돌아간 남방큰돌고래 제돌이", who: "시민과 동물 보호 시민단체",
+            what: "불법으로 잡혀 공연하던 남방큰돌고래를 바다로 돌려보내자고 목소리를 냄.",
+            res: "2013년 제주 바다로 돌아갔고, 함께 풀려난 돌고래들이 야생에서 새끼를 낳음.", src: "서울신문, 2014. 1. 24." } },
+  { main: { topic: 3, title: "가구 회사가 만든 난민 쉼터", who: "이케아 재단(가구 회사 이케아가 만든 재단)",
+            what: "유엔난민기구와 함께 약 4시간 만에 조립하는 난민 쉼터 ‘베터 셸터’를 개발함.",
+            res: "2015년부터 만들어져 난민촌과 재난 지역에 보내졌고, 천막보다 튼튼함.", src: "디진, 2015. 3. 24." },
+    alt:  { topic: 4, title: "공정무역 초콜릿과 커피", who: "공정무역 인증을 받은 기업들",
+            what: "카카오·커피 농부에게 최저가격 이상을 주고, 마을 발전에 쓸 돈(공정무역 프리미엄)을 따로 줌.",
+            res: "어린이 노동을 금지하고, 가난한 생산자의 생활에 도움이 됨.", src: "국제공정무역기구 누리집" } },
+  { main: { topic: 2, title: "동해 명태 살리기", who: "대한민국 정부(해양수산부)",
+            what: "명태가 사라지자 2014년 ‘명태 살리기 프로젝트’를 시작해 어린 명태를 바다에 풀어 줌.",
+            res: "2016년 세계 처음으로 명태 완전양식에 성공했고, 2019년부터 명태잡이를 1년 내내 금지함.", src: "뉴스토마토, 2016. 10." },
+    alt:  { topic: 1, title: "대한민국의 2050 탄소중립", who: "대한민국 정부",
+            what: "2020년 2050년까지 탄소 배출을 ‘0’으로 만드는 탄소중립을 선언하고, 2021년 탄소중립기본법을 만듦.",
+            res: "2030년까지 온실가스를 2018년보다 40% 줄이는 목표를 정함.", src: "데일리안, 2021. 10." } },
+  { main: { topic: 4, title: "굶주림과 싸우는 세계식량계획", who: "세계식량계획(WFP, 유엔 기구)",
+            what: "굶주린 사람들에게 식량을 전하고, 전쟁 지역에도 식량을 나름.",
+            res: "2020년 한 해에 1억 명이 넘는 사람을 돕고 노벨평화상을 받음.", src: "쿠키뉴스, 2020. 10. 9." },
+    alt:  { topic: 3, title: "난민을 지키는 유엔난민기구", who: "유엔난민기구(UNHCR)",
+            what: "난민에게 쉼터·식수·생활용품을 주고 보호함. 노벨평화상을 두 번 받음.",
+            res: "차드로 피한 수단 난민이 100만 명을 넘었지만 지원금이 줄어 도움이 부족함(2026년).", src: "더스타(로이터), 2026. 4. 9." } },
+];
+/* ── 추천 검색어: KEYWORDS[주체-1][문제-1] ── */
+const KEYWORDS = [
+  [["청소년 기후 행동", "탄소 줄이기 챌린지", "기후위기 캠페인 시민단체"],
+   ["플로깅 바다 쓰레기 줍기", "멸종위기종 보호 시민단체", "꿀벌 살리기 캠페인"],
+   ["난민 돕기 시민단체", "국경없는의사회 활동", "난민 어린이 교육 지원"],
+   ["굶주리는 어린이 돕기 캠페인", "음식물 쓰레기 줄이기 캠페인", "공정무역 마을"]],
+  [["기업 재생에너지 RE100", "기업 탄소중립 선언", "친환경 포장 기업"],
+   ["기업 숲 보호 활동", "인증 팜유 사용 기업", "플라스틱 줄이기 기업"],
+   ["기업 난민 고용", "기업 난민 지원 기부", "난민 쉼터 개발 기업"],
+   ["공정무역 초콜릿 기업", "기업 식량 기부", "사회적 기업 빈곤"]],
+  [["2050 탄소중립 정부 정책", "재생에너지 확대 정책", "탄소중립기본법"],
+   ["멸종위기종 복원 사업", "해양보호구역 지정", "반달가슴곰 복원 사업"],
+   ["재정착 난민 우리나라", "우크라이나 난민 받아들인 나라", "난민 인정 제도"],
+   ["우리나라 해외 쌀 원조", "KOICA 공적개발원조", "정부 식량 원조"]],
+  [["파리협정 1.5도", "녹색기후기금 지원 사업", "유엔 기후변화 회의 COP"],
+   ["유엔 생물다양성 30x30", "세계자연보전연맹 적색목록", "람사르 습지 협약"],
+   ["유엔난민기구 활동", "유니세프 난민 어린이 지원", "국제이주기구 난민 지원"],
+   ["세계식량계획 식량 지원", "유니세프 영양실조 어린이", "지속가능발전목표 기아 종식"]],
+];
+const SEARCH_TIPS = ["‘주체 이름 + 문제 + 노력·캠페인·지원’으로 검색해요", "신문 기사나 기관 누리집처럼 믿을 수 있는 곳을 골라요", "날짜를 확인하고 되도록 최근 자료를 써요", "찾은 곳의 이름과 날짜를 꼭 출처에 적어요"];
+
+
+const DEMO = new URLSearchParams(location.search).has("demo");
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const T = g => TOPICS[(GROUP_TOPIC[g] || g) - 1];
+const A = a => ACTORS[a - 1];
+const josa = (w, a, b) => { const c = String(w).trim().slice(-1).charCodeAt(0); return (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28) ? a : b; };
+const ICONS = {
+  person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.5"/><path d="M16 14.2c2.8.3 5 2.6 5 5.8"/></svg>',
+  factory: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V5h3l1 16z"/><path d="M7 18h2M12 18h2"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>',
+};
+const GLOBE = '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="#2463A8"/><path d="M14 15c5 1 6 5 10 5s4 5 1 7-1 6-4 7-6 5-8 3-1-6-3-8-4-4-2-7 3-8 6-7zM33 10c3 2 7 2 9 6s-1 6-4 6-4 3-2 6 5 3 6 7-3 8-7 8-4-4-3-8-4-5-3-9 0-7 4-7z" fill="#7FC29B"/><circle cx="26" cy="26" r="24" fill="none" stroke="#173F6B" stroke-width="2"/></svg>';
+
+let toastT;
+function toast(msg, ms = 2200){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+const ss = { get(k){ try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } }, set(k,v){ try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+/* ══════════════ 저장소 (Firebase / 데모) ══════════════ */
+let api = null, apiError = null, RES = [], GRP = {};
+function demoApi(){
+  const res = new Map(), grp = new Map(), subs = new Set(), gsubs = new Set();
+  const ideas = [
+    ["친구들과 학교에서 ‘전기 끄기 챌린지’를 열고 결과를 누리집에 알리겠다.", "가게에서 공정무역 초콜릿을 고르고 가족에게도 알려 주겠다.", "난민 어린이에게 학용품을 보내는 모금에 참여하겠다.", "급식을 남기지 않고 남은 용돈으로 세계식량계획에 기부하겠다."],
+    ["공장 지붕에 태양광 발전기를 달아 전기를 직접 만들겠다.", "인증받은 팜유만 쓰고 포장지에 표시하겠다.", "난민을 직원으로 뽑고 한국어 교육을 지원하겠다.", "공정무역 카카오로 초콜릿을 만들어 농부에게 제값을 주겠다."],
+    ["재생에너지 발전소를 짓는 회사에 지원금을 주는 법을 만들겠다.", "바다 보호구역을 늘리고 어린 물고기 잡기를 금지하겠다.", "재정착 난민을 더 받아들이고 학교와 일자리를 마련하겠다.", "식량이 부족한 나라에 쌀과 농사 기술을 보내겠다."],
+    ["여러 나라가 온실가스를 줄이는 약속을 지키는지 해마다 점검하겠다.", "30×30 약속을 지키도록 보호구역을 만드는 나라를 돕겠다.", "난민촌에 학교를 세우고 여러 나라에 지원금을 요청하겠다.", "가뭄에 강한 씨앗을 나누고 비상 식량 창고를 만들겠다."],
+  ];
+  const nos = STUDENT_NOS.slice();
+  for (let g = 1; g <= 4; g++) for (let a = 1; a <= 4; a++) {
+    const no = nos[(g - 1) * 4 + (a - 1)]; if (no === undefined || (g === 4 && a === 4)) continue;
+    const tp = GROUP_TOPIC[g];
+    res.set(String(no), { no, g, a, state: g === 3 && a === 2 ? "조사 중" : "제출",
+      ctitle: g === 3 && a === 2 ? "" : CASES[a - 1][tp - 1].title, cwho: g === 3 && a === 2 ? "" : ["시민단체", "○○ 기업", "대한민국 정부", "유엔 기구"][a - 1], cwhat: g === 3 && a === 2 ? "" : CASES[a - 1][tp - 1].body[0], csrc: g === 3 && a === 2 ? "" : CASES[a - 1][tp - 1].src,
+      powers: [[0, 1], [3, 4], [5, 6], [7, 5]][a - 1], limits: [[0], [1], [5], [2, 3]][a - 1],
+      idea: g === 3 && a === 2 ? "" : ideas[a - 1][tp - 1], partner: [3, 1, 4, 3][a - 1], why: "혼자서는 힘이 부족하기 때문임",
+      star: [3, 2, 4, 1][g - 1], at: Date.now() - (g * 4 + a) * 40000 });
+  }
+  grp.set("1", { sentence: "기후변화를 해결하려면 개인은 전기를 아끼고, 기업은 재생에너지를 쓰고, 국가는 법을 만들고, 국제기구는 약속을 점검해야 함. 온실가스는 국경 없이 퍼지기 때문임.", by: nos[0], at: Date.now() - 60000 });
+  const emit = () => subs.forEach(f => f([...res.values()]));
+  const gemit = () => gsubs.forEach(f => f(Object.fromEntries(grp)));
+  return {
+    async save(no, rec){ await new Promise(r => setTimeout(r, 200)); res.set(String(no), { ...(res.get(String(no)) || {}), ...rec, at: Date.now() }); emit(); },
+    subscribe(cb){ subs.add(cb); setTimeout(() => cb([...res.values()]), 30); return () => subs.delete(cb); },
+    async saveGroup(g, rec){ grp.set(String(g), { ...(grp.get(String(g)) || {}), ...rec, at: Date.now() }); gemit(); },
+    subscribeGroups(cb){ gsubs.add(cb); setTimeout(() => cb(Object.fromEntries(grp)), 30); return () => gsubs.delete(cb); },
+    async clear(){ res.clear(); grp.clear(); emit(); gemit(); },
+  };
+}
+async function firebaseApi(){
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  const app = appMod.initializeApp(firebaseConfig);
+  const db = fs.getFirestore(app);
+  const col = fs.collection(db, ROOM, ACT_ID, "responses");
+  const gcol = fs.collection(db, ROOM, ACT_ID, "groups");
+  const race = w => Promise.race([w, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error("timeout"), { code: "timeout" })), 12000))]);
+  const ms = x => x?.toMillis ? x.toMillis() : (x || 0);
+  return {
+    save(no, rec){ return race(fs.setDoc(fs.doc(col, String(no)), { ...rec, at: fs.serverTimestamp() }, { merge: true })); },
+    subscribe(cb, onErr){ return fs.onSnapshot(col, snap => cb(snap.docs.map(d => ({ ...d.data(), at: ms(d.data().at) }))), onErr); },
+    saveGroup(g, rec){ return race(fs.setDoc(fs.doc(gcol, String(g)), { ...rec, at: fs.serverTimestamp() }, { merge: true })); },
+    subscribeGroups(cb, onErr){ return fs.onSnapshot(gcol, snap => { const o = {}; snap.forEach(d => { o[d.id] = { ...d.data(), at: ms(d.data().at) }; }); cb(o); }, onErr); },
+    async clear(){
+      for (const c of [col, gcol]) { const snap = await fs.getDocs(c); const b = fs.writeBatch(db); snap.forEach(d => b.delete(d.ref)); await b.commit(); }
+    },
+  };
+}
+const errKind = e => { const c = e?.code || ""; return c.includes("permission-denied") ? "perm" : (c === "timeout" || c.includes("unavailable")) ? "net" : "etc"; };
+const RULES = `match /${ROOM}/{document=**} {\n  allow read, write: if true;\n}`;
+
+/* ══════════════ 학생 상태 ══════════════ */
+const blank = () => ({ no: null, g: null, a: null, step: 0, ctitle: "", cwho: "", cwhat: "", cres: "", csrc: "", curl: "", powers: [], limits: [], idea: "", partner: null, why: "", hint: false, ex: false });
+let S = Object.assign(blank(), ss.get("ga_state") || {});
+const keep = () => ss.set("ga_state", S);
+
+function header(sub){
+  return `<div class="top">${GLOBE}<div><h1 class="display">지구촌 문제 해결 조사단${DEMO ? '<span class="demo-badge">데모 · 저장 안 됨</span>' : ""}</h1><div class="sub">${sub}</div></div></div>`;
+}
+function takenBy(g, a, me){ return RES.find(r => r.g === g && r.a === a && r.no !== me); }
+function setTheme(){
+  const r = document.documentElement.style;
+  if (S.g){ const t = T(S.g); r.setProperty("--tc", t.c); r.setProperty("--tt", t.t); r.setProperty("--ton", t.on); }
+  if (S.a){ const a = A(S.a); r.setProperty("--ac", a.c); r.setProperty("--at", a.t); }
+}
+
+/* ── 0. 시작: 번호 · 모둠 · 주체 ── */
+function renderStart(){
+  setTheme();
+  const nums = STUDENT_NOS.map(n => `<button class="num ${S.no === n ? "sel" : ""}" data-no="${n}">${n}</button>`).join("");
+  const groups = [1, 2, 3, 4].map(g => { const t = T(g);
+    return `<button class="grp ${S.g === g ? "sel" : ""}" data-g="${g}"><b>${g}모둠</b><span style="background:${t.c};color:${t.on}">${esc(t.name)}</span></button>`; }).join("");
+  const actors = ACTORS.map(a => { const tk = S.g ? takenBy(S.g, a.n, S.no) : null;
+    return `<button class="act ${S.a === a.n ? "sel" : ""}" data-a="${a.n}" style="--ac:${a.c}"><span class="ic" style="background:${a.c}">${ICONS[a.icon]}</span><span><b>${esc(a.name)}</b><small>${esc(a.hint)}</small>${tk ? `<span class="taken">${tk.no}번 친구가 맡았어요</span>` : ""}</span></button>`; }).join("");
+  const ready = S.no && S.g && S.a;
+  $("#app").innerHTML = `<div class="wrap">${header("사회 3. 지구촌 사람들 · 여러 주체의 노력 조사하기")}
+    ${!api && !DEMO ? `<div class="err">저장 서버에 연결하지 못했어요. 인터넷을 확인하고 새로고침해 주세요.</div>` : ""}
+    <div class="card"><div class="sec-t">① 내 번호</div><div class="nums">${nums}</div></div>
+    <div class="card"><div class="sec-t">② 우리 모둠 <small>모둠마다 맡은 지구촌 문제가 있어요</small></div><div class="groups">${groups}</div></div>
+    <div class="card"><div class="sec-t">③ 내가 맡을 주체 <small>모둠 친구와 겹치지 않게 하나씩 골라요</small></div><div class="actors">${actors}</div></div>
+    <button class="btn primary cta" id="go" ${ready ? "" : "disabled"}>${ready ? `${S.no}번, ${esc(A(S.a).name)} 조사 시작` : "번호 · 모둠 · 주체를 골라요"}</button>
+    <p style="text-align:center;margin-top:18px"><a href="#group=${S.g || 1}" class="muted" style="font-size:15px">모둠 화면</a> · <a href="#teacher" class="muted" style="font-size:15px">교사 화면</a></p></div>`;
+  $("#app").querySelectorAll("[data-no]").forEach(b => b.onclick = () => { S.no = +b.dataset.no; keep(); renderStart(); });
+  $("#app").querySelectorAll("[data-g]").forEach(b => b.onclick = () => { S.g = +b.dataset.g; keep(); renderStart(); });
+  $("#app").querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const tk = S.g && takenBy(S.g, +b.dataset.a, S.no);
+    if (tk) toast(`${tk.no}번 친구가 이미 맡았어요. 다른 주체를 골라 보세요.`);
+    S.a = +b.dataset.a; keep(); renderStart(); });
+  $("#go").onclick = async () => {
+    if (!ready) return;
+    const mine = RES.find(r => r.no === S.no);
+    if (mine && mine.g === S.g && mine.a === S.a && mine.state === "제출" && !S.cwhat){
+      Object.assign(S, { ctitle: mine.ctitle || "", cwho: mine.cwho || "", cwhat: mine.cwhat || "", cres: mine.cres || "", csrc: mine.csrc || "", curl: mine.curl || "", powers: mine.powers || [], limits: mine.limits || [], idea: mine.idea || "", partner: mine.partner ?? null, why: mine.why || "" });
+    }
+    S.step = 1; keep(); render();
+    try { await api?.save(S.no, { no: S.no, g: S.g, a: S.a, state: mine?.state === "제출" && mine.g === S.g && mine.a === S.a ? "제출" : "조사 중" }); } catch (e) { console.warn(e); }
+  };
+}
+
+/* ── 공통: 맨 위 정보와 단계 ── */
+function stepHead(){
+  const t = T(S.g), a = A(S.a);
+  const bar = ["사례 찾기", "가진 힘과 한계", "나의 해결 방법"].map((l, i) =>
+    `<div class="${S.step === i + 1 ? "on" : S.step > i + 1 ? "done" : ""}">${S.step > i + 1 ? "✓ " : (i + 1) + ". "}${l}</div>`).join("");
+  return `<div class="who"><span class="chip" style="background:#fff;border:2px solid var(--line)">${S.no}번</span>
+    <span class="chip" style="background:${t.c};color:${t.on}">${S.g}모둠 · ${esc(t.name)}</span>
+    <span class="chip" style="background:${a.c};color:#fff">${esc(a.name)}</span>
+    <button class="btn small ghost" id="chg" style="margin-left:auto">바꾸기</button></div>
+    <div class="stepbar">${bar}</div>`;
+}
+function caseCard(c, a, t, main){
+  return `<article class="case" style="--ac:${a.c}">
+    <div class="case-h"><span>${esc(a.name)}의 노력${main ? "" : ""}</span><span class="tp" style="background:${t.c};color:${t.on}">${esc(t.name)}</span></div>
+    <div class="case-b"><h2 class="case-t">${esc(c.title)}</h2><div class="place">${esc(c.place)}</div>
+      ${c.body.map(p => `<p>${esc(p)}</p>`).join("")}<div class="src">출처: ${esc(c.src)} (초등학생 눈높이로 요약)</div></div></article>`;
+}
+
+/* ── 1. 사례 찾기: 예시 1개 + 직접 검색 ── */
+function exampleFor(a, tp){ const e = EXAMPLES[a - 1]; return e.main.topic === tp ? e.alt : e.main; }
+function exampleCard(ex, a){
+  const t = TOPICS[ex.topic - 1];
+  const row = (k, v) => `<div class="exr"><span class="exk">${k}</span><span>${esc(v)}</span></div>`;
+  return `<article class="case" style="--ac:${a.c}">
+    <div class="case-h"><span>예시 · ${esc(a.name)}의 노력</span><span class="tp" style="background:${t.c};color:${t.on}">${esc(t.name)}</span></div>
+    <div class="case-b exbox">${row("사례 제목", ex.title)}${row("누가", ex.who)}${row("무엇을 했나요", ex.what)}${row("결과·숫자", ex.res)}${row("출처", ex.src)}</div></article>`;
+}
+function renderStep1(){
+  setTheme();
+  const t = T(S.g), a = A(S.a), tp = GROUP_TOPIC[S.g] || S.g;
+  const ex = exampleFor(S.a, tp), kws = KEYWORDS[S.a - 1][tp - 1];
+  const kwBtns = kws.map(k => `<div class="kw"><b>${esc(k)}</b><a class="btn small ghost" target="_blank" rel="noopener" href="https://search.naver.com/search.naver?query=${encodeURIComponent(k)}">네이버</a><a class="btn small ghost" target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent(k)}">구글</a></div>`).join("");
+  const field = (id, label, ph, req, big) => `<label class="fl"><span>${label}${req ? ' <i class="req">필수</i>' : ' <i class="opt">선택</i>'}</span>${big
+    ? `<textarea id="${id}" maxlength="250" placeholder="${esc(ph)}" style="min-height:90px">${esc(S[id])}</textarea>`
+    : `<input type="text" id="${id}" maxlength="${id === "curl" ? 400 : 120}" placeholder="${esc(ph)}" value="${esc(S[id])}">`}</label>`;
+  $("#app").innerHTML = `<div class="wrap">${stepHead()}
+    <div class="sec-t" style="font-size:21px">① 예시를 보고 사례가 무엇인지 알아봐요</div>
+    ${exampleCard(ex, a)}
+    <div class="sec-t" style="font-size:21px">② 우리 모둠 문제(${esc(t.name)})에서 ${esc(a.name)}의 노력을 검색해요</div>
+    <section class="q search">
+      <p class="guide" style="margin-bottom:8px">추천 검색어를 누르면 새 창에서 검색돼요. 다른 검색어로 찾아도 좋아요. <b>예시와 다른 사례</b>를 찾아요.</p>
+      <div class="kws">${kwBtns}</div>
+      <ul class="tips">${SEARCH_TIPS.map(s => `<li>${esc(s)}</li>`).join("")}</ul>
+    </section>
+    <div class="sec-t" style="font-size:21px">③ 내가 찾은 사례를 정리해요</div>
+    <section class="q">
+      ${field("ctitle", "사례 제목", "예) ○○의 ○○ 캠페인", true)}
+      ${field("cwho", "누가", `${a.name} 이름을 구체적으로 (예: ○○ 단체, ○○ 회사, ○○ 나라, ○○ 기구)`, true)}
+      ${field("cwhat", "무엇을 했나요", "어떤 노력을 했는지 내 말로 1~2문장으로 써요", true, true)}
+      ${field("cres", "결과·숫자", "그 노력으로 무엇이 달라졌는지, 기억에 남는 숫자", false)}
+      ${field("csrc", "출처", "누리집이나 신문 이름, 날짜 (예: ○○신문, 2025. 3. 5.)", true)}
+      ${field("curl", "주소", "찾은 페이지 주소를 붙여 넣어요", false)}
+      <div class="count" id="cnt1"></div>
+    </section>
+    <div class="nav"><button class="btn primary cta" id="next" style="min-height:62px">다음: 가진 힘과 한계 →</button></div></div>`;
+  const ids = ["ctitle", "cwho", "cwhat", "cres", "csrc", "curl"], nx = $("#next"), cnt = $("#cnt1");
+  const upd = () => {
+    const miss = [["ctitle", "사례 제목"], ["cwho", "누가"], ["cwhat", "무엇을 했나요"], ["csrc", "출처"]].filter(([k]) => !S[k].trim()).map(x => x[1]);
+    const short = S.cwhat.trim() && S.cwhat.trim().length < 10;
+    cnt.textContent = miss.length ? `아직 비어 있는 칸: ${miss.join(", ")}` : short ? "‘무엇을 했나요’를 조금 더 자세히 써요 (10자 넘게)" : "모두 채웠어요";
+    nx.disabled = miss.length > 0 || short;
+  };
+  ids.forEach(id => { $("#" + id).oninput = e => { S[id] = e.target.value; keep(); upd(); }; }); upd();
+  nx.onclick = () => { S.step = 2; keep(); render(); scrollTo(0, 0); };
+  $("#chg").onclick = () => { S.step = 0; keep(); render(); };
+}
+
+/* ── 2. 가진 힘과 한계 ── */
+function renderStep2(){
+  setTheme();
+  const a = A(S.a), tp = GROUP_TOPIC[S.g] || S.g;
+  const chips = (list, key, max) => list.map((p, i) => `<button class="pick ${S[key].includes(i) ? "sel" : ""}" data-k="${key}" data-i="${i}" data-max="${max}">${esc(p)}</button>`).join("");
+  const hints = CASES[S.a - 1].map((c, i) => `<div>· ${esc(TOPICS[i].name)}: ${esc(c.power)}</div>`).join("");
+  $("#app").innerHTML = `<div class="wrap">${stepHead()}
+    <section class="q"><h3>Q2. <em>${esc(a.name)}</em>${josa(a.name, "이", "가")} 가진 힘은 무엇일까요?</h3>
+      <p class="guide">다른 주체보다 ${esc(a.name)}${josa(a.name, "이", "가")} 특히 잘할 수 있는 것을 2개까지 골라요.</p>
+      <div class="chips">${chips(POWERS, "powers", 2)}</div>
+      <button class="hintbtn" id="hint">${S.hint ? "힌트 숨기기" : "다른 사례의 힘 보기 (힌트)"}</button>
+      ${S.hint ? `<div class="hint">${hints}</div>` : ""}</section>
+    <section class="q"><h3>Q3. <em>${esc(a.name)}</em>의 노력에는 어떤 한계가 있을까요?</h3>
+      <p class="guide">${esc(a.name)}${josa(a.name, "이", "가")} 혼자서는 하기 어려운 점을 1~2개 골라요.</p>
+      <div class="chips">${chips(LIMITS, "limits", 2)}</div></section>
+    <div class="nav"><button class="btn ghost back" id="prev">← 이전</button><button class="btn primary" id="next">다음: 나의 해결 방법 →</button></div></div>`;
+  const nx = $("#next"); const upd = () => { nx.disabled = !(S.powers.length && S.limits.length); }; upd();
+  $("#app").querySelectorAll(".pick").forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = +b.dataset.i, max = +b.dataset.max, arr = S[k], at = arr.indexOf(i);
+    if (at >= 0) arr.splice(at, 1); else { if (arr.length >= max) arr.shift(); arr.push(i); }
+    keep(); renderStep2();
+  });
+  $("#hint").onclick = () => { S.hint = !S.hint; keep(); renderStep2(); };
+  $("#prev").onclick = () => { S.step = 1; keep(); render(); };
+  nx.onclick = () => { S.step = 3; keep(); render(); scrollTo(0, 0); };
+  $("#chg").onclick = () => { S.step = 0; keep(); render(); };
+}
+
+/* ── 3. 나의 해결 방법 ── */
+function renderStep3(){
+  setTheme();
+  const t = T(S.g), a = A(S.a);
+  const partners = ACTORS.filter(x => x.n !== S.a).map(x => `<button class="partner ${S.partner === x.n ? "sel" : ""}" data-p="${x.n}" style="${S.partner === x.n ? `background:${x.c};border-color:${x.c}` : ""}">${esc(x.name)}</button>`).join("");
+  $("#app").innerHTML = `<div class="wrap">${stepHead()}
+    <section class="q"><h3>Q4. 내가 <em>${esc(a.name)}</em>${josa(a.name, "이라면", "라면")} <em>${esc(t.name)}</em> 문제를 줄이기 위해 무엇을 할까요?</h3>
+      <p class="guide">고른 ‘가진 힘’을 써서, 실제로 할 수 있는 방법을 구체적으로 써요.</p>
+      <div class="frame">“나는 ${esc(a.short)}${josa(a.short, "으로서", "로서")} ~을/를 하겠다. 그러면 ~ 때문에 ~이/가 줄어든다.”</div>
+      <textarea id="idea" maxlength="300" placeholder="나의 해결 방법을 써요">${esc(S.idea)}</textarea>
+      <div class="count" id="cnt3"></div>
+      <button class="hintbtn" id="ex">${S.ex ? "예시 숨기기" : "막히면 예시 보기"}</button>
+      ${S.ex ? `<div class="hint">${esc(IDEA_EX[S.a - 1])}</div>` : ""}</section>
+    <section class="q"><h3>Q5. 누구와 함께하면 더 효과적일까요?</h3>
+      <p class="guide">나의 방법을 도와줄 주체를 하나 고르고 까닭을 짧게 써요.</p>
+      <div class="partners">${partners}</div>
+      <input type="text" id="why" maxlength="120" placeholder="까닭 예) 돈이 많이 들어서 나라의 예산이 필요하기 때문임" value="${esc(S.why)}"></section>
+    <div class="nav"><button class="btn ghost back" id="prev">← 이전</button><button class="btn primary" id="send" style="font-size:20px">제출하기</button></div></div>`;
+  const ta = $("#idea"), cnt = $("#cnt3"), sd = $("#send");
+  const upd = () => { const n = ta.value.trim().length; cnt.textContent = n < 15 ? `${n}자 · 15자 넘게 써요` : `${n}자`; sd.disabled = n < 15 || !S.partner; };
+  ta.oninput = () => { S.idea = ta.value; keep(); upd(); }; upd();
+  $("#why").oninput = e => { S.why = e.target.value; keep(); };
+  $("#app").querySelectorAll("[data-p]").forEach(b => b.onclick = () => { S.partner = +b.dataset.p; keep(); renderStep3(); });
+  $("#ex").onclick = () => { S.ex = !S.ex; keep(); renderStep3(); };
+  $("#prev").onclick = () => { S.step = 2; keep(); render(); };
+  $("#chg").onclick = () => { S.step = 0; keep(); render(); };
+  sd.onclick = async () => {
+    sd.disabled = true; sd.textContent = "보내는 중…";
+    const rec = { no: S.no, g: S.g, a: S.a, topic: GROUP_TOPIC[S.g] || S.g, state: "제출", ctitle: S.ctitle.trim(), cwho: S.cwho.trim(), cwhat: S.cwhat.trim(), cres: S.cres.trim(), csrc: S.csrc.trim(), curl: S.curl.trim(), powers: S.powers, limits: S.limits, idea: S.idea.trim(), partner: S.partner, why: S.why.trim() };
+    try { if (!api) throw Object.assign(new Error("no api"), { code: "unavailable" }); await api.save(S.no, rec); S.step = 4; keep(); render(); scrollTo(0, 0); }
+    catch (e) { console.error(e); sd.disabled = false; sd.textContent = "다시 제출하기";
+      toast(errKind(e) === "perm" ? "저장 권한이 없어요. 선생님께 알려 주세요." : "인터넷 연결을 확인하고 다시 눌러 주세요.", 3500); }
+  };
+}
+
+/* ── 4. 제출 완료 ── */
+function renderDone(){
+  setTheme();
+  const t = T(S.g), a = A(S.a), p = S.partner ? A(S.partner) : null;
+  $("#app").innerHTML = `<div class="wrap">
+    <div class="card done-hero"><div class="big">✅</div><h2>제출했어요!</h2><p class="muted" style="margin:0">모둠 화면에서 친구들의 생각과 이어 봐요.</p></div>
+    <div class="card"><dl class="sum" style="margin:0">
+      <dt>${S.g}모둠 · ${esc(t.name)} · ${esc(a.name)}</dt>
+      <dt>내가 찾은 사례</dt><dd><b>${esc(S.ctitle)}</b> · ${esc(S.cwho)}<br>${esc(S.cwhat)}${S.cres ? `<br>${esc(S.cres)}` : ""}<br><span class="muted" style="font-size:15px">출처: ${esc(S.csrc)}</span></dd>
+      <dt>가진 힘 / 한계</dt><dd>${S.powers.map(i => esc(POWERS[i])).join(", ")} / ${S.limits.map(i => esc(LIMITS[i])).join(", ")}</dd>
+      <dt>나의 해결 방법</dt><dd>${esc(S.idea)}</dd>
+      <dt>함께할 주체</dt><dd>${p ? esc(p.name) : ""}${S.why ? ` · ${esc(S.why)}` : ""}</dd></dl></div>
+    <div class="nav"><button class="btn ghost back" id="edit">고치기</button><a class="btn primary" href="#group=${S.g}" style="flex:1;font-size:20px">우리 모둠 화면 보기 →</a></div></div>`;
+  $("#edit").onclick = () => { S.step = 1; keep(); render(); };
+}
+
+/* ══════════════ 모둠 화면 ══════════════ */
+let groupG = 1, sentDraft = null;
+function renderGroup(g){
+  groupG = g; const t = T(g), tp = GROUP_TOPIC[g] || g;
+  const r = document.documentElement.style; r.setProperty("--tc", t.c); r.setProperty("--tt", t.t); r.setProperty("--ton", t.on);
+  const frame = `${t.name}${josa(t.name, "을", "를")} 해결하려면 개인은 ○○, 기업은 ○○, 국가는 ○○, 국제기구는 ○○ 해야 함. 함께해야 하는 까닭은 ○○ 때문임.`;
+  const gd = GRP[String(g)] || {};
+  $("#app").innerHTML = `<div class="wrap wide">
+    <div class="gh"><h1>${g}모둠 · ${esc(t.name)} 해결 협력 사슬</h1><p>네 주체의 방법을 이어, 가장 효과적인 방법을 함께 골라요</p></div>
+    <div class="board" id="board"></div>
+    <div class="talk">
+      <div class="card"><div class="sec-t">모둠 토의 순서</div><ol class="order">
+        <li><div>한 사람씩 내 방법 소개하기 (30초)<small>“나는 ○○로서 ~을 하겠어. 왜냐하면 ~”</small></div></li>
+        <li><div>서로 질문하기<small>“그 방법의 한계는 뭘까?” “누가 도와주면 될까?”</small></div></li>
+        <li><div>가장 효과적인 방법에 ★ 누르기<small>기준: 여러 사람에게 도움이 되는가? 오래 계속할 수 있는가?</small></div></li>
+        <li><div>우리 모둠 한 문장 쓰기<small>네 주체가 왜 함께해야 하는지 까닭을 넣어요</small></div></li></ol></div>
+      <div class="card"><div class="sec-t">우리 모둠 한 문장</div>
+        <div class="frame">${esc(frame)}</div>
+        <textarea id="sent" maxlength="400" placeholder="모둠에서 의논한 한 문장을 써요">${esc(sentDraft ?? gd.sentence ?? "")}</textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn primary" id="saveSent">저장하기</button><span class="saved" id="savedAt">${gd.sentence ? `저장됨${gd.by ? ` · ${gd.by}번` : ""}` : "아직 저장 전"}</span></div></div>
+    </div>
+    <p style="text-align:center;margin-top:16px">${[1, 2, 3, 4].filter(x => x !== g).map(x => `<a href="#group=${x}" class="muted" style="font-size:15px;margin:0 6px">${x}모둠 화면</a>`).join("")} · <a href="#" class="muted" style="font-size:15px">처음 화면</a></p></div>`;
+  drawBoard();
+  const ta = $("#sent"); ta.oninput = () => { sentDraft = ta.value; };
+  $("#saveSent").onclick = async () => {
+    const v = ta.value.trim(); if (!v) return toast("한 문장을 먼저 써요");
+    try { await api.saveGroup(g, { sentence: v, by: S.no || null, topic: tp }); sentDraft = null; toast("모둠 한 문장을 저장했어요"); }
+    catch (e) { toast("저장하지 못했어요. 인터넷을 확인해 주세요.", 3000); }
+  };
+}
+function drawBoard(){
+  const g = groupG, el = $("#board"); if (!el) return;
+  const members = RES.filter(r => r.g === g);
+  const stars = {}; members.forEach(r => { if (r.star) stars[r.star] = (stars[r.star] || 0) + 1; });
+  const me = S.no && S.g === g ? RES.find(r => r.no === S.no) : null;
+  el.innerHTML = ACTORS.map(a => {
+    const r = members.find(m => m.a === a.n);
+    let body;
+    if (!r || r.state !== "제출") body = `<div class="empty">${r ? `${r.no}번 친구가 조사 중이에요…` : "아직 맡은 친구가 없어요"}</div>`;
+    else {
+      const p = r.partner ? A(r.partner) : null;
+      body = `<div><div class="lab">나의 해결 방법</div><div class="idea">${esc(r.idea)}</div></div>
+        <div><div class="lab">찾은 사례</div><div class="eff"><b>${esc(r.ctitle || "")}</b>${r.cwho ? ` · ${esc(r.cwho)}` : ""}<br>${esc(r.cwhat || "")}</div><div class="srcl">출처: ${r.curl && /^https?:\/\//.test(r.curl) ? `<a href="${esc(r.curl)}" target="_blank" rel="noopener">${esc(r.csrc || "링크")}</a>` : esc(r.csrc || "")}</div></div>
+        <div class="mini-chips">${(r.powers || []).map(i => `<span>${esc(POWERS[i])}</span>`).join("")}${(r.limits || []).map(i => `<span class="lim">한계: ${esc(LIMITS[i])}</span>`).join("")}</div>
+        ${p ? `<div class="with">→ <b style="color:${p.c}">${esc(p.name)}</b>${josa(p.name, "과", "와")} 함께${r.why ? `: ${esc(r.why)}` : ""}</div>` : ""}`;
+    }
+    const n = stars[a.n] || 0, mine = me && me.star === a.n;
+    return `<section class="col" style="--c:${a.c};--t:${a.t}">
+      <div class="col-h"><span class="ic">${ICONS[a.icon]}</span><div><b>${esc(a.name)}</b><small>${r ? `${r.no}번` : ""}</small></div></div>
+      <div class="col-b">${body}
+        ${r && r.state === "제출" ? `<button class="star ${mine ? "on" : ""}" data-star="${a.n}" ${me ? "" : "disabled"} title="${me ? "" : "내 태블릿에서 눌러요"}">★ 가장 효과적 ${n ? `· ${n}표` : ""}</button>` : ""}</div></section>`;
+  }).join("");
+  el.querySelectorAll("[data-star]").forEach(b => b.onclick = async () => {
+    const a = +b.dataset.star, cur = me?.star === a ? null : a;
+    try { await api.save(S.no, { star: cur }); } catch (e) { toast("저장하지 못했어요", 2500); }
+  });
+}
+
+/* ══════════════ 교사 화면 ══════════════ */
+let tv = false, delArm = 0, listenErr = null;
+function askPw(){
+  if (ss.get("ga_teacher") || DEMO) return renderTeacher();
+  $("#app").innerHTML = `<div class="modal"><div class="box2"><b style="font-size:20px">교사 화면</b><div class="muted" style="font-size:15px">비밀번호를 입력하세요</div>
+    <input type="password" id="pw" inputmode="numeric" autofocus><div style="display:flex;gap:8px"><a class="btn ghost" href="#" style="flex:1">취소</a><button class="btn primary" id="ok" style="flex:1">들어가기</button></div></div></div>`;
+  const go = () => { if ($("#pw").value === TEACHER_PW){ ss.set("ga_teacher", true); renderTeacher(); } else toast("비밀번호가 달라요"); };
+  $("#ok").onclick = go; $("#pw").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+function renderTeacher(){
+  document.body.classList.toggle("tv", tv);
+  const done = RES.filter(r => r.state === "제출"), doing = RES.filter(r => r.state !== "제출");
+  const head = [1, 2, 3, 4].map(g => { const t = T(g); return `<th style="background:${t.c};color:${t.on}">${g}모둠 · ${esc(t.name)}</th>`; }).join("");
+  const stars = {}; RES.forEach(r => { if (r.star) stars[r.g + "-" + r.star] = (stars[r.g + "-" + r.star] || 0) + 1; });
+  const rows = ACTORS.map(a => `<tr><th class="rowh" style="background:${a.t};color:${a.c}">${esc(a.name)}</th>${[1, 2, 3, 4].map(g => {
+    const r = RES.find(x => x.g === g && x.a === a.n);
+    if (!r) return `<td class="wait">—</td>`;
+    if (r.state !== "제출") return `<td class="wait">${r.no}번 조사 중…</td>`;
+    const s = stars[g + "-" + a.n];
+    return `<td><div class="no">${r.no}번${s ? ` <span class="st">★ ${s}</span>` : ""}</div><div class="ti">${esc(r.idea)}</div><div class="cs2">사례: ${esc(r.ctitle || "")}${r.csrc ? ` <span>(${esc(r.csrc)})</span>` : ""}</div></td>`; }).join("")}</tr>`).join("");
+  const agg = ACTORS.map(a => {
+    const mine = done.filter(r => r.a === a.n), cnt = (key, list) => list.map((p, i) => [p, mine.filter(r => (r[key] || []).includes(i)).length]).filter(x => x[1]).sort((x, y) => y[1] - x[1]).slice(0, 3);
+    const bars = (arr) => arr.length ? arr.map(([p, n]) => `<div class="bar"><span>${esc(p)}</span><span>${n}명</span><div class="tr"><i style="width:${Math.round(n / Math.max(1, mine.length) * 100)}%"></i></div></div>`).join("") : `<div class="muted" style="font-size:15px">아직 없음</div>`;
+    return `<div class="box" style="--c:${a.c}"><h3 style="color:${a.c}">${esc(a.name)}</h3><div class="lab" style="--c:${a.c}">가진 힘</div>${bars(cnt("powers", POWERS))}<div class="lab" style="--c:#666;margin-top:6px">한계</div>${bars(cnt("limits", LIMITS))}</div>`;
+  }).join("");
+  const sents = [1, 2, 3, 4].map(g => { const t = T(g), s = GRP[String(g)]; return `<div class="s" style="--c:${t.c};border-left-color:${t.c}"><small>${g}모둠 · ${esc(t.name)}</small>${s?.sentence ? esc(s.sentence) : `<span class="muted">아직 저장 전</span>`}</div>`; }).join("");
+  $("#app").innerHTML = `<div class="wrap wide">
+    <div class="tbar"><h1>지구촌 문제 해결 조사단 · 교사 화면${DEMO ? '<span class="demo-badge">데모</span>' : ""}</h1>
+      <div class="stats"><span class="stat">제출<b>${done.length}</b>/${STUDENT_NOS.length}</span><span class="stat">조사 중<b>${doing.length}</b></span></div></div>
+    ${listenErr ? `<div class="err">${listenErr === "perm" ? `Firestore 읽기 권한이 없어요. 규칙에 아래 내용을 넣어 주세요.<pre>${esc(RULES)}</pre>` : "서버에 연결하지 못했어요. 인터넷을 확인해 주세요."}</div>` : ""}
+    <div class="flow"><span>개인 검색·조사<i>15′</i></span><span>모둠 협력 사슬 · ★<i>12′</i></span><span>전체 공유 · 일반화<i>8′</i></span><span>나의 실천 다짐<i>5′</i></span></div>
+    <table class="matrix"><thead><tr><th class="rowh"></th>${head}</tr></thead><tbody>${rows}</tbody></table>
+    <div class="sec-t" style="margin-top:18px">주체별 ‘가진 힘’과 ‘한계’ <small>일반화할 때 함께 봐요: 주체마다 가진 힘이 달라 서로 채워 줌</small></div>
+    <div class="agg">${agg}</div>
+    <div class="sec-t" style="margin-top:18px">모둠 한 문장</div><div class="sentences">${sents}</div>
+    <div class="tools"><button class="btn ghost" id="tvb">${tv ? "보통 글씨" : "TV용 큰 글씨"}</button><button class="btn ghost" id="csv">CSV 내려받기</button>
+      <a class="btn ghost" href="#print">종이 조사지 인쇄</a><a class="btn ghost" href="#group=1">모둠 화면 보기</a>
+      <button class="btn ghost" id="del" style="margin-left:auto;color:var(--no)">${delArm ? "한 번 더 누르면 모두 지워져요" : "모든 기록 지우기"}</button></div></div>`;
+  $("#tvb").onclick = () => { tv = !tv; renderTeacher(); };
+  $("#csv").onclick = () => {
+    const head = ["번호", "모둠", "문제", "주체", "상태", "사례 제목", "누가", "무엇을 했나요", "결과·숫자", "출처", "주소", "가진 힘", "한계", "나의 해결 방법", "함께할 주체", "까닭", "★"];
+    const lines = [head].concat(RES.slice().sort((x, y) => x.g - y.g || x.a - y.a).map(r => [r.no, r.g, T(r.g).name, A(r.a)?.name, r.state, r.ctitle, r.cwho, r.cwhat, r.cres, r.csrc, r.curl, (r.powers || []).map(i => POWERS[i]).join("/"), (r.limits || []).map(i => LIMITS[i]).join("/"), r.idea, r.partner ? A(r.partner).name : "", r.why, r.star ? A(r.star).name : ""]));
+    lines.push([]); [1, 2, 3, 4].forEach(g => lines.push([`${g}모둠 한 문장`, GRP[String(g)]?.sentence || ""]));
+    const csv = "﻿" + lines.map(l => l.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "지구촌_해결_조사_결과.csv"; a.click();
+  };
+  $("#del").onclick = async () => {
+    if (!delArm){ delArm = 1; renderTeacher(); setTimeout(() => { if (delArm){ delArm = 0; if (location.hash === "#teacher") renderTeacher(); } }, 4000); return; }
+    delArm = 0; try { await api.clear(); toast("모든 기록을 지웠어요"); } catch (e) { toast("지우지 못했어요", 2500); }
+  };
+}
+
+/* ══════════════ 종이 조사지 (#print) ══════════════ */
+let printBuilt = false;
+function renderPrint(){
+  document.body.classList.add("pmode");
+  if (printBuilt) return; printBuilt = true;
+  const ln = h => `<div class="ln" style="--h:${h}mm"></div>`;
+  const fr = (k, h) => `<div class="fr"><span class="k">${k}</span>${ln(h)}</div>`;
+  const pages = ACTORS.map(a => { const ex = EXAMPLES[a.n - 1].main, et = TOPICS[ex.topic - 1];
+    return `<section class="pg" style="--c:${a.c};--t:${a.t}">
+    <div class="band"><b>${esc(a.name)} 조사지</b><span>지구촌 문제 해결 조사단 · ${esc(a.hint)}</span></div>
+    <div class="info">모둠 <span></span> 맡은 문제 <span style="min-width:40mm"></span> 이름 <span style="min-width:30mm"></span></div>
+    <div class="exp"><div class="eh">① 예시 사례 <i style="background:${et.c};color:${et.on}">${esc(et.name)}</i></div>
+      <div class="er"><span class="k">사례 제목</span><span>${esc(ex.title)}</span></div>
+      <div class="er"><span class="k">누가</span><span>${esc(ex.who)}</span></div>
+      <div class="er"><span class="k">무엇을 했나요</span><span>${esc(ex.what)}</span></div>
+      <div class="er"><span class="k">결과·숫자</span><span>${esc(ex.res)}</span></div>
+      <div class="er"><span class="k">출처</span><span>${esc(ex.src)}</span></div></div>
+    <div class="srch"><div class="eh">② 우리 모둠 문제에서 ${esc(a.name)}의 노력을 검색해요 <small>예시와 다른 사례를 찾아요</small></div>
+      <table>${TOPICS.map(t => `<tr><th style="background:${t.t}">${esc(t.name)}</th><td>${KEYWORDS[a.n - 1][t.n - 1].map(esc).join(" · ")}</td></tr>`).join("")}</table>
+      <div class="tp2">${SEARCH_TIPS.map(esc).join(" / ")}</div></div>
+    <div class="qq mine"><div class="x">③ 내가 찾은 사례</div>
+      ${fr("사례 제목", 7.5)}${fr("누가", 7.5)}${fr("무엇을 했나요", 15)}${fr("결과·숫자", 7.5)}${fr("출처(이름·날짜)", 7.5)}</div>
+    <div class="qq"><div class="x">④ ${esc(a.name)}${josa(a.name, "이", "가")} 가진 힘 (2개까지 ○)</div><div class="ck">${POWERS.map(p => `<span>○ ${esc(p)}</span>`).join("")}</div></div>
+    <div class="qq"><div class="x">⑤ ${esc(a.name)}의 노력의 한계 (1~2개 ○)</div><div class="ck">${LIMITS.map(p => `<span>○ ${esc(p)}</span>`).join("")}</div></div>
+    <div class="qq" style="flex:1"><div class="x">⑥ 내가 ${esc(a.name)}${josa(a.name, "이라면", "라면")} 우리 모둠 문제를 줄이기 위해 무엇을 할까요?</div><div style="font-size:9pt;color:#555">“나는 ${esc(a.short)}${josa(a.short, "으로서", "로서")} ~을/를 하겠다. 그러면 ~ 때문에 ~이/가 줄어든다.”</div>${ln(22.5)}</div>
+    <div class="qq"><div class="x">⑦ 누구와 함께하면 더 효과적일까요? ${ACTORS.filter(x => x.n !== a.n).map(x => `○ ${esc(x.name)}`).join("  ")}</div>${fr("까닭", 7.5)}</div>
+  </section>`; }).join("");
+  const gpage = `<section class="pg" style="--c:#173F6B">
+    <div class="band"><b>모둠 협력 사슬</b><span>모둠 <u style="display:inline-block;width:12mm"></u> · 맡은 문제 <u style="display:inline-block;width:40mm"></u></span></div>
+    <div class="gcols">${ACTORS.map(a => `<div class="gc" style="--c:${a.c}"><div class="h">${esc(a.name)}</div><div class="b">
+      <div>맡은 사람: </div><div>찾은 사례 (누가 · 무엇을)</div>${ln(30)}<div>나의 해결 방법</div>${ln(37.5)}<div>가진 힘 / 한계</div>${ln(15)}<div>함께할 주체</div>${ln(7.5)}<div>☆ 가장 효과적 (    표)</div></div></div>`).join("")}</div>
+    <div class="qq"><div class="x">우리 모둠 한 문장</div><div style="font-size:9pt;color:#555">“○○ 문제를 해결하려면 개인은 ○○, 기업은 ○○, 국가는 ○○, 국제기구는 ○○ 해야 함. 함께해야 하는 까닭은 ○○ 때문임.”</div>${ln(30)}</div>
+  </section>`;
+  $("#pp").innerHTML = `<div class="pbar">종이 조사지 (주체별 4쪽 + 모둠 정리 1쪽) <button class="btn primary small" onclick="window.print()">인쇄하기</button><a href="#teacher">← 교사 화면</a></div>${pages}${gpage}`;
+}
+
+/* ══════════════ 라우팅 ══════════════ */
+function render(){
+  const h = location.hash;
+  document.body.classList.remove("pmode", "tv");
+  ["--tc", "--tt", "--ton", "--ac", "--at"].forEach(v => document.documentElement.style.removeProperty(v));
+  if (h === "#print") return renderPrint();
+  if (h === "#teacher") return askPw();
+  const m = h.match(/^#group=(\d)/);
+  if (m) return renderGroup(+m[1]);
+  if (!S.step || !S.no || !S.g || !S.a) return renderStart();
+  ({ 1: renderStep1, 2: renderStep2, 3: renderStep3, 4: renderDone })[S.step]?.();
+}
+function onData(){
+  const h = location.hash;
+  if (h === "#teacher" && (ss.get("ga_teacher") || DEMO)) renderTeacher();
+  else if (/^#group=/.test(h)) drawBoard();
+  else if (!S.step) renderStart();
+}
+addEventListener("hashchange", () => { sentDraft = null; render(); scrollTo(0, 0); });
+
+(async () => {
+  if (DEMO) api = demoApi();
+  else { try { api = await firebaseApi(); } catch (e) { console.error(e); apiError = "load"; } }
+  if (api){
+    api.subscribe(list => { RES = list; listenErr = null; onData(); }, e => { listenErr = errKind(e); onData(); });
+    api.subscribeGroups(o => { GRP = o; const h = location.hash; if (h === "#teacher") onData();
+      else if (/^#group=/.test(h)) { const s = $("#savedAt"), gd = GRP[String(groupG)]; if (s && gd?.sentence) s.textContent = `저장됨${gd.by ? ` · ${gd.by}번` : ""}`;
+        const ta = $("#sent"); if (ta && sentDraft == null && gd?.sentence && document.activeElement !== ta) ta.value = gd.sentence; } }, () => {});
+  }
+  render();
+  if (!api) toast("저장 서버에 연결하지 못했어요. 선생님께 알려 주세요.", 4000);
+})();
+</script>
+</body>
+</html>
