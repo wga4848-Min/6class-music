@@ -1013,8 +1013,10 @@ async function pushCloud(p) {
   p = p || P(); clearTimeout(FB.timer);
   if (!p || !p.cloud || !p.dirty) return;
   if (FB.state !== 'on') { if (P() === p) setSync('fail'); return; }
-  const snap = toDoc(p);
   try {
+    const remote = await withTimeout(FB.api.get('n' + p.num), 9000);
+    if (remote && sameName(remote.name, p.name) && String(remote.pin) === String(p.pin) && absorb(p, fromDoc(remote))) p.updated = Date.now();
+    const snap = toDoc(p);
     await withTimeout(FB.api.put('n' + p.num, snap), 10000);
     if (p.updated === snap.updated) { p.dirty = false; localSave(); }
     if (P() === p) { if (p.dirty) queueCloud(); else setSync('ok'); }
@@ -1022,6 +1024,14 @@ async function pushCloud(p) {
     if (P() === p) setSync('fail');
     FB.timer = setTimeout(() => pushCloud(p), 8000);
   }
+}
+/* 다른 기기·이전 버전 창에서 저장한 기록과 합치기: 푼 문제와 장비는 절대 지우지 않음 */
+function absorb(p, o) {
+  let changed = false;
+  Object.entries(o.rec || {}).forEach(([k, r]) => { const m = p.rec[k]; if (r && (!m || (!m.ok && r.ok))) { p.rec[k] = r; changed = true; } });
+  (o.owned || []).forEach(id => { if (ITEMS[id] && !p.owned.includes(id)) { p.owned.push(id); changed = true; } });
+  if ((o.best || 0) > (p.best || 0)) { p.best = o.best; changed = true; }
+  return changed;
 }
 const sameName = (a, b) => String(a || '').replace(/\s+/g, '') === String(b || '').replace(/\s+/g, '');
 async function login() {
@@ -1047,7 +1057,11 @@ async function login() {
   if (!sameName(ref.name, name)) return fail(`${num}번은 다른 이름으로 등록되어 있음. 번호를 다시 확인해 주세요.`);
   if (String(ref.pin) !== pin) return fail('비밀번호가 맞지 않음. 잊었으면 선생님께 물어봐요.');
   let p = src || cached;
-  if (src && cached && (cached.updated || 0) > (src.updated || 0)) { p = cached; p.dirty = true; }
+  if (src && cached) {
+    const other = (cached.updated || 0) > (src.updated || 0) ? src : cached;
+    if (other === src) { p = cached; p.dirty = true; }
+    if (absorb(p, other)) p.dirty = true;
+  }
   S.P[id] = p; S.cur = id; S.last = {num, name:ref.name};
   ui.lPin = ''; ui.lMsg = ''; combo = 0;
   localSave();
