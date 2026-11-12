@@ -148,7 +148,6 @@ button:focus-visible,input:focus-visible{outline:3px dashed var(--azure);outline
 /* chapter map */
 .ch-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
 .ch-card{grid-column:span 2;padding:0;overflow:hidden;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column}
-.ch-card:nth-child(4){grid-column:2 / span 2}
 .ch-card:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
 .ch-head{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--cc);color:#fff;font-family:var(--f-display);font-size:18px;border-bottom:3px solid var(--ink)}
 .ch-body{padding:14px 16px 16px;display:grid;gap:8px}
@@ -159,8 +158,8 @@ button:focus-visible,input:focus-visible{outline:3px dashed var(--azure);outline
 .rw-thumb{width:52px;height:52px;flex:none;border:2px solid var(--ink);border-radius:10px;background:#fff;padding:4px}
 .ch-rw small{display:block;font-size:13px;color:var(--ink-2)}
 .ch-rw b{font-family:var(--f-display);font-weight:400;font-size:17px}
-@media (max-width:900px){.ch-grid{grid-template-columns:1fr 1fr}.ch-card,.ch-card:nth-child(4){grid-column:auto}.ch-card:nth-child(5){grid-column:1/-1}}
-@media (max-width:600px){.ch-grid{grid-template-columns:1fr}.ch-card:nth-child(5){grid-column:auto}}
+@media (max-width:900px){.ch-grid{grid-template-columns:1fr 1fr}.ch-card{grid-column:auto}}
+@media (max-width:600px){.ch-grid{grid-template-columns:1fr}}
 
 /* chapter */
 .chv{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.3fr);gap:22px;align-items:start}
@@ -373,7 +372,7 @@ button:focus-visible,input:focus-visible{outline:3px dashed var(--azure);outline
 .chbar{display:grid;grid-template-columns:48px minmax(0,1fr) 40px;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums}
 .chbar .bar{height:10px;border-width:2px}
 .dhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.dtbl{min-width:980px}
+.dtbl{min-width:1060px}
 .dtbl th,.dtbl td{padding:8px}
 .cell-n{display:inline-block;min-width:34px;border-radius:8px;padding:1px 6px}
 .cell-n.some{background:var(--paper-2)}
@@ -433,7 +432,10 @@ const CH = [
    ex:['2 × 6 = 12, 3 × 4 = 12','3 : 4 = 9 : □ → 3 × □ = 4 × 9, □ = 12']},
   {n:5, t:'비례식의 활용', c:'#F2558F', d:'비례식으로 생활 속 문제 해결', tip:'두 양의 순서를 똑같이 맞춰 비례식을 세워!', dq:'',
    sum:['구하려는 값을 □로 놓음.','두 양의 순서를 맞추어 비례식을 세움.','비례식의 성질을 이용하여 □를 구함.'],
-   ex:['쿠키 3개 : 밀가루 120 g = 쿠키 5개 : □ g','3 × □ = 120 × 5, □ = 200']}
+   ex:['쿠키 3개 : 밀가루 120 g = 쿠키 5개 : □ g','3 × □ = 120 × 5, □ = 200']},
+  {n:7, no:6, t:'비례배분', c:'#17A2B8', d:'전체를 주어진 비로 나누기', tip:'전체를 (전항 + 후항)만큼 나눠서 생각해!', dq:'', bar:true,
+   sum:['전체를 주어진 비로 배분하는 것을 비례배분이라고 함.','전체를 가 : 나 = 2 : 3으로 비례배분하면 가는 전체의 {2/5}, 나는 전체의 {3/5}임.','비가 분수나 소수이면 먼저 간단한 자연수의 비로 바꿈.','비례배분한 두 수를 더하면 처음 전체와 같음.'],
+   ex:['10 → 2 : 3','10 × {2/5} = 4, 10 × {3/5} = 6']}
 ];
 
 const Q = {
@@ -597,7 +599,39 @@ Q[6] = [
  {d:4, q:'소금과 물을 1 : 9의 비로 섞어 소금물 400 g을 만들려고 해요. 소금은 몇 g 필요할까요?', e:'[] g', a:[40], h:'소금물은 소금과 물을 합한 것임. 소금 : 소금물 = 1 : (1 + 9)', x:'소금 : 소금물 = 1 : 10 = □ : 400, 10 × □ = 400, □ = 40', k:['400*1/10']},
  {d:4, q:'기계 1대는 8분 동안 부품 36개를 만들어요. 똑같은 기계 2대로 부품 270개를 만들려면 몇 분이 걸릴까요?', e:'[] 분', a:[30], h:'2대가 나누어 만들면 1대가 만드는 부품은 270 ÷ 2 = 135개임.', x:'8 : 36 = □ : 135, 36 × □ = 8 × 135 = 1080, □ = 30', k:['8*(270/2)/36']},
  {d:4, q:'같은 시각에 키가 1.5 m인 사람의 그림자가 2 m였어요. 그림자가 18 m인 탑의 높이는 몇 m인가요?', e:'[] m', a:[13.5], h:'1.5 : 2 = □ : 18로 비례식을 세움. 답이 소수일 수도 있음.', x:'2 × □ = 1.5 × 18 = 27, □ = 13.5', k:['1.5*18/2']},
- {d:5, q:'가로와 세로의 비가 5 : 3인 직사각형 꽃밭의 가로가 7.5 m예요. 1 m²마다 꽃을 4송이씩 심으려면 꽃은 모두 몇 송이 필요할까요?', e:'[] 송이', a:[135], h:'5 : 3 = 7.5 : □로 세로를 먼저 구한 뒤 넓이를 구함.', x:'5 × □ = 3 × 7.5 = 22.5, 세로는 4.5 m. 넓이는 7.5 × 4.5 = 33.75 m², 꽃은 33.75 × 4 = 135송이', k:['7.5*(7.5*3/5)*4']}
+ {d:5, q:'가로와 세로의 비가 5 : 3인 직사각형 꽃밭의 가로가 7.5 m예요. 1 m²마다 꽃을 4송이씩 심으려면 꽃은 모두 몇 송이 필요할까요?', e:'[] 송이', a:[135], h:'5 : 3 = 7.5 : □로 세로를 먼저 구한 뒤 넓이를 구함.', x:'5 × □ = 3 × 7.5 = 22.5, 세로는 4.5 m. 넓이는 7.5 × 4.5 = 33.75 m², 꽃은 33.75 × 4 = 135송이', k:['7.5*(7.5*3/5)*4']},
+ {d:4, q:'어떤 수를 5 : 3으로 비례배분했더니 작은 쪽이 27이었어요. 어떤 수는 얼마인가요?', e:'[]', a:[72], h:'작은 쪽 27은 전체를 8부분으로 나눈 것 중 3부분임.', x:'27 ÷ 3 = 9가 1부분이므로 전체는 9 × 8 = 72임.', k:['27/3*8']},
+ {d:4, q:'둘레가 70 cm인 직사각형의 가로와 세로의 비가 4 : 3이에요. 이 직사각형의 넓이는 몇 cm²인가요?', e:'[] cm²', a:[300], h:'가로와 세로의 합은 둘레의 절반인 35 cm임. 35를 4 : 3으로 비례배분함.', x:'35 × {4/7} = 20, 35 × {3/7} = 15이므로 넓이는 20 × 15 = 300 cm²임.', k:['(70/2*4/7)*(70/2*3/7)']},
+ {d:4, q:'140을 {2/3} : 0.5로 비례배분하세요.', e:['140 → {2/3} : 0.5','[] , []'], a:[80,60], h:'0.5 = {1/2}임. {2/3} : {1/2}을 간단한 자연수의 비로 바꿈.', x:'{2/3} : {1/2}에 6을 곱하면 4 : 3임. 140 × {4/7} = 80, 140 × {3/7} = 60', k:['140*4/7','140*3/7']},
+ {d:4, q:'형과 동생이 구슬을 9 : 4로 나누었더니 형이 동생보다 25개 더 많았어요. 구슬은 모두 몇 개인가요?', e:'[] 개', a:[65], h:'형과 동생의 차는 9 − 4 = 5부분임. 5부분이 25개임.', x:'25 ÷ 5 = 5개가 1부분이므로 전체는 5 × 13 = 65개임.', k:['25/5*13']},
+ {d:4, q:'사과 96개를 가 반 26명, 나 반 22명의 학생 수의 비로 나누어 주려고 해요. 각 반은 몇 개씩 받을까요?', e:['가 반 → [] 개','나 반 → [] 개'], a:[52,44], h:'26 : 22를 간단한 자연수의 비로 바꾸면 13 : 11임.', x:'13 + 11 = 24이므로 96 × {13/24} = 52, 96 × {11/24} = 44', k:['96*13/24','96*11/24']},
+ {d:5, q:'수현이는 {1 1/2}시간, 지호는 1시간 48분 동안 봉사 활동을 했어요. 받은 간식 쿠폰 55장을 봉사한 시간의 비로 나누면 수현이는 몇 장을 받을까요?', e:'[] 장', a:[25], h:'두 시간을 분으로 바꾸어 비를 만듦. {1 1/2}시간 = 90분, 1시간 48분 = 108분', x:'90 : 108을 18로 나누면 5 : 6, 55 × {5/11} = 25장임.', k:['55*5/11']}
+];
+Q[7] = [
+ {d:1, q:'10을 2 : 3으로 비례배분하세요.', e:['10 → 2 : 3','[] , []'], a:[4,6], h:'2 + 3 = 5이므로 10을 5부분으로 나눈 것 중 2부분과 3부분임.', x:'10 × {2/5} = 4, 10 × {3/5} = 6이므로 4, 6임.', k:['10*2/5','10*3/5']},
+ {d:1, q:'12를 1 : 3으로 비례배분하려고 해요. 12를 모두 몇 부분으로 나누어 생각해야 하나요?', e:'[] 부분', a:[4], h:'비의 전항과 후항을 더해 봄.', x:'1 + 3 = 4이므로 12를 4부분으로 나누어 1부분과 3부분으로 배분함. 12 × {1/4} = 3, 12 × {3/4} = 9', k:['1+3']},
+ {d:1, t:'o', q:'전체를 주어진 비로 배분하는 것을 비례배분이라고 한다.', a:true, h:'비례배분의 뜻을 떠올려 봄.', x:'전체를 주어진 비로 배분하는 것을 비례배분이라고 함. 10을 2 : 3으로 비례배분하면 4와 6임.'},
+ {d:1, q:'20을 3 : 2로 비례배분하세요.', e:['20 → 3 : 2','[] , []'], a:[12,8], h:'20 × {3/5}와 20 × {2/5}를 구함.', x:'3 + 2 = 5이므로 20 × {3/5} = 12, 20 × {2/5} = 8임.', k:['20*3/5','20*2/5']},
+ {d:1, t:'c', q:'14를 3 : 4로 비례배분한 것을 고르세요.', c:['6, 8','8, 6','3, 4','7, 7'], a:0, h:'14 × {3/7}과 14 × {4/7}을 구해 봄.', x:'3 + 4 = 7이므로 14 × {3/7} = 6, 14 × {4/7} = 8임.'},
+ {d:1, q:'사탕 15개를 형과 동생이 3 : 2로 나누어 가지려고 해요. 형과 동생은 각각 몇 개를 가지게 될까요?', e:['형 → [] 개','동생 → [] 개'], a:[9,6], h:'15 × {3/5}, 15 × {2/5}를 구함.', x:'3 + 2 = 5이므로 형은 15 × {3/5} = 9개, 동생은 15 × {2/5} = 6개임.', k:['15*3/5','15*2/5']},
+ {d:1, q:'24를 5 : 1로 비례배분하세요.', e:['24 → 5 : 1','[] , []'], a:[20,4], h:'5 + 1 = 6이므로 24를 6부분으로 나누어 봄.', x:'24 × {5/6} = 20, 24 × {1/6} = 4임.', k:['24*5/6','24*1/6']},
+ {d:1, q:'30을 1 : 2로 비례배분하세요.', e:['30 → 1 : 2','[] , []'], a:[10,20], h:'1 + 2 = 3이므로 30을 3부분으로 나누어 봄.', x:'30 × {1/3} = 10, 30 × {2/3} = 20임.', k:['30*1/3','30*2/3']},
+ {d:2, t:'c', q:'45를 4 : 5로 비례배분할 때, 앞의 수를 구하는 식을 고르세요.', c:['45 × {4/9}','45 × {4/5}','45 × {5/9}','45 ÷ {4/9}'], a:0, h:'전체를 (4 + 5)부분으로 나눈 것 중 4부분임.', x:'4 + 5 = 9이므로 앞의 수는 45 × {4/9} = 20, 뒤의 수는 45 × {5/9} = 25임.'},
+ {d:2, q:'연필 48자루를 두 모둠에 5 : 7로 나누어 주려고 해요. 각 모둠은 몇 자루씩 받을까요?', e:['1모둠 → [] 자루','2모둠 → [] 자루'], a:[20,28], h:'5 + 7 = 12이므로 48 × {5/12}, 48 × {7/12}를 구함.', x:'48 × {5/12} = 20, 48 × {7/12} = 28임.', k:['48*5/12','48*7/12']},
+ {d:2, q:'색 테이프 90 cm를 지우와 민서가 2 : 3으로 나누어 가지려고 해요. 각각 몇 cm씩 가지게 될까요?', e:['지우 → [] cm','민서 → [] cm'], a:[36,54], h:'2 + 3 = 5이므로 90 × {2/5}, 90 × {3/5}를 구함.', x:'90 × {2/5} = 36, 90 × {3/5} = 54임.', k:['90*2/5','90*3/5']},
+ {d:2, q:'64를 0.3 : 0.5로 비례배분하세요.', e:['64 → 0.3 : 0.5','[] , []'], a:[24,40], h:'0.3 : 0.5를 먼저 간단한 자연수의 비 3 : 5로 바꿈.', x:'0.3 : 0.5 = 3 : 5이므로 64 × {3/8} = 24, 64 × {5/8} = 40임.', k:['64*3/8','64*5/8']},
+ {d:2, q:'50을 {1/2} : {1/3}으로 비례배분하세요.', e:['50 → {1/2} : {1/3}','[] , []'], a:[30,20], h:'{1/2} : {1/3}에 6을 곱하면 3 : 2임.', x:'{1/2} : {1/3} = 3 : 2이므로 50 × {3/5} = 30, 50 × {2/5} = 20임.', k:['50*3/5','50*2/5']},
+ {d:2, t:'o', q:'35를 2 : 5로 비례배분하면 14와 21이다.', a:false, h:'2 + 5 = 7이므로 35를 7부분으로 나누어 봄.', x:'35 × {2/7} = 10, 35 × {5/7} = 25이므로 10과 25임. 14와 21은 35를 2 : 3으로 비례배분한 것임.'},
+ {d:2, q:'용돈 6000원을 언니와 내가 7 : 5로 나누어 가지려고 해요. 각각 얼마씩 가지게 될까요?', e:['언니 → [] 원','나 → [] 원'], a:[3500,2500], h:'7 + 5 = 12이므로 6000 × {7/12}, 6000 × {5/12}를 구함.', x:'6000 × {7/12} = 3500, 6000 × {5/12} = 2500임.', k:['6000*7/12','6000*5/12']},
+ {d:2, q:'귤 56개를 1반과 2반에 학생 수의 비 4 : 3으로 나누어 주려고 해요. 각 반은 몇 개씩 받을까요?', e:['1반 → [] 개','2반 → [] 개'], a:[32,24], h:'4 + 3 = 7이므로 56 × {4/7}, 56 × {3/7}을 구함.', x:'56 × {4/7} = 32, 56 × {3/7} = 24임.', k:['56*4/7','56*3/7']},
+ {d:2, q:'하루 24시간 중 낮과 밤의 길이의 비가 7 : 5인 날이 있어요. 이날 낮은 몇 시간인가요?', e:'[] 시간', a:[14], h:'24시간을 7 : 5로 비례배분함.', x:'7 + 5 = 12이므로 낮은 24 × {7/12} = 14시간임.', k:['24*7/12']},
+ {d:3, q:'150을 1.2 : 0.8로 비례배분하세요.', e:['150 → 1.2 : 0.8','[] , []'], a:[90,60], h:'1.2 : 0.8을 간단한 자연수의 비로 바꾸면 3 : 2임.', x:'1.2 : 0.8 = 3 : 2이므로 150 × {3/5} = 90, 150 × {2/5} = 60임.', k:['150*3/5','150*2/5']},
+ {d:3, q:'어떤 수를 3 : 4로 비례배분했더니 큰 쪽이 28이 되었어요. 어떤 수는 얼마인가요?', e:'[]', a:[49], h:'큰 쪽 28은 전체를 7부분으로 나눈 것 중 4부분임.', x:'28 ÷ 4 = 7이 1부분이므로 전체는 7 × 7 = 49임.', k:['28/4*7']},
+ {d:3, q:'둘레가 56 cm인 직사각형의 가로와 세로의 비가 4 : 3이에요. 이 직사각형의 넓이는 몇 cm²인가요?', e:'[] cm²', a:[192], h:'가로와 세로의 합은 둘레의 절반인 28 cm임. 28을 4 : 3으로 비례배분함.', x:'28 × {4/7} = 16, 28 × {3/7} = 12이므로 넓이는 16 × 12 = 192 cm²임.', k:['(56/2*4/7)*(56/2*3/7)']},
+ {d:3, q:'두 사람이 각각 3000원, 5000원을 내어 피자 한 판 16조각을 샀어요. 낸 돈의 비로 나누면 각각 몇 조각씩 먹을 수 있을까요?', e:['3000원 낸 사람 → [] 조각','5000원 낸 사람 → [] 조각'], a:[6,10], h:'3000 : 5000을 간단한 자연수의 비로 바꾸면 3 : 5임.', x:'3 + 5 = 8이므로 16 × {3/8} = 6조각, 16 × {5/8} = 10조각임.', k:['16*3/8','16*5/8']},
+ {d:3, q:'84를 5 : 2로 비례배분했을 때, 두 수의 차를 구하세요.', e:'[]', a:[36], h:'먼저 84를 5 : 2로 비례배분한 두 수를 구함.', x:'84 × {5/7} = 60, 84 × {2/7} = 24이므로 차는 60 − 24 = 36임.', k:['84*5/7-84*2/7']},
+ {d:3, q:'끈 2 m를 {1/4} : {1/6}의 비로 나누려고 해요. 각각 몇 cm씩 되나요?', e:['앞 → [] cm','뒤 → [] cm'], a:[120,80], h:'2 m = 200 cm임. {1/4} : {1/6}을 간단한 자연수의 비로 바꿈.', x:'{1/4} : {1/6}에 12를 곱하면 3 : 2임. 200 × {3/5} = 120 cm, 200 × {2/5} = 80 cm', k:['200*3/5','200*2/5']},
+ {d:3, t:'c', q:'60을 다음 비로 비례배분했을 때, 결과가 나머지와 다른 것을 고르세요.', c:['2 : 3','0.4 : 0.6','{1/3} : {1/2}','3 : 2'], a:3, h:'각 비를 간단한 자연수의 비로 바꾸어 봄.', x:'2 : 3, 0.4 : 0.6, {1/3} : {1/2}은 모두 2 : 3이라 24, 36으로 나뉨. 3 : 2만 36, 24로 나뉨.'}
 ];
 /*DATA_END*/
 
@@ -617,12 +651,14 @@ const FLOORS = [
   {f:2, t:'자연수 숲', ch:2, c:'#3F8CFF', tip:'분수와 소수를 하나로 맞추면 쉬워져!'},
   {f:3, t:'비례식 탑', ch:3, c:'#21B38A', tip:'두 비의 비율이 같아야 비례식이야!'},
   {f:4, t:'외항·내항 성', ch:4, c:'#9B64F2', tip:'외항의 곱 = 내항의 곱을 꼭 기억해!'},
-  {f:5, t:'마왕의 성', ch:5, c:'#F2558F', tip:'구하려는 값을 □로 놓고 순서를 맞춰!'}
+  {f:5, t:'마왕의 성', ch:5, c:'#F2558F', tip:'구하려는 값을 □로 놓고 순서를 맞춰!'},
+  {f:6, t:'보물 창고', ch:7, c:'#17A2B8', tip:'전체를 (전항 + 후항)만큼 나눠서 생각해!'}
 ];
-const meta = n => n === 6 ? DG : CH[n - 1];
+const chOf = n => CH.find(c => c.n === n);
+const meta = n => n === 6 ? DG : chOf(n);
 const floorOf = i => Math.floor(i / FLOOR) + 1;
 function floorSolved(p, f) { let n = 0; for (let i = (f - 1) * FLOOR; i < f * FLOOR; i++) { const r = p.rec[rk(6, i)]; if (r && r.ok) n++; } return n; }
-const floorOpen = (p, f) => solvedIn(p, f) >= DG_OPEN;
+const floorOpen = (p, f) => solvedIn(p, FLOORS[f - 1].ch) >= DG_OPEN;
 const qStart = () => nav.ch === 6 ? (floorOf(nav.qi) - 1) * FLOOR : 0;
 const qEnd = () => nav.ch === 6 ? floorOf(nav.qi) * FLOOR : Q[nav.ch].length;
 const listName = () => nav.ch === 6 ? '던전으로' : '차시 목록으로';
@@ -651,7 +687,7 @@ const ITEMS = {
     svg:`<path d="M84,56 L124,-14 L156,56 Z" fill="#5B4BDB"/>${star4(112,22,8,'#FFE066')}${star4(134,36,6,'#FFE066')}<path d="M91,44 L151,44 L154,54 L88,54 Z" fill="#FFC93C"/><ellipse cx="120" cy="56" rx="66" ry="13" fill="#4537B8"/><circle cx="124" cy="-14" r="6" fill="#FFC93C"/>`},
   hat_helm:{slot:'hat', n:'기사 투구', price:280, desc:'빨간 깃털이 달린 단단한 투구임.',
     svg:`<path d="M121,28 C126,6 146,-6 162,-2 C150,4 142,16 136,32 Z" fill="#F25267"/><path d="M66,98 C62,46 90,24 120,24 C150,24 178,46 174,98 L160,98 L160,76 Q120,64 80,76 L80,98 Z" fill="#C9D3E0"/><path d="M120,26 L120,66" fill="none" stroke="#8D9BB0" stroke-width="4"/><path d="M82,75 Q120,64 158,75" fill="none" stroke="#8D9BB0" stroke-width="3"/><g stroke="none" fill="#8D9BB0"><circle cx="73" cy="86" r="3"/><circle cx="167" cy="86" r="3"/></g>`},
-  hat_crown:{slot:'hat', n:'비례 왕관', need:{total:120}, desc:'모든 문제를 정복한 용사만 쓰는 왕관임. 가운데에 비의 기호가 새겨져 있음.',
+  hat_crown:{slot:'hat', n:'비례 왕관', need:{total:120}, desc:'문제 120개를 정복한 용사만 쓰는 왕관임. 가운데에 비의 기호가 새겨져 있음.',
     svg:`<path d="M84,58 L86,20 L103,40 L120,10 L137,40 L154,20 L156,58 Z" fill="#FFC93C"/><rect x="83" y="46" width="74" height="14" rx="4" fill="#E9A400"/><g stroke-width="2.5"><circle cx="86" cy="18" r="5" fill="#F25267"/><circle cx="154" cy="18" r="5" fill="#F25267"/><circle cx="120" cy="8" r="6" fill="#3F8CFF"/></g><g stroke="none" fill="${K}"><circle cx="120" cy="50" r="2.4"/><circle cx="120" cy="56" r="2.4"/></g>`},
 
   body_vest:{slot:'body', n:'모험가 조끼', price:80, sleeve:'#F4EEDF', desc:'주머니가 달린 가벼운 조끼임.',
@@ -686,7 +722,7 @@ const ITEMS = {
   bk_star:{slot:'back', n:'별빛 망토', need:{total:30}, desc:'밤하늘을 그대로 담은 망토임.',
     svg: capeShape('#2B3A7A') + `<path d="M70,214 Q120,228 170,214" fill="none" stroke="#9B64F2" stroke-width="4"/>${star4(80,196,6,'#FFE066')}${star4(160,182,7,'#FFE066')}${star4(104,212,5,'#fff')}${star4(144,208,5,'#fff')}${star4(166,214,4,'#fff')}`, front: clasps},
   bk_angel:{slot:'back', n:'천사 날개', need:{total:90}, desc:'문제 90개를 풀면 돋아나는 하얀 날개임.', svg: mirror(WING_A)},
-  bk_dragon:{slot:'back', n:'용의 날개', need:{ch:5}, desc:'마지막 5차시를 정복한 용사의 날개임.', svg: mirror(WING_D)},
+  bk_dragon:{slot:'back', n:'용의 날개', need:{ch:5}, desc:'5차시 비례식의 활용을 정복한 용사의 날개임.', svg: mirror(WING_D)},
 
   pet_chick:{slot:'pet', n:'병아리', need:{total:1}, desc:'첫 문제를 풀면 따라오는 병아리임.',
     svg:`<path d="M-6,20 L-6,25 M6,20 L6,25" fill="none" stroke="#FF9F43" stroke-width="2.5"/><circle cx="0" cy="4" r="17" fill="#FFE066"/><path d="M-2,-13 Q0,-20 4,-13" fill="none"/><g stroke="none" fill="${K}"><circle cx="-6" cy="0" r="2.4"/><circle cx="6" cy="0" r="2.4"/></g><path d="M-4,5 L4,5 L0,10 Z" fill="#FF9F43" stroke-width="2"/><path d="M10,8 Q19,6 15,16 Q11,14 10,8 Z" fill="#F5C842" stroke-width="2"/>`},
@@ -764,7 +800,10 @@ const ITEMS = {
   pet_bat:{slot:'pet', n:'꼬마 박쥐', need:{fl:1}, desc:'던전 1층을 정복하면 따라오는 꼬마 박쥐임.',
     svg:`<g fill="#6B4BD8"><path d="M-6,-2 Q-18,-14 -29,-6 Q-24,0 -26,7 Q-18,3 -15,10 Q-10,3 -6,5 Z"/><path d="M6,-2 Q18,-14 29,-6 Q24,0 26,7 Q18,3 15,10 Q10,3 6,5 Z"/><path d="M-7,-6 L-6,-17 L-1,-9 Z M7,-6 L6,-17 L1,-9 Z"/><ellipse cx="0" cy="2" rx="9" ry="11"/></g><g stroke="none"><circle cx="-3.5" cy="0" r="2.4" fill="#FFE066"/><circle cx="3.5" cy="0" r="2.4" fill="#FFE066"/><path d="M-3,6 L-1.5,9 L0,6 Z M0,6 L1.5,9 L3,6 Z" fill="#fff"/></g>`},
   pet_phoenix:{slot:'pet', n:'아기 불사조', need:{fl:5}, desc:'마왕의 성까지 정복한 용사만 만나는 불사조임.',
-    svg:`<path d="M8,10 Q26,16 30,4 Q24,8 21,4 Q27,0 25,-8 Q16,2 8,4 Z" fill="#FF7A3D"/><path d="M-6,22 L-6,18 M4,22 L4,18" fill="none" stroke="#FFB547" stroke-width="3"/><circle cx="-1" cy="7" r="13" fill="#FF8A3D"/><ellipse cx="-3" cy="12" rx="7" ry="6" fill="#FFD23F" stroke="none"/><path d="M2,4 Q14,2 12,14 Q6,12 2,4 Z" fill="#F25267" stroke-width="2"/><path d="M-5,-5 Q-8,-17 -1,-22 Q-1,-14 4,-16 Q4,-9 2,-5 Z" fill="#FFD23F"/><path d="M-13,4 L-19,6 L-13,8 Z" fill="#FFB547" stroke-width="1.6"/><circle cx="-7" cy="2" r="2.2" fill="${K}" stroke="none"/>`}
+    svg:`<path d="M8,10 Q26,16 30,4 Q24,8 21,4 Q27,0 25,-8 Q16,2 8,4 Z" fill="#FF7A3D"/><path d="M-6,22 L-6,18 M4,22 L4,18" fill="none" stroke="#FFB547" stroke-width="3"/><circle cx="-1" cy="7" r="13" fill="#FF8A3D"/><ellipse cx="-3" cy="12" rx="7" ry="6" fill="#FFD23F" stroke="none"/><path d="M2,4 Q14,2 12,14 Q6,12 2,4 Z" fill="#F25267" stroke-width="2"/><path d="M-5,-5 Q-8,-17 -1,-22 Q-1,-14 4,-16 Q4,-9 2,-5 Z" fill="#FFD23F"/><path d="M-13,4 L-19,6 L-13,8 Z" fill="#FFB547" stroke-width="1.6"/><circle cx="-7" cy="2" r="2.2" fill="${K}" stroke="none"/>`},
+  pet_squirrel:{slot:'pet', n:'도토리 다람쥐', need:{ch:7}, desc:'6차시 비례배분을 모두 정복하면 만나는 다람쥐임. 도토리를 비에 맞게 척척 나눔.',
+    svg:`<path d="M6,16 Q30,18 28,-4 Q26,-22 10,-16 Q22,-8 18,4 Q14,10 6,10 Z" fill="#B5743B"/><ellipse cx="0" cy="14" rx="11" ry="9" fill="#C98A4B"/><ellipse cx="-1" cy="16" rx="6" ry="6" fill="#F2D3A5" stroke="none"/><path d="M-13,-8 L-12,-17 L-7,-11 Z M1,-8 L0,-17 L-5,-11 Z" fill="#C98A4B"/><circle cx="-6" cy="-2" r="10" fill="#C98A4B"/><g stroke="none" fill="${K}"><circle cx="-9.5" cy="-3" r="2"/><circle cx="-2.5" cy="-3" r="2"/><ellipse cx="-6" cy="2" rx="2" ry="1.5"/></g><ellipse cx="-13" cy="13" rx="4.5" ry="5.5" fill="#8B5A2B"/><path d="M-18,10 Q-13,4 -8,10 Z" fill="#5A341C"/>`},
+  bk_gold:{slot:'back', n:'황금 날개', need:{fl:6}, desc:'던전 6층 보물 창고를 정복하면 얻는 황금 날개임.', svg: mirror(WING_A.replace('#fff', '#FFE27A').replace('#C9D3E0', '#E9A400'))}
 };
 
 /* ---------- 아이콘 ---------- */
@@ -851,6 +890,15 @@ function thumb(id) {
   else if (it.slot === 'back') { vb = '12 88 216 150'; inner = it.svg + (it.front || ''); }
   else { vb = '-32 -30 64 58'; inner = it.svg; }
   return `<svg viewBox="${vb}" class="thumb" aria-hidden="true"><g stroke="${K}" stroke-width="${it.slot === 'pet' ? 2.5 : 3}" stroke-linejoin="round" stroke-linecap="round">${inner}</g></svg>`;
+}
+function barDiagram() {
+  const cell = i => `<rect x="${20 + i * 56}" y="44" width="56" height="40" rx="3" fill="${i < 2 ? '#FF8A3D' : '#17A2B8'}" stroke="${K}" stroke-width="2.5"/>`;
+  return `<svg class="terms" viewBox="0 0 320 146" role="img" aria-label="10을 2 : 3으로 비례배분하면 4와 6">
+<text x="160" y="26" font-size="18" fill="${K}">전체 10을 5칸으로 · 한 칸 = 2</text>
+${[0, 1, 2, 3, 4].map(cell).join('')}
+<path d="M22,94 L22,100 L130,100 L130,94 M134,94 L134,100 L298,100 L298,94" fill="none" stroke="${K}" stroke-width="2.5"/>
+<text x="76" y="130" font-size="19" fill="#D9640F">가 2칸 → 4</text><text x="216" y="130" font-size="19" fill="#0F7F8F">나 3칸 → 6</text>
+</svg>`;
 }
 function termDiagram(withProduct) {
   return `<svg class="terms" viewBox="0 0 320 ${withProduct ? 176 : 146}" role="img" aria-label="비례식 2 : 3 = 4 : 6에서 외항은 2와 6, 내항은 3과 4">
@@ -1039,7 +1087,7 @@ function startTeacher() {
 }
 function leaveTeacher() { if (FB.unsub) { try { FB.unsub(); } catch (e) {} FB.unsub = null; } ui.tOK = false; ui.tPin = false; ui.tDel = null; }
 function downloadCSV() {
-  const head = ['번호', '이름', '레벨', `해결(전체 ${TOTAL})`, ...CH.map(c => `${c.n}차시 ${c.t}`), `던전(${Q[6].length})`, '한 번에 정답', '힌트 사용', '풀이 확인', '코인', '최근 활동'];
+  const head = ['번호', '이름', '레벨', `해결(전체 ${TOTAL})`, ...CH.map(c => `${c.no || c.n}차시 ${c.t}`), `던전(${Q[6].length})`, '한 번에 정답', '힌트 사용', '풀이 확인', '코인', '최근 활동'];
   const lines = [head].concat(teacherRows().map(p => { const s = statsOf(p); return [p.num, p.name, s.lv, s.solved, ...s.ch, s.dg, s.first, s.hint, s.sol, p.coins, p.updated ? new Date(p.updated).toLocaleString('ko-KR') : '']; }));
   const csv = '\ufeff' + lines.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const a = document.createElement('a');
@@ -1064,8 +1112,8 @@ function meets(p, it) {
   if (n.best) return (p.best || 0) >= n.best;
   return false;
 }
-function needText(it) { const n = it.need; if (n.total) return `문제 ${n.total}개 해결`; if (n.ch) return `${n.ch}차시 모두 해결`; if (n.fl) return `던전 ${n.fl}층 정복`; if (n.dg) return `던전 몬스터 ${n.dg}마리 처치`; return `${n.best}문제 연속 정답`; }
-function whyText(it) { const n = it.need; if (n.ch) return `${n.ch}차시 ${CH[n.ch - 1].t} 정복!`; if (n.fl) return `던전 ${n.fl}층 ${FLOORS[n.fl - 1].t} 정복!`; return needText(it) + '!'; }
+function needText(it) { const n = it.need; if (n.total) return `문제 ${n.total}개 해결`; if (n.ch) return `${chOf(n.ch).no || n.ch}차시 모두 해결`; if (n.fl) return `던전 ${n.fl}층 정복`; if (n.dg) return `던전 몬스터 ${n.dg}마리 처치`; return `${n.best}문제 연속 정답`; }
+function whyText(it) { const n = it.need; if (n.ch) { const c = chOf(n.ch); return `${c.no || c.n}차시 ${c.t} 정복!`; } if (n.fl) return `던전 ${n.fl}층 ${FLOORS[n.fl - 1].t} 정복!`; return needText(it) + '!'; }
 const chReward = n => Object.keys(ITEMS).find(id => ITEMS[id].need && ITEMS[id].need.ch === n);
 function rarity(it) {
   if (it.need && it.need.fl) return {k:'dungeon', n:'던전'};
@@ -1137,7 +1185,7 @@ function renderTop() {
   let mid;
   if (nav.v === 'title' || nav.v === 'home') mid = `<div class="logo">비례<span class="cl">:</span>용사</div>`;
   else if (nav.v === 'problem' && nav.ch === 6) { const fl = FLOORS[floorOf(nav.qi) - 1]; mid = `<div class="vtitle"><span class="chip" style="--cc:${fl.c}">던전 ${fl.f}층</span><span class="vt">${fl.t}</span></div>`; }
-  else if (nav.v === 'chapter' || nav.v === 'problem') { const c = CH[nav.ch - 1]; mid = `<div class="vtitle"><span class="chip" style="--cc:${c.c}">${c.n}차시</span><span class="vt">${c.t}</span></div>`; }
+  else if (nav.v === 'chapter' || nav.v === 'problem') { const c = chOf(nav.ch); mid = `<div class="vtitle"><span class="chip" style="--cc:${c.c}">${c.no || c.n}차시</span><span class="vt">${c.t}</span></div>`; }
   else mid = `<div class="vtitle"><span class="vt">${names[nav.v]}</span></div>`;
   $('#top').innerHTML = `${showBack ? `<button class="icon-btn" data-act="back" aria-label="뒤로 가기">${IC.back}</button>` : ''}${mid}<div class="sp"></div>
 ${p && p.cloud && nav.v !== 'title' ? `<span class="sync s-${FB.sync}" id="syncChip">${SYNC_TXT[FB.sync]}</span>` : ''}
@@ -1179,13 +1227,13 @@ function floorCard(p, fl) {
   const rid = Object.keys(ITEMS).find(id => ITEMS[id].need && ITEMS[id].need.fl === fl.f), got = p.owned.includes(rid);
   const cells = Array.from({length:FLOOR}, (_, k) => { const i = base + k, r = p.rec[rk(6, i)], boss = k === FLOOR - 1, ok = r && r.ok; return `<button class="mcell${boss ? ' boss' : ''}${ok ? ' ok' : ''}" data-act="openDQ" data-i="${i}" aria-label="${fl.f}층 ${boss ? '보스' : (k + 1) + '번 몬스터'}${ok ? ', 물리침' : ''}">${monster(fl.c, boss)}<span>${boss ? '보스' : k + 1}</span>${ok ? okBadge : ''}</button>`; }).join('');
   return `<section class="floor${open ? '' : ' shut'}" style="--fc:${fl.c}"><div class="fl-head"><span class="fl-no">${fl.f}층</span><b>${fl.t}</b><span class="fl-s">${open ? `${s} / ${FLOOR}` : `${IC.lockSm}잠김`}</span></div>
-<div class="fl-body">${open ? `<div class="mgrid">${cells}</div>` : `<p class="fl-lock">${fl.ch}차시 문제를 ${DG_OPEN}개 풀면 열림 · 지금 ${Math.min(need, DG_OPEN)} / ${DG_OPEN}</p><div class="bar sm"><i style="width:${(Math.min(need / DG_OPEN, 1) * 100).toFixed(1)}%;background:${fl.c}"></i></div>`}
+<div class="fl-body">${open ? `<div class="mgrid">${cells}</div>` : `<p class="fl-lock">${chOf(fl.ch).no || fl.ch}차시 문제를 ${DG_OPEN}개 풀면 열림 · 지금 ${Math.min(need, DG_OPEN)} / ${DG_OPEN}</p><div class="bar sm"><i style="width:${(Math.min(need / DG_OPEN, 1) * 100).toFixed(1)}%;background:${fl.c}"></i></div>`}
 <div class="ch-rw${got ? ' got' : ''}"><span class="rw-thumb${got ? '' : ' locked'}">${thumb(rid)}</span><span><small>${got ? '정복 보상 획득!' : '층을 정복하면 받는 보상'}</small><b>${ITEMS[rid].n}</b></span></div></div></section>`;
 }
 
 const VIEWS = {
   title() {
-    const banner = `<section class="hero-banner"><h1 class="big-title">비례<span class="cl">:</span>용사<small>키우기</small></h1><p class="sub">6학년 2학기 수학 4단원 · 비례식과 비례배분 1~5차시</p></section>`;
+    const banner = `<section class="hero-banner"><h1 class="big-title">비례<span class="cl">:</span>용사<small>키우기</small></h1><p class="sub">6학년 2학기 수학 4단원 · 비례식과 비례배분 1~6차시</p></section>`;
     if (ui.pend) return `<div class="wrap title-v">${banner}${pendHTML()}</div>`;
     const hasCache = Object.values(S.P).some(p => p && p.cloud);
     let out = '';
@@ -1218,14 +1266,14 @@ ${g ? `<div class="goal panel"><div class="goal-thumb">${thumb(gid)}</div><div c
     const p = P();
     return `<div class="wrap"><div class="ch-grid">${CH.map(c => {
       const s = solvedIn(p, c.n), n = Q[c.n].length, rid = chReward(c.n), got = p.owned.includes(rid);
-      return `<button class="ch-card panel" data-act="openCh" data-ch="${c.n}" style="--cc:${c.c}"><div class="ch-head"><span>${c.n}차시</span><span>${s} / ${n}</span></div><div class="ch-body"><b class="ch-t">${c.t}</b><span class="ch-d">${c.d}</span><div class="bar"><i style="width:${(s / n * 100).toFixed(1)}%;background:var(--cc)"></i></div><div class="ch-rw${got ? ' got' : ''}"><span class="rw-thumb${got ? '' : ' locked'}">${thumb(rid)}</span><span><small>${got ? '정복 보상 획득!' : '모두 풀면 받는 보상'}</small><b>${ITEMS[rid].n}</b></span></div></div></button>`;
+      return `<button class="ch-card panel" data-act="openCh" data-ch="${c.n}" style="--cc:${c.c}"><div class="ch-head"><span>${c.no || c.n}차시</span><span>${s} / ${n}</span></div><div class="ch-body"><b class="ch-t">${c.t}</b><span class="ch-d">${c.d}</span><div class="bar"><i style="width:${(s / n * 100).toFixed(1)}%;background:var(--cc)"></i></div><div class="ch-rw${got ? ' got' : ''}"><span class="rw-thumb${got ? '' : ' locked'}">${thumb(rid)}</span><span><small>${got ? '정복 보상 획득!' : '모두 풀면 받는 보상'}</small><b>${ITEMS[rid].n}</b></span></div></div></button>`;
     }).join('')}</div></div>`;
   },
 
   chapter() {
-    const p = P(), c = CH[nav.ch - 1], qs = Q[nav.ch], s = solvedIn(p, c.n);
+    const p = P(), c = chOf(nav.ch), qs = Q[nav.ch], s = solvedIn(p, c.n);
     return `<div class="wrap chv" style="--cc:${c.c}">
-<section class="panel concept"><span class="eyebrow">핵심 정리</span><h2 class="h2">${c.t}</h2><ul class="sum">${c.sum.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>${c.diagram ? termDiagram(c.n === 4) : ''}<div class="ex">${c.ex.map(x => `<div class="ex-line">${fmtE(x)}</div>`).join('')}</div></section>
+<section class="panel concept"><span class="eyebrow">핵심 정리</span><h2 class="h2">${c.t}</h2><ul class="sum">${c.sum.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>${c.diagram ? termDiagram(c.n === 4) : ''}${c.bar ? barDiagram() : ''}<div class="ex">${c.ex.map(x => `<div class="ex-line">${fmtE(x)}</div>`).join('')}</div></section>
 <section class="qsec"><div class="qsec-head"><span>${s} / ${qs.length} 해결</span><div class="legend">${[1, 2, 3].map(d => `<span><i class="dot d${d}"></i>${DIFF[d].n} ${DIFF[d].pts}코인</span>`).join('')}</div></div>
 <div class="qgrid">${qs.map((q, i) => { const r = p.rec[rk(c.n, i)]; const st = r && r.ok ? 'ok' : (r && r.sol ? 'sol' : (r && (r.w || r.h) ? 'try' : '')); return `<button class="qcell d${q.d} ${st}" data-act="openQ" data-i="${i}" aria-label="${i + 1}번 문제, ${DIFF[q.d].n}${st === 'ok' ? ', 해결함' : ''}"><span class="qn">${i + 1}</span><span class="qd">${'<i></i>'.repeat(q.d)}</span>${st === 'ok' ? okBadge : ''}</button>`; }).join('')}</div>
 <button class="btn gold big wide" data-act="cont">${s === qs.length ? '1번부터 복습하기' : '이어서 풀기'}</button>
@@ -1298,7 +1346,7 @@ ${t === 'n' && !done ? padHTML(blankCount(q)) : ''}${sideHint}</aside></div>`;
     return `<div class="wrap rec">
 <section class="panel rec-head">${hero(p.eq, {...look(p), label:p.name})}<div class="rh-main"><span class="eyebrow">${titleOf(L.lv)} · Lv.${L.lv}</span><span class="rh-name">${esc(p.name)}</span><div class="rh-facts"><span class="fact">코인 ${p.coins}</span><span class="fact">장비 ${p.owned.length} / ${Object.keys(ITEMS).length}</span><span class="fact">최고 연속 정답 ${p.best}</span><span class="fact">${p.cloud ? `${p.num}번 · 학급 서버 저장` : '이 기기에만 저장'}</span><span class="fact">${new Date().toLocaleDateString('ko-KR')} 기준</span></div></div></section>
 <section class="panel rec-body"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>차시</th><th>해결</th><th>한 번에 정답</th><th>힌트 사용</th><th>풀이 확인</th></tr></thead><tbody>
-${rows.map(r => `<tr><td><b>${r.c.n < 6 ? r.c.n + '. ' : ''}${r.c.t}</b></td><td><div class="minibar"><div class="bar"><i style="width:${(r.s / r.n * 100).toFixed(1)}%;background:${r.c.c}"></i></div>${r.s}/${r.n}</div></td><td>${r.f}</td><td>${r.h}</td><td>${r.so}</td></tr>`).join('')}
+${rows.map(r => `<tr><td><b>${r.c === DG ? '' : (r.c.no || r.c.n) + '. '}${r.c.t}</b></td><td><div class="minibar"><div class="bar"><i style="width:${(r.s / r.n * 100).toFixed(1)}%;background:${r.c.c}"></i></div>${r.s}/${r.n}</div></td><td>${r.f}</td><td>${r.h}</td><td>${r.so}</td></tr>`).join('')}
 </tbody><tfoot><tr><td>합계</td><td>${sum('s')}/${TOTAL + Q[6].length}</td><td>${sum('f')}</td><td>${sum('h')}</td><td>${sum('so')}</td></tr></tfoot></table></div>
 <p class="note">‘한 번에 정답’은 힌트 없이 처음 시도에 맞힌 문제 수임. ‘풀이 확인’은 두 번 틀려 풀이를 본 문제 수임.</p></section>
 <section class="panel danger"><h3>용사 삭제 (선생님용)</h3>${ui.delAsk ? `<label class="lbl" for="tpw">선생님 비밀번호</label><input id="tpw" class="inp" type="password" autocomplete="off"><div class="row"><button class="btn" data-act="delYes">이 용사 삭제하기</button><button class="btn" data-act="delNo">취소</button></div>` : `<p class="note">삭제하면 이 용사의 기록과 장비가 모두 사라짐.</p><div class="row"><button class="btn" data-act="delAsk">삭제하기</button></div>`}</section></div>`;
@@ -1321,10 +1369,10 @@ ${rows.map(r => `<tr><td><b>${r.c.n < 6 ? r.c.n + '. ' : ''}${r.c.t}</b></td><td
     const chAvg = CH.map((c, i) => n ? rows.reduce((a, r) => a + r.s.ch[i], 0) / (n * Q[c.n].length) : 0);
     return `<div class="wrap dash">
 <div class="dsum"><div class="panel dtile"><b>${n}</b><span>접속한 학생</span></div><div class="panel dtile"><b>${avg}<small>/${TOTAL}</small></b><span>평균 해결 문제</span></div><div class="panel dtile"><b>${recent}</b><span>24시간 안에 활동</span></div>
-<div class="panel dtile chbox"><span>차시별 평균 해결률</span><div class="chbars">${CH.map((c, i) => `<div class="chbar"><span>${c.n}차시</span><div class="bar"><i style="width:${(chAvg[i] * 100).toFixed(1)}%;background:${c.c}"></i></div><span>${Math.round(chAvg[i] * 100)}%</span></div>`).join('')}</div></div></div>
+<div class="panel dtile chbox"><span>차시별 평균 해결률</span><div class="chbars">${CH.map((c, i) => `<div class="chbar"><span>${c.no || c.n}차시</span><div class="bar"><i style="width:${(chAvg[i] * 100).toFixed(1)}%;background:${c.c}"></i></div><span>${Math.round(chAvg[i] * 100)}%</span></div>`).join('')}</div></div></div>
 <section class="panel rec-body"><div class="dhead"><h2 class="h2">${clsName()} 학습 기록</h2><div class="row"><button class="btn sm" data-act="tPin">${ui.tPin ? '비밀번호 숨기기' : '비밀번호 보기'}</button><button class="btn sm" data-act="csv">CSV 내려받기</button></div></div>
-${n ? `<div class="tbl-wrap"><table class="tbl dtbl"><thead><tr><th>번호</th><th>이름</th><th>레벨</th><th>해결</th>${CH.map(c => `<th>${c.n}차시</th>`).join('')}<th>던전</th><th>한 번에 정답</th><th>코인</th><th>최근 활동</th>${ui.tPin ? '<th>비밀번호</th>' : ''}<th></th></tr></thead><tbody>
-${rows.map(({p, s}) => `<tr><td>${p.num}</td><td><b>${esc(p.name)}</b></td><td>${s.lv}</td><td>${s.solved}</td>${s.ch.map((v, i) => `<td><span class="cell-n${v === Q[i + 1].length ? ' full' : (v ? ' some' : '')}">${v}</span></td>`).join('')}<td>${s.dg}</td><td>${s.solved ? Math.round(s.first / s.solved * 100) + '%' : '-'}</td><td>${p.coins}</td><td>${ago(p.updated)}</td>${ui.tPin ? `<td>${esc(p.pin || '')}</td>` : ''}<td>${ui.tDel === p.num ? `<span class="tdel">삭제할까요? <button class="btn sm" data-act="tDelYes" data-n="${p.num}">예</button><button class="btn sm" data-act="tDelNo">아니요</button></span>` : `<button class="btn sm" data-act="tDelAsk" data-n="${p.num}">삭제</button>`}</td></tr>`).join('')}
+${n ? `<div class="tbl-wrap"><table class="tbl dtbl"><thead><tr><th>번호</th><th>이름</th><th>레벨</th><th>해결</th>${CH.map(c => `<th>${c.no || c.n}차시</th>`).join('')}<th>던전</th><th>한 번에 정답</th><th>코인</th><th>최근 활동</th>${ui.tPin ? '<th>비밀번호</th>' : ''}<th></th></tr></thead><tbody>
+${rows.map(({p, s}) => `<tr><td>${p.num}</td><td><b>${esc(p.name)}</b></td><td>${s.lv}</td><td>${s.solved}</td>${s.ch.map((v, i) => `<td><span class="cell-n${v === Q[CH[i].n].length ? ' full' : (v ? ' some' : '')}">${v}</span></td>`).join('')}<td>${s.dg}</td><td>${s.solved ? Math.round(s.first / s.solved * 100) + '%' : '-'}</td><td>${p.coins}</td><td>${ago(p.updated)}</td>${ui.tPin ? `<td>${esc(p.pin || '')}</td>` : ''}<td>${ui.tDel === p.num ? `<span class="tdel">삭제할까요? <button class="btn sm" data-act="tDelYes" data-n="${p.num}">예</button><button class="btn sm" data-act="tDelNo">아니요</button></span>` : `<button class="btn sm" data-act="tDelAsk" data-n="${p.num}">삭제</button>`}</td></tr>`).join('')}
 </tbody></table></div>` : '<p class="note">아직 접속한 학생이 없음. 학생이 번호·이름·비밀번호로 처음 접속하면 여기에 나타남.</p>'}
 <p class="note">표는 학생이 문제를 풀 때마다 실시간으로 바뀜. ‘한 번에 정답’은 해결한 문제 중 힌트 없이 처음에 맞힌 비율임. 노란 칸은 그 차시를 모두 푼 학생임.</p></section></div>`;
   }
@@ -1366,7 +1414,7 @@ function buddyLine() {
   if (pv.phase === 'ok') return pv.review ? '잘 기억하고 있어!' : (combo >= 3 ? `${combo}연속 정답! 대단해!` : ['정답이야! 최고!', '역시 비례 용사!', '완벽해!'][nav.qi % 3]);
   if (pv.phase === 'retry') return '괜찮아, 힌트를 보고 다시 해 보자!';
   if (pv.phase === 'sol') return '풀이를 읽고 나중에 다시 도전하자!';
-  return nav.ch === 6 ? FLOORS[floorOf(nav.qi) - 1].tip : CH[nav.ch - 1].tip;
+  return nav.ch === 6 ? FLOORS[floorOf(nav.qi) - 1].tip : chOf(nav.ch).tip;
 }
 
 /* ---------- 문제 풀기 ---------- */
@@ -1541,7 +1589,7 @@ const ACT = {
   createHero: () => createHero(),
   openCh: d => { nav = {v:'chapter', ch:+d.ch}; render(true); },
   openQ: d => openQ(+d.i),
-  openDQ: d => { const i = +d.i, f = floorOf(i); if (!floorOpen(P(), f)) { toast(`${f}차시 문제를 ${DG_OPEN}개 풀면 열림`); return; } nav.ch = 6; openQ(i); },
+  openDQ: d => { const i = +d.i, f = floorOf(i); if (!floorOpen(P(), f)) { toast(`${chOf(FLOORS[f - 1].ch).no || FLOORS[f - 1].ch}차시 문제를 ${DG_OPEN}개 풀면 열림`); return; } nav.ch = 6; openQ(i); },
   cont: () => { const p = P(), n = Q[nav.ch].length; let i = 0; while (i < n && p.rec[rk(nav.ch, i)] && p.rec[rk(nav.ch, i)].ok) i++; openQ(i < n ? i : 0); },
   blank: d => { pv.act = +d.i; updExpr(); },
   key: d => press(d.k),
