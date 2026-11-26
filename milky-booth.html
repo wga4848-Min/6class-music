@@ -456,10 +456,22 @@ document.addEventListener("click", e => {
   const f = ACT[b.dataset.act]; if (f){ e.preventDefault(); f(b.dataset.id, b); }
 });
 setInterval(() => { try { tickFn && tickFn(); } catch(e){ console.error(e); } }, 1000);
+function adminInstallable(){
+  /* 관리자 태블릿에 '부스 관리' 앱으로 설치되도록 관리자 화면에서만 설치 정보를 붙임(방문객 화면에는 붙이지 않음) */
+  if (document.querySelector('link[rel="manifest"]')) return;
+  const add = (tag, attrs) => { const el = document.createElement(tag); for (const k in attrs) el.setAttribute(k, attrs[k]); document.head.appendChild(el); };
+  add("link", { rel: "manifest", href: "milky-admin.webmanifest" });
+  add("link", { rel: "apple-touch-icon", href: "milky-icons/apple-touch-icon.png" });
+  add("meta", { name: "apple-mobile-web-app-capable", content: "yes" });
+  add("meta", { name: "mobile-web-app-capable", content: "yes" });
+  add("meta", { name: "apple-mobile-web-app-title", content: "부스 관리" });
+  if (/^https?:/.test(location.protocol)) regSW();
+}
 function route(){
   cleanup.forEach(f => { try { f && f(); } catch(e){} }); cleanup = []; tickFn = null; ACT = {};
   closeModal(); window.scrollTo(0, 0);
   const h = location.hash;
+  if (h === "#admin" || h === "#qr") adminInstallable();
   if (h === "#admin") startAdmin(); else if (h === "#qr") startQR(); else startParticipant();
 }
 

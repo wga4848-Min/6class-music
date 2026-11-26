@@ -1,0 +1,19 @@
+{
+  "name": "MILKY UP 부스 관리",
+  "short_name": "부스 관리",
+  "description": "우유팩 업사이클링 부스 체험 예약 관리(관리자용)",
+  "lang": "ko",
+  "id": "./milky-booth.html#admin",
+  "start_url": "./milky-booth.html#admin",
+  "scope": "./milky",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F3F7FC",
+  "theme_color": "#1E5BD8",
+  "icons": [
+    { "src": "milky-icons/icon-any-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "milky-icons/icon-any-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "milky-icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "milky-icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
