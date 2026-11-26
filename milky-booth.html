@@ -146,8 +146,18 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .row.late{background:var(--straw-l);border-color:var(--straw);border-left-color:var(--straw-d)}
 .cut{margin-left:8px;color:var(--ink)}
 .cut span{font-family:var(--fd);font-size:16px;color:var(--straw-d)}
-.tag.walk{color:var(--choco);font-family:var(--fb);font-size:12px;margin-left:8px;vertical-align:middle}
-.col h2 .h2tool{margin-left:auto;font-size:16px}
+.tag.nophone{color:var(--choco);font-family:var(--fb);font-size:12px;margin-left:8px;vertical-align:middle}
+.walk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 20px;align-items:center;background:#fff;border:2px solid var(--line);border-left:9px solid var(--choco);border-radius:18px;padding:12px 16px;margin:0 0 16px}
+.walk label b{font-family:var(--fd);font-weight:400;font-size:22px;display:block;line-height:1.25}
+.walk label small{color:var(--muted);font-size:14px;display:block;line-height:1.4}
+.walk-in{display:flex;gap:10px}
+.walk input{flex:1;min-width:0;height:56px;border:3px solid var(--ink);border-radius:14px;padding:0 16px;font-size:21px;font-family:var(--fb);color:var(--ink);background:#fff}
+.walk input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px var(--sky)}
+.walk .btn{width:auto;flex:none;min-height:56px;font-size:21px;padding:0 24px;background:var(--choco)}
+.walk .err{grid-column:1/-1;margin:0}
+.walk .err:empty{display:none}
+@media (max-width:980px){.walk{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:420px){.walk .btn{padding:0 16px;font-size:19px}}
 .rule{font-size:14px;color:var(--straw-d);background:var(--straw-l);border-radius:10px;padding:4px 12px;margin:-6px 0 12px}
 .rule:empty{display:none}
 .late-tag{display:none;color:var(--straw-d);font-family:var(--fd);font-size:15px;margin-left:4px}
@@ -256,7 +266,7 @@ const store = {
 };
 const setText = (sel, v) => { const el = $(sel); if (el && el.textContent !== String(v)) el.textContent = v; };
 function newSid(){ const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`; }
-const DEFAULT_CFG = () => ({ sid: newSid(), open: true, capacity: 4, minutes: 10, notifyAhead: 2, noShowMin: 3, cancelMin: 10, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기" });
+const DEFAULT_CFG = () => ({ sid: newSid(), open: true, capacity: 8, minutes: 10, notifyAhead: 2, noShowMin: 3, cancelMin: 10, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기" });
 
 function toast(msg){
   let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
@@ -748,6 +758,7 @@ function startAdmin(){
   $("#app").innerHTML = demoBar() + `<main class="p">${carton("st-join")}<h1>불러오는 중</h1></main>`;
   const u = B.watchConfig(cfg => {
     const prev = A.cfg?.sid; A.cfg = cfg; if (!cfg) return;
+    if ((cfg.cfgVer || 0) < 2 && !A.migrated){ A.migrated = true; B.setConfig({ capacity: 8, cfgVer: 2 }).catch(onErr); } /* 동시 체험 인원 8명으로 한 번 맞춤 */
     if (cfg.sid !== prev){ A.unsub?.(); A.all = []; A.unsub = B.watchAll(cfg.sid, list => { A.all = list; renderA(); maybeAuto(); }, onErr); }
     renderA(); maybeAuto();
   }, onErr);
@@ -772,17 +783,17 @@ function renderGate(){
     else { setText("#pw-err", "비밀번호가 맞지 않아요."); $("#pw").select(); }
   });
 }
-const walkTag = t => t.walkin ? `<span class="tag walk">휴대폰 없음</span>` : "";
+const walkTag = t => t.walkin ? `<span class="tag nophone">휴대폰 없음</span>` : "";
 function rowHTML(t, kind, i){
   const cfg = A.cfg;
   if (kind === "called") return `<div class="row" data-late="${(t.calledAt || 0) + cfg.noShowMin * 60000}">
       <div class="r-no">${t.no}</div>
       <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta">부른 지 <span data-since="${t.calledAt || ""}"></span>${t.callCount > 1 ? `, ${t.callCount}번 부름` : ""}<span class="late-tag">아직 안 왔어요</span>${cfg.cancelMin > 0 ? `<span class="cut">자동 취소까지 <span data-until="${(t.calledAt || Date.now()) + cfg.cancelMin * 60000}"></span></span>` : ""}</div></div>
-      <div class="r-acts"><button class="sbtn pri" data-act="arrive" data-id="${t.id}">도착 확인</button><button class="sbtn" data-act="recall" data-id="${t.id}">다시 알림</button><button class="sbtn warn" data-act="skip" data-id="${t.id}">건너뛰고 다음 호출</button></div></div>`;
+      <div class="r-acts"><button class="sbtn pri" data-act="arrive" data-id="${t.id}">도착 확인</button>${t.walkin ? "" : `<button class="sbtn" data-act="recall" data-id="${t.id}">다시 알림</button>`}<button class="sbtn warn" data-act="skip" data-id="${t.id}">건너뛰고 다음 호출</button></div></div>`;
   if (kind === "active") return `<div class="row">
       <div class="r-no">${t.no}</div>
       <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta">체험한 지 <span data-since="${t.startedAt || ""}"></span></div></div>
-      <div class="r-acts"><button class="sbtn" data-act="finishT" data-id="${t.id}">완료 처리</button></div></div>`;
+      <div class="r-acts"><button class="sbtn" data-act="finishT" data-id="${t.id}">${t.walkin ? "완료·별점" : "완료 처리"}</button></div></div>`;
   return `<div class="row">
       <div class="r-no">${t.no}</div>
       <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta"><span class="pos">${i + 1}번째</span>기다린 지 <span data-since="${t.queueAt || ""}"></span></div></div>
@@ -799,17 +810,29 @@ function renderA(){
   const col = (cls, title, count, rows, empty, tool = "") => `<section class="col ${cls}"><h2><i></i>${title}<em>${count}</em>${tool}</h2>${rows || `<div class="empty">${empty}</div>`}</section>`;
   const tagOf = t => t.status === "done" ? `<span class="tag done">완료${t.rating ? ` ★${t.rating}` : ""}</span>` : t.status === "noshow" ? `<span class="tag noshow">미도착</span>` : t.status === "expired" ? `<span class="tag noshow">시간 초과 취소</span>` : `<span class="tag cancelled">취소</span>`;
   const sy = window.scrollY;
-  $("#app").innerHTML = demoBar() + `
-  <header class="a-top">
+  if (!$("#a-board")){
+    $("#app").innerHTML = demoBar() + `<header class="a-top" id="a-top"></header>
+    <main class="a-main">
+      <div id="a-hd"></div>
+      <form class="walk" id="walkForm" autocomplete="off" novalidate>
+        <label for="wk-name"><b>휴대폰 없는 사람 등록</b><small>이름을 쓰면 대기 줄 맨 뒤에 서요. 차례가 되면 이름을 불러 주세요.</small></label>
+        <div class="walk-in"><input id="wk-name" maxlength="10" placeholder="이름" enterkeyhint="done"><button class="btn" type="submit" id="wk-btn">줄 세우기</button></div>
+        <p class="err" id="wk-err"></p>
+      </form>
+      <div id="a-board"></div>
+    </main>`;
+    $("#walkForm").addEventListener("submit", e => { e.preventDefault(); addWalkin(); });
+    $("#wk-name").addEventListener("input", () => setText("#wk-err", ""));
+  }
+  $("#a-top").innerHTML = `
     <div class="a-brand">${MINI}<span>${esc(cfg.name)}</span><small>관리자</small></div>
     <nav class="a-tools">
       <button class="tbtn ${cfg.open ? "is-open" : "is-closed"}" data-act="toggleOpen">${cfg.open ? "줄 받는 중" : "줄 마감됨"}</button>
       <button class="tbtn" data-act="qr">QR 띄우기</button>
       <button class="tbtn" data-act="settings">설정</button>
       <button class="tbtn" data-act="logout">나가기</button>
-    </nav>
-  </header>
-  <main class="a-main">
+    </nav>`;
+  $("#a-hd").innerHTML = `
     <div class="a-head">
       <button class="btn a-next" data-act="next" ${next ? "" : "disabled"}>${next ? `다음 사람 호출 <span class="nx">${next.no}번 ${esc(next.name)}</span>` : "기다리는 사람이 없어요"}</button>
       <div class="a-sum">
@@ -820,11 +843,12 @@ function renderA(){
         <div><b>${avgMin}</b><span>평균 체험(분)</span></div>
       </div>
     </div>
-    ${A.auto ? `<p class="auto-on">이 기기에서 자동 호출 중이에요. 빈자리가 생기면 다음 사람을 바로 불러요.</p>` : ""}
+    ${A.auto ? `<p class="auto-on">이 기기에서 자동 호출 중이에요. 빈자리가 생기면 다음 사람을 바로 불러요.</p>` : ""}`;
+  $("#a-board").innerHTML = `
     <div class="a-cols">
       ${col("c-called", "호출함", g.called.length, g.called.map(t => rowHTML(t, "called")).join(""), "부른 사람이 없어요. 위의 버튼으로 다음 사람을 호출하세요.")}
       ${col("c-active", "체험 중", `${g.active.length}/${cap}`, g.active.map(t => rowHTML(t, "active")).join(""), "체험 중인 사람이 없어요.")}
-      ${col("c-wait", "대기 줄", g.waiting.length, g.waiting.map((t, i) => rowHTML(t, "wait", i)).join(""), cfg.open ? "QR로 번호표를 받으면 여기에 나타나요." : "줄이 마감돼 있어요. 위의 버튼으로 다시 열 수 있어요.", `<button class="sbtn h2tool" data-act="walkin">현장 등록</button>`)}
+      ${col("c-wait", "대기 줄", g.waiting.length, g.waiting.map((t, i) => rowHTML(t, "wait", i)).join(""), cfg.open ? "QR로 번호표를 받으면 여기에 나타나요." : "줄이 마감돼 있어요. 위의 버튼으로 다시 열 수 있어요.")}
     </div>
     <details class="rec" id="rec" ${A.recOpen ? "open" : ""}>
       <summary>기록 보기<em>완료 ${g.done.length}명, 미도착 ${g.noshow.length}명, 시간 초과 ${g.expired.length}명, 취소 ${g.cancelled.length}명</em></summary>
@@ -834,8 +858,7 @@ function renderA(){
         </div>
         <ul class="rlist">${g.rec.length ? g.rec.map(t => `<li><b>${t.no}</b><span class="n">${esc(t.name)}</span>${tagOf(t)}<time>${hm(t.updatedAt)}</time>${t.status !== "done" ? `<button class="sbtn quiet" data-act="back" data-id="${t.id}">다시 줄 세우기</button>` : ""}</li>`).join("") : `<li class="empty" style="border:0">아직 기록이 없어요.</li>`}</ul>
       </div>
-    </details>
-  </main>`;
+    </details>`;
   $("#rec").addEventListener("toggle", e => { A.recOpen = e.target.open; });
   window.scrollTo(0, sy);
   tickA();
@@ -848,7 +871,7 @@ function tickA(){
   document.querySelectorAll("[data-late]").forEach(el => el.classList.toggle("late", now > +el.dataset.late));
 }
 async function callOne(t){
-  try { const ok = await B.callIfWaiting(A.cfg.sid, t.id); toast(ok ? `${t.no}번 ${t.name} 호출했어요` : "이미 호출된 사람이에요"); return ok; }
+  try { const ok = await B.callIfWaiting(A.cfg.sid, t.id); toast(ok ? callMsg(t) : "이미 호출된 사람이에요"); return ok; }
   catch(e){ onErr(e); return false; }
 }
 const expiring = new Set();
@@ -876,7 +899,7 @@ async function maybeAuto(){
   const g = groups(A.all);
   if (!g.waiting.length || g.called.length + g.active.length >= A.cfg.capacity) return;
   A.busy = true;
-  try { const t = g.waiting[0]; const ok = await B.callIfWaiting(A.cfg.sid, t.id); if (ok) toast(`빈자리가 생겨 ${t.no}번 ${t.name}을(를) 자동 호출했어요`); }
+  try { const t = g.waiting[0]; const ok = await B.callIfWaiting(A.cfg.sid, t.id); if (ok) toast(`빈자리가 생겨 ${t.no}번 ${t.name}을(를) 자동 호출했어요${t.walkin ? ". 이름을 불러 주세요" : ""}`); }
   catch(e){ onErr(e); }
   finally { A.busy = false; setTimeout(maybeAuto, 400); }
 }
@@ -917,24 +940,36 @@ function openSettings(){
     renderA(); maybeAuto();
   });
 }
-function openWalkin(){
-  const m = modal(`<h3>현장 등록</h3>
-    <p class="msub">휴대폰이 없는 사람을 이름으로 줄 세워요. 차례가 되면 이름을 불러 주세요.</p>
-    <div class="set-txt"><label>이름<input id="wk-name" maxlength="10" placeholder="예: 김하늘" enterkeyhint="done"></label></div>
-    <p class="err" id="wk-err"></p>
-    <div class="mbtns"><button class="btn ghost" data-x="close">닫기</button><button class="btn" data-x="add">줄 세우기</button></div>`);
-  const inp = $("#wk-name"); inp.focus();
-  const add = async () => {
-    const name = inp.value.trim().replace(/\s+/g, " ");
-    if (!name){ setText("#wk-err", "이름을 적어 주세요."); inp.focus(); return; }
-    try { const r = await B.addTicket(A.cfg.sid, name, { walkin: true }); closeModal(); toast(`${r.no}번 ${name} 줄 세웠어요`); }
-    catch(e){ setText("#wk-err", "줄 세우지 못했어요. 인터넷 연결을 확인해 주세요."); }
-  };
-  inp.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); add(); } });
-  m.addEventListener("click", e => { const x = e.target.closest("[data-x]"); if (!x) return; if (x.dataset.x === "close") closeModal(); else add(); });
+async function addWalkin(){
+  const inp = $("#wk-name"), btn = $("#wk-btn");
+  const name = inp.value.trim().replace(/\s+/g, " ");
+  setText("#wk-err", "");
+  if (!name){ setText("#wk-err", "이름을 적어 주세요."); inp.focus(); return; }
+  btn.disabled = true;
+  try {
+    const r = await B.addTicket(A.cfg.sid, name, { walkin: true });
+    inp.value = ""; toast(`${r.no}번 ${name} 줄 세웠어요`);
+  } catch(e){ setText("#wk-err", "줄 세우지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요."); }
+  btn.disabled = false; inp.focus();
 }
+function openFinish(t){
+  let rate = 0;
+  const m = modal(`<h3>${t.no}번 ${esc(t.name)} 체험 완료</h3>
+    <p class="msub">${t.walkin ? "체험한 사람이 이 화면에서 직접 별을 눌러 만족도를 남겨요." : "휴대폰에서 별점을 못 남겼을 때 써요."} 별점 없이 완료할 수도 있어요.</p>
+    <div class="stars" role="radiogroup" aria-label="만족도">${[1,2,3,4,5].map(i => `<button type="button" class="star" role="radio" aria-checked="false" aria-label="별 ${i}개" data-r="${i}">${STAR}</button>`).join("")}</div>
+    <p class="rate-lab" id="f-lab"></p>
+    <div class="mbtns"><button class="btn ghost" data-x="close">닫기</button><button class="btn leaf" data-x="ok">완료 처리</button></div>`);
+  m.addEventListener("click", async e => {
+    const st = e.target.closest("[data-r]");
+    if (st){ rate = +st.dataset.r; m.querySelectorAll(".star").forEach((b, i) => { b.classList.toggle("on", i < rate); b.setAttribute("aria-checked", String(i + 1 === rate)); }); setText("#f-lab", RATE_LAB[rate]); return; }
+    const x = e.target.closest("[data-x]"); if (!x) return;
+    closeModal(); if (x.dataset.x !== "ok") return;
+    await safe(B.update(A.cfg.sid, t.id, { status: "done", doneAt: NOW, rating: rate || null }));
+    toast(`${t.no}번 ${t.name} 체험 완료${rate ? ` (별점 ${rate})` : ""}`);
+  });
+}
+const callMsg = t => `${t.no}번 ${t.name} 호출했어요${t.walkin ? ". 휴대폰이 없으니 이름을 불러 주세요" : ""}`;
 const AACT = {
-  walkin(){ openWalkin(); },
   async toggleOpen(){ const willOpen = !A.cfg.open; await safe(B.setConfig({ open: willOpen })); toast(willOpen ? "줄을 다시 받아요" : "줄을 마감했어요"); },
   qr(){ location.hash = "#qr"; },
   settings(){ openSettings(); },
@@ -949,11 +984,7 @@ const AACT = {
     if (w){ const ok = await B.callIfWaiting(A.cfg.sid, w.id).catch(onErr); toast(ok ? `${t.no}번은 미도착 처리, ${w.no}번 ${w.name} 호출했어요` : `${t.no}번 미도착 처리했어요`); }
     else toast(`${t.no}번 미도착 처리했어요. 기다리는 사람이 없어요.`);
   },
-  async finishT(id){
-    const t = findT(id);
-    if (!await ask(`${t.no}번 ${esc(t.name)} 완료 처리할까요?`, "참여자가 별점을 못 남겼을 때 써요. 참여자 화면에는 별점 남기기가 계속 보여요.", "완료 처리", "leaf")) return;
-    await safe(B.update(A.cfg.sid, id, { status: "done", doneAt: NOW })); toast(`${t.no}번 완료 처리했어요`);
-  },
+  finishT(id){ const t = findT(id); if (t) openFinish(t); },
   async cancelT(id){
     const t = findT(id);
     if (!await ask(`${t.no}번 ${esc(t.name)}을(를) 줄에서 뺄까요?`, "참여자 화면의 번호표도 함께 사라져요.", "줄에서 빼기", "straw")) return;
