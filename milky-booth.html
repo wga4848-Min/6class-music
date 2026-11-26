@@ -94,7 +94,7 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .carton.small .lab .nm{font-size:14px}
 .carton.small .lab small{font-size:10px}
 .carton.small .lab .stamp{display:none}
-.carton.big{width:min(80vw,44vh,420px)}
+.carton.big{width:min(78vw,38vh,400px)}
 .carton.big .lab{left:19%;width:62%;top:38.5%;height:auto;aspect-ratio:1;padding:4%;border-radius:10px}
 .dojang{position:absolute;right:-14%;top:20%;width:48%;aspect-ratio:1;border-radius:50%;border:4px solid var(--straw-d);color:var(--straw-d);background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--fd);font-size:clamp(17px,5.2vw,23px);line-height:1.05;transform:rotate(-14deg);box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--straw-d);animation:stamp .45s cubic-bezier(.2,1.6,.4,1) .5s both}
 @keyframes stamp{from{transform:rotate(-14deg) scale(1.8);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:1}}
@@ -144,6 +144,12 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .sbtn.warn{background:var(--straw);color:#fff}
 .sbtn.quiet{border-color:var(--line);box-shadow:none;color:var(--muted)}
 .row.late{background:var(--straw-l);border-color:var(--straw);border-left-color:var(--straw-d)}
+.cut{margin-left:8px;color:var(--ink)}
+.cut span{font-family:var(--fd);font-size:16px;color:var(--straw-d)}
+.tag.walk{color:var(--choco);font-family:var(--fb);font-size:12px;margin-left:8px;vertical-align:middle}
+.col h2 .h2tool{margin-left:auto;font-size:16px}
+.rule{font-size:14px;color:var(--straw-d);background:var(--straw-l);border-radius:10px;padding:4px 12px;margin:-6px 0 12px}
+.rule:empty{display:none}
 .late-tag{display:none;color:var(--straw-d);font-family:var(--fd);font-size:15px;margin-left:4px}
 .row.late .late-tag{display:inline}
 .empty{color:var(--muted);border:2px dashed var(--line);border-radius:14px;padding:20px 14px;text-align:center;font-size:15px}
@@ -195,6 +201,10 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .qrp{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;padding:24px;text-align:center}
 .qrp h1{font-family:var(--fd);font-weight:400;font-size:clamp(34px,6vw,56px);line-height:1.15;margin:10px 0 4px}
 .qrp .q-sub{color:var(--muted);font-size:19px;margin:0}
+.q-steps{list-style:none;counter-reset:q;margin:16px auto 4px;padding:0;display:grid;grid-template-columns:repeat(2,auto);justify-content:center;gap:10px 40px;text-align:left}
+.q-steps li{counter-increment:q;display:flex;align-items:center;gap:12px;font-family:var(--fd);font-size:clamp(19px,2.6vw,26px);line-height:1.25}
+.q-steps li::before{content:counter(q);flex:none;width:1.7em;height:1.7em;border-radius:50%;background:var(--blue);color:#fff;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:.9em}
+@media (max-width:560px){.q-steps{grid-template-columns:1fr}}
 .qrp .q-url{color:var(--muted);font-size:13px;margin:10px 0 18px;word-break:break-all}
 .q-btns{display:flex;gap:10px;width:min(100%,420px)}
 @media print{.no-print,.demo-bar,#errbar{display:none!important}body{background:#fff}.qrp{min-height:auto;padding-top:40px}.carton .wave{animation:none}}
@@ -246,7 +256,7 @@ const store = {
 };
 const setText = (sel, v) => { const el = $(sel); if (el && el.textContent !== String(v)) el.textContent = v; };
 function newSid(){ const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`; }
-const DEFAULT_CFG = () => ({ sid: newSid(), open: true, capacity: 4, minutes: 10, notifyAhead: 2, noShowMin: 3, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기" });
+const DEFAULT_CFG = () => ({ sid: newSid(), open: true, capacity: 4, minutes: 10, notifyAhead: 2, noShowMin: 3, cancelMin: 10, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기" });
 
 function toast(msg){
   let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
@@ -341,13 +351,13 @@ async function makeFirestore(){
     watchQueue(sid, cb, err){ return F.onSnapshot(F.query(tCol(sid), F.where("status", "in", ["waiting","called","active"])), qs => cb(qs.docs.map(conv)), err); },
     watchAll(sid, cb, err){ return F.onSnapshot(tCol(sid), qs => cb(qs.docs.map(conv)), err); },
     watchTicket(sid, id, cb, err){ return F.onSnapshot(F.doc(tCol(sid), id), s => cb(s.exists() ? conv(s) : null), err); },
-    async addTicket(sid, name){
+    async addTicket(sid, name, extra = {}){
       const tref = F.doc(tCol(sid));
       const no = await F.runTransaction(db, async tx => {
         const s = await tx.get(sRef(sid));
         const n = (s.exists() ? (s.data().counter || 0) : 0) + 1;
         tx.set(sRef(sid), { counter: n }, { merge: true });
-        tx.set(tref, prep({ no: n, name, status: "waiting", createdAt: NOW, queueAt: NOW, updatedAt: NOW, callCount: 0, rating: null }));
+        tx.set(tref, prep({ no: n, name, status: "waiting", createdAt: NOW, queueAt: NOW, updatedAt: NOW, callCount: 0, rating: null, walkin: !!extra.walkin }));
         return n;
       });
       return { id: tref.id, no };
@@ -359,6 +369,16 @@ async function makeFirestore(){
         const s = await tx.get(r);
         if (!s.exists() || s.data().status !== "waiting") return false;
         tx.update(r, prep({ status: "called", calledAt: NOW, lastCallAt: NOW, callCount: (s.data().callCount || 0) + 1, updatedAt: NOW }));
+        return true;
+      });
+    },
+    expireIfCalled(sid, id, cutoff){
+      const r = F.doc(tCol(sid), id);
+      return F.runTransaction(db, async tx => {
+        const s = await tx.get(r); if (!s.exists()) return false;
+        const d = s.data(); const ca = d.calledAt && d.calledAt.toMillis ? d.calledAt.toMillis() : 0;
+        if (d.status !== "called" || !ca || ca > cutoff) return false;
+        tx.update(r, prep({ status: "expired", updatedAt: NOW }));
         return true;
       });
     }
@@ -383,14 +403,15 @@ function makeLocal(){
     watchQueue(sid, cb){ return sub(db => cb(list(db, sid).filter(t => ["waiting","called","active"].includes(t.status)))); },
     watchAll(sid, cb){ return sub(db => cb(list(db, sid))); },
     watchTicket(sid, id, cb){ return sub(db => { const t = db.s[sid]?.t?.[id]; cb(t ? { ...t } : null); }); },
-    async addTicket(sid, name){
+    async addTicket(sid, name, extra = {}){
       const db = read(); const s = db.s[sid] || (db.s[sid] = { counter: 0, t: {} });
       const no = ++s.counter; const id = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); const now = Date.now();
-      s.t[id] = { id, no, name, status: "waiting", createdAt: now, queueAt: now, updatedAt: now, callCount: 0, rating: null };
+      s.t[id] = { id, no, name, status: "waiting", createdAt: now, queueAt: now, updatedAt: now, callCount: 0, rating: null, walkin: !!extra.walkin };
       write(db); return { id, no };
     },
     async update(sid, id, patch){ const db = read(); const t = db.s[sid]?.t?.[id]; if (!t) return; apply(t, { ...patch, updatedAt: NOW }); write(db); },
-    async callIfWaiting(sid, id){ const db = read(); const t = db.s[sid]?.t?.[id]; if (!t || t.status !== "waiting") return false; apply(t, { status: "called", calledAt: NOW, lastCallAt: NOW, callCount: INC, updatedAt: NOW }); write(db); return true; }
+    async callIfWaiting(sid, id){ const db = read(); const t = db.s[sid]?.t?.[id]; if (!t || t.status !== "waiting") return false; apply(t, { status: "called", calledAt: NOW, lastCallAt: NOW, callCount: INC, updatedAt: NOW }); write(db); return true; },
+    async expireIfCalled(sid, id, cutoff){ const db = read(); const t = db.s[sid]?.t?.[id]; if (!t || t.status !== "called" || !t.calledAt || t.calledAt > cutoff) return false; apply(t, { status: "expired", updatedAt: NOW }); write(db); return true; }
   };
 }
 
@@ -483,6 +504,7 @@ function pScreen(){
       if (t.status === "active") return P.me.ratingStep ? "rating" : "active";
       if (t.status === "done") return (t.rating == null && !P.me.rated) ? "rating" : "done";
       if (t.status === "noshow") return "noshow";
+      if (t.status === "expired") return "expired";
     }
   }
   return P.cfg.open ? "join" : "closed";
@@ -514,12 +536,13 @@ const PT = {
   waiting: () => `${carton("st-waiting")}
     <h1 id="w-h">번호표를 받았어요</h1>
     <p class="sub" id="w-sub"></p>
+    <p class="rule" id="w-rule"></p>
     <div class="chips" id="w-chips"></div>
     <div class="stack"><button class="btn ghost" data-act="cancel">줄 서기 취소</button></div>`,
   called: () => `${carton("st-called")}
     <h1>지금 차례예요!</h1>
-    <p class="sub">부스에 도착하면 아래 버튼을 눌러 주세요.</p>
-    <p class="since">부른 지 <b id="c-since" data-since=""></b></p>
+    <p class="since" id="c-line"></p>
+    <p class="sub" id="c-sub">부스에 도착하면 아래 버튼을 눌러 주세요.</p>
     <div class="stack"><button class="btn straw" data-act="start">체험 시작하기</button></div>`,
   active: () => `${carton("st-active")}
     <h1>체험 중이에요</h1>
@@ -536,6 +559,10 @@ const PT = {
     <h1>체험 완료!</h1>
     <p class="sub" id="d-sub"></p>
     <div class="stack"><button class="btn ghost" data-act="again">새 번호표 받기</button></div>`,
+  expired: () => `${carton("st-off")}
+    <h1>예약이 취소됐어요</h1>
+    <p class="sub" id="x-sub">부른 뒤 정해진 시간 안에 부스에 오지 않아 예약이 취소됐어요. 체험하고 싶으면 새 번호표를 받아 주세요.</p>
+    <div class="stack"><button class="btn" data-act="again">새 번호표 받기</button></div>`,
   noshow: () => `${carton("st-off")}
     <h1>순서가 지나갔어요</h1>
     <p class="sub">이름을 불렀을 때 부스에 없어서 다음 사람을 먼저 불렀어요. 다시 줄을 서면 맨 뒤에서 기다려요.</p>
@@ -590,9 +617,13 @@ function updateP(){
       WL ? `<span class="chip">화면 켜짐 유지</span>` : ""
     ].join("");
     const c = $("#w-chips"); if (c && c.innerHTML !== chips) c.innerHTML = chips;
+    setText("#w-rule", cfg.cancelMin > 0 ? `부른 뒤 ${cfg.cancelMin}분 안에 오지 않으면 예약이 취소돼요.` : "");
   } else if (s === "called"){
     setLab({ ...lab, stamp: `부른 시각 ${hm(t.calledAt)}` }); setFill(1);
-    const el = $("#c-since"); if (el){ el.dataset.since = t.calledAt || ""; }
+    const m = cfg.cancelMin || 0, line = $("#c-line");
+    const want = m > 0 ? `남은 시간 <b data-until="${(t.calledAt || Date.now()) + m * 60000}"></b>` : `부른 지 <b data-since="${t.calledAt || ""}"></b>`;
+    if (line && line.dataset.key !== want){ line.dataset.key = want; line.innerHTML = want; }
+    setText("#c-sub", m > 0 ? `부스에 도착하면 아래 버튼을 눌러 주세요. ${m}분 안에 오지 않으면 예약이 취소돼요.` : "부스에 도착하면 아래 버튼을 눌러 주세요.");
   } else if (s === "active"){
     setLab({ ...lab, stamp: `시작 ${hm(t.startedAt)}` }); setFill(1);
     const el = $("#a-timer"); if (el){ el.dataset.clock = t.startedAt || ""; }
@@ -602,7 +633,7 @@ function updateP(){
     setLab({ ...lab, stamp: `완료 ${hm(t.doneAt)}` }); setFill(1);
     const r = t.rating;
     setText("#d-sub", r ? `별점 ${"★".repeat(r)}${"☆".repeat(5 - r)} 고마워요. 우유팩이 새 물건으로 다시 태어났어요.` : "우유팩이 새 물건으로 다시 태어났어요. 함께해 줘서 고마워요.");
-  } else if (s === "noshow"){
+  } else if (s === "noshow" || s === "expired"){
     setLab(lab); setFill(.12);
   }
   tickP();
@@ -610,6 +641,9 @@ function updateP(){
 function tickP(){
   document.querySelectorAll("[data-since]").forEach(el => { const v = +el.dataset.since; el.textContent = v ? dur(Date.now() - v) : ""; });
   document.querySelectorAll("[data-clock]").forEach(el => { const v = +el.dataset.clock; el.textContent = v ? clock(Date.now() - v) : "00:00"; });
+  document.querySelectorAll("[data-until]").forEach(el => { const v = +el.dataset.until; el.textContent = clock(v - Date.now()); });
+  const cu = $("#c-line [data-until]");
+  if (cu && +cu.dataset.until <= Date.now()) setText("#c-sub", "시간이 다 됐어요. 예약이 곧 취소돼요. 부스에 와 있다면 선생님께 알려 주세요.");
 }
 function checkAlerts(){
   const t = P.ticket, me = P.me, cfg = P.cfg; if (!t || !me || !cfg) return;
@@ -625,7 +659,12 @@ function checkAlerts(){
   if (t.status === "called" && (t.callCount || 1) > (me.alerted || 0)){
     me.alerted = t.callCount || 1; saveMe();
     chime(DINGDONG, 3); buzz([450, 150, 450, 150, 900]);
-    notify("지금 차례예요!", `${t.no}번 ${t.name}님, 부스로 와 주세요.`);
+    const m = cfg.cancelMin || 0;
+    notify("지금 차례예요!", `${t.no}번 ${t.name}님, ${m > 0 ? `${m}분 안에 ` : ""}부스로 와 주세요.`);
+  }
+  if (t.status === "expired" && !me.expiredSeen){
+    me.expiredSeen = true; saveMe(); buzz([200]);
+    notify("예약이 취소됐어요", "시간 안에 부스에 오지 않아 예약이 취소됐어요. 새 번호표를 받을 수 있어요.");
   }
 }
 async function reserve(){
@@ -669,7 +708,7 @@ const PACT = {
   skiprate(){ P.me.rated = true; saveMe(); renderP(); },
   again(){ clearMe(); renderP(); },
   async requeue(){
-    unlockAudio(); const me = P.me; me.initialAhead = null; me.nearDone = false; saveMe();
+    unlockAudio(); const me = P.me; me.initialAhead = null; me.nearDone = false; me.expiredSeen = false; saveMe();
     await safe(B.update(me.sid, me.id, { status: "waiting", queueAt: NOW })); keepAwake(true);
   },
   async leave(){ const me = P.me; await safe(B.update(me.sid, me.id, { status: "cancelled" })); clearMe(); renderP(); },
@@ -686,8 +725,8 @@ function groups(list){
     waiting: by("waiting").sort((a, b) => k("queueAt", a) - k("queueAt", b) || a.no - b.no),
     called: by("called").sort((a, b) => k("calledAt", a) - k("calledAt", b)),
     active: by("active").sort((a, b) => k("startedAt", a) - k("startedAt", b)),
-    done: by("done"), noshow: by("noshow"), cancelled: by("cancelled"),
-    rec: list.filter(t => ["done","noshow","cancelled"].includes(t.status)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+    done: by("done"), noshow: by("noshow"), cancelled: by("cancelled"), expired: by("expired"),
+    rec: list.filter(t => ["done","noshow","cancelled","expired"].includes(t.status)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
   };
 }
 const findT = id => A.all.find(t => t.id === id);
@@ -721,19 +760,20 @@ function renderGate(){
     else { setText("#pw-err", "비밀번호가 맞지 않아요."); $("#pw").select(); }
   });
 }
+const walkTag = t => t.walkin ? `<span class="tag walk">휴대폰 없음</span>` : "";
 function rowHTML(t, kind, i){
   const cfg = A.cfg;
   if (kind === "called") return `<div class="row" data-late="${(t.calledAt || 0) + cfg.noShowMin * 60000}">
       <div class="r-no">${t.no}</div>
-      <div><div class="r-nm">${esc(t.name)}</div><div class="r-meta">부른 지 <span data-since="${t.calledAt || ""}"></span>${t.callCount > 1 ? `, ${t.callCount}번 부름` : ""}<span class="late-tag">아직 안 왔어요</span></div></div>
+      <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta">부른 지 <span data-since="${t.calledAt || ""}"></span>${t.callCount > 1 ? `, ${t.callCount}번 부름` : ""}<span class="late-tag">아직 안 왔어요</span>${cfg.cancelMin > 0 ? `<span class="cut">자동 취소까지 <span data-until="${(t.calledAt || Date.now()) + cfg.cancelMin * 60000}"></span></span>` : ""}</div></div>
       <div class="r-acts"><button class="sbtn pri" data-act="arrive" data-id="${t.id}">도착 확인</button><button class="sbtn" data-act="recall" data-id="${t.id}">다시 알림</button><button class="sbtn warn" data-act="skip" data-id="${t.id}">건너뛰고 다음 호출</button></div></div>`;
   if (kind === "active") return `<div class="row">
       <div class="r-no">${t.no}</div>
-      <div><div class="r-nm">${esc(t.name)}</div><div class="r-meta">체험한 지 <span data-since="${t.startedAt || ""}"></span></div></div>
+      <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta">체험한 지 <span data-since="${t.startedAt || ""}"></span></div></div>
       <div class="r-acts"><button class="sbtn" data-act="finishT" data-id="${t.id}">완료 처리</button></div></div>`;
   return `<div class="row">
       <div class="r-no">${t.no}</div>
-      <div><div class="r-nm">${esc(t.name)}</div><div class="r-meta"><span class="pos">${i + 1}번째</span>기다린 지 <span data-since="${t.queueAt || ""}"></span></div></div>
+      <div><div class="r-nm">${esc(t.name)}${walkTag(t)}</div><div class="r-meta"><span class="pos">${i + 1}번째</span>기다린 지 <span data-since="${t.queueAt || ""}"></span></div></div>
       <div class="r-acts"><button class="sbtn pri" data-act="call" data-id="${t.id}">호출</button><button class="sbtn quiet" data-act="cancelT" data-id="${t.id}">줄에서 빼기</button></div></div>`;
 }
 function renderA(){
@@ -744,8 +784,8 @@ function renderA(){
   const durs = g.done.filter(t => t.startedAt && t.doneAt).map(t => t.doneAt - t.startedAt);
   const avgMin = durs.length ? Math.max(1, Math.round(durs.reduce((a, b) => a + b, 0) / durs.length / 60000)) : "–";
   const next = g.waiting[0];
-  const col = (cls, title, count, rows, empty) => `<section class="col ${cls}"><h2><i></i>${title}<em>${count}</em></h2>${rows || `<div class="empty">${empty}</div>`}</section>`;
-  const tagOf = t => t.status === "done" ? `<span class="tag done">완료${t.rating ? ` ★${t.rating}` : ""}</span>` : t.status === "noshow" ? `<span class="tag noshow">미도착</span>` : `<span class="tag cancelled">취소</span>`;
+  const col = (cls, title, count, rows, empty, tool = "") => `<section class="col ${cls}"><h2><i></i>${title}<em>${count}</em>${tool}</h2>${rows || `<div class="empty">${empty}</div>`}</section>`;
+  const tagOf = t => t.status === "done" ? `<span class="tag done">완료${t.rating ? ` ★${t.rating}` : ""}</span>` : t.status === "noshow" ? `<span class="tag noshow">미도착</span>` : t.status === "expired" ? `<span class="tag noshow">시간 초과 취소</span>` : `<span class="tag cancelled">취소</span>`;
   const sy = window.scrollY;
   $("#app").innerHTML = demoBar() + `
   <header class="a-top">
@@ -772,10 +812,10 @@ function renderA(){
     <div class="a-cols">
       ${col("c-called", "호출함", g.called.length, g.called.map(t => rowHTML(t, "called")).join(""), "부른 사람이 없어요. 위의 버튼으로 다음 사람을 호출하세요.")}
       ${col("c-active", "체험 중", `${g.active.length}/${cap}`, g.active.map(t => rowHTML(t, "active")).join(""), "체험 중인 사람이 없어요.")}
-      ${col("c-wait", "대기 줄", g.waiting.length, g.waiting.map((t, i) => rowHTML(t, "wait", i)).join(""), cfg.open ? "QR로 번호표를 받으면 여기에 나타나요." : "줄이 마감돼 있어요. 위의 버튼으로 다시 열 수 있어요.")}
+      ${col("c-wait", "대기 줄", g.waiting.length, g.waiting.map((t, i) => rowHTML(t, "wait", i)).join(""), cfg.open ? "QR로 번호표를 받으면 여기에 나타나요." : "줄이 마감돼 있어요. 위의 버튼으로 다시 열 수 있어요.", `<button class="sbtn h2tool" data-act="walkin">현장 등록</button>`)}
     </div>
     <details class="rec" id="rec" ${A.recOpen ? "open" : ""}>
-      <summary>기록 보기<em>완료 ${g.done.length}명, 미도착 ${g.noshow.length}명, 취소 ${g.cancelled.length}명</em></summary>
+      <summary>기록 보기<em>완료 ${g.done.length}명, 미도착 ${g.noshow.length}명, 시간 초과 ${g.expired.length}명, 취소 ${g.cancelled.length}명</em></summary>
       <div class="rec-in">
         <div class="dist"><h3>만족도 (${rated.length}명 응답)</h3>
           ${[5,4,3,2,1].map(s => { const n = rated.filter(t => t.rating === s).length; const w = rated.length ? Math.round(n / rated.length * 100) : 0; return `<div class="bar"><span>${s}점</span><i style="--w:${w}%"></i><b>${n}</b></div>`; }).join("")}
@@ -790,12 +830,34 @@ function renderA(){
 }
 function tickA(){
   const now = Date.now();
+  document.querySelectorAll("[data-until]").forEach(el => { el.textContent = clock(+el.dataset.until - now); });
+  checkExpire();
   document.querySelectorAll("[data-since]").forEach(el => { const v = +el.dataset.since; el.textContent = v ? dur(now - v) : ""; });
   document.querySelectorAll("[data-late]").forEach(el => el.classList.toggle("late", now > +el.dataset.late));
 }
 async function callOne(t){
   try { const ok = await B.callIfWaiting(A.cfg.sid, t.id); toast(ok ? `${t.no}번 ${t.name} 호출했어요` : "이미 호출된 사람이에요"); return ok; }
   catch(e){ onErr(e); return false; }
+}
+const expiring = new Set();
+function checkExpire(){
+  const m = A.cfg?.cancelMin || 0; if (!m) return;
+  const cutoff = Date.now() - m * 60000;
+  groups(A.all).called.forEach(t => {
+    if (!t.calledAt || t.calledAt > cutoff || expiring.has(t.id)) return;
+    expiring.add(t.id); expireOne(t, cutoff).finally(() => setTimeout(() => expiring.delete(t.id), 3000));
+  });
+}
+async function expireOne(t, cutoff){
+  try {
+    const ok = await B.expireIfCalled(A.cfg.sid, t.id, cutoff); if (!ok) return;
+    let msg = `${t.no}번 ${t.name}: ${A.cfg.cancelMin}분이 지나 예약을 취소했어요`;
+    if (!A.auto){
+      const w = groups(A.all).waiting.find(x => x.id !== t.id);
+      if (w && await B.callIfWaiting(A.cfg.sid, w.id)) msg += `. ${w.no}번 ${w.name}을(를) 호출했어요`;
+    }
+    toast(msg);
+  } catch(e){ onErr(e); }
 }
 async function maybeAuto(){
   if (!A.auto || A.busy || !A.cfg) return;
@@ -807,7 +869,7 @@ async function maybeAuto(){
   finally { A.busy = false; setTimeout(maybeAuto, 400); }
 }
 function exportCSV(){
-  const L = { waiting: "대기", called: "호출", active: "체험 중", done: "완료", noshow: "미도착", cancelled: "취소" };
+  const L = { waiting: "대기", called: "호출", active: "체험 중", done: "완료", noshow: "미도착", expired: "시간 초과 취소", cancelled: "취소" };
   const rows = [["번호","이름","상태","줄 선 시각","부른 시각","체험 시작","체험 완료","체험 시간(분)","별점","부른 횟수"]];
   [...A.all].sort((a, b) => a.no - b.no).forEach(t => rows.push([t.no, t.name, L[t.status] || t.status, hms(t.createdAt), hms(t.calledAt), hms(t.startedAt), hms(t.doneAt), t.startedAt && t.doneAt ? ((t.doneAt - t.startedAt) / 60000).toFixed(1) : "", t.rating || "", t.callCount || 0]));
   const cell = v => { let s = String(v ?? ""); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
@@ -816,7 +878,7 @@ function exportCSV(){
   a.download = `${A.cfg.name}_${A.cfg.sid}.csv`; document.body.appendChild(a); a.click(); a.remove();
   toast("CSV 파일을 내려받았어요");
 }
-const STEPS = { capacity: [1, 12], minutes: [1, 60], notifyAhead: [0, 10], noShowMin: [1, 15] };
+const STEPS = { capacity: [1, 12], minutes: [1, 60], notifyAhead: [0, 10], noShowMin: [1, 15], cancelMin: [0, 30] };
 function openSettings(){
   const c = { ...A.cfg };
   const stepRow = (k, title, hint) => `<div class="set-row"><div><b>${title}</b><small>${hint}</small></div><div class="step"><button type="button" data-step="${k}" data-d="-1" aria-label="${title} 줄이기">−</button><output id="s-${k}">${c[k]}</output><button type="button" data-step="${k}" data-d="1" aria-label="${title} 늘리기">+</button></div></div>`;
@@ -825,6 +887,7 @@ function openSettings(){
     ${stepRow("minutes", "한 사람 체험 시간(분)", "예상 대기 시간을 계산할 때 써요.")}
     ${stepRow("notifyAhead", "곧 차례 알림", "내 앞에 이 인원 이하로 남으면 미리 알려 줘요.")}
     ${stepRow("noShowMin", "미도착 표시(분)", "부른 뒤 이 시간이 지나면 빨갛게 표시해요.")}
+    ${stepRow("cancelMin", "자동 취소(분)", "부른 뒤 이 시간 안에 오지 않으면 예약을 취소하고 다음 사람을 불러요. 0이면 꺼져요.")}
     <label class="set-row"><div><b>이 기기에서 자동 호출</b><small>빈자리가 생기면 다음 사람을 바로 불러요. 관리자 기기 한 대에서만 켜 주세요.</small></div><input type="checkbox" class="tog" id="s-auto" ${A.auto ? "checked" : ""}></label>
     <div class="set-txt"><label>부스 이름<input id="s-name" maxlength="16" value="${esc(c.name)}"></label><label>한 줄 소개<input id="s-sub" maxlength="30" value="${esc(c.sub)}"></label></div>
     <div class="mbtns"><button class="btn ghost" data-x="close">닫기</button><button class="btn" data-x="save">저장</button></div>
@@ -837,12 +900,29 @@ function openSettings(){
     const x = e.target.closest("[data-x]"); if (!x) return;
     if (x.dataset.x === "close"){ closeModal(); return; }
     A.auto = $("#s-auto").checked; store.set("milkyAuto", A.auto);
-    const patch = { capacity: c.capacity, minutes: c.minutes, notifyAhead: c.notifyAhead, noShowMin: c.noShowMin, name: $("#s-name").value.trim() || "MILKY UP", sub: $("#s-sub").value.trim() };
+    const patch = { capacity: c.capacity, minutes: c.minutes, notifyAhead: c.notifyAhead, noShowMin: c.noShowMin, cancelMin: c.cancelMin, name: $("#s-name").value.trim() || "MILKY UP", sub: $("#s-sub").value.trim() };
     closeModal(); safe(B.setConfig(patch)).then(() => toast("설정을 저장했어요")).catch(() => {});
     renderA(); maybeAuto();
   });
 }
+function openWalkin(){
+  const m = modal(`<h3>현장 등록</h3>
+    <p class="msub">휴대폰이 없는 사람을 이름으로 줄 세워요. 차례가 되면 이름을 불러 주세요.</p>
+    <div class="set-txt"><label>이름<input id="wk-name" maxlength="10" placeholder="예: 김하늘" enterkeyhint="done"></label></div>
+    <p class="err" id="wk-err"></p>
+    <div class="mbtns"><button class="btn ghost" data-x="close">닫기</button><button class="btn" data-x="add">줄 세우기</button></div>`);
+  const inp = $("#wk-name"); inp.focus();
+  const add = async () => {
+    const name = inp.value.trim().replace(/\s+/g, " ");
+    if (!name){ setText("#wk-err", "이름을 적어 주세요."); inp.focus(); return; }
+    try { const r = await B.addTicket(A.cfg.sid, name, { walkin: true }); closeModal(); toast(`${r.no}번 ${name} 줄 세웠어요`); }
+    catch(e){ setText("#wk-err", "줄 세우지 못했어요. 인터넷 연결을 확인해 주세요."); }
+  };
+  inp.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); add(); } });
+  m.addEventListener("click", e => { const x = e.target.closest("[data-x]"); if (!x) return; if (x.dataset.x === "close") closeModal(); else add(); });
+}
 const AACT = {
+  walkin(){ openWalkin(); },
   async toggleOpen(){ const willOpen = !A.cfg.open; await safe(B.setConfig({ open: willOpen })); toast(willOpen ? "줄을 다시 받아요" : "줄을 마감했어요"); },
   qr(){ location.hash = "#qr"; },
   settings(){ openSettings(); },
@@ -891,12 +971,18 @@ function startQR(){
     ${carton("st-waiting big")}
     <h1>QR을 찍고<br>번호표를 받으세요</h1>
     <p class="q-sub" id="q-sub"></p>
+    <ol class="q-steps">
+      <li>QR을 찍고 이름을 써요</li>
+      <li>화면을 켜 둔 채 기다려요</li>
+      <li id="q-step3">알림이 울리면 부스로 와요</li>
+      <li>체험이 끝나면 별점을 남겨요</li>
+    </ol>
     <p class="q-url">${esc(url)}</p>
     <div class="q-btns no-print"><button class="btn ghost" data-act="print">인쇄하기</button><button class="btn" data-act="back">관리자 화면으로</button></div>
   </main>`;
   $("#ct .lab").innerHTML = qrSVG(url);
   requestAnimationFrame(() => setFill(.58));
-  const u = B.watchConfig(cfg => { if (!cfg) return; setRoof(cfg.name); setText("#q-sub", cfg.sub); }, onErr);
+  const u = B.watchConfig(cfg => { if (!cfg) return; setRoof(cfg.name); setText("#q-sub", cfg.sub); setText("#q-step3", cfg.cancelMin > 0 ? `알림이 울리면 ${cfg.cancelMin}분 안에 부스로 와요` : "알림이 울리면 부스로 와요"); }, onErr);
   cleanup.push(u);
 }
 
