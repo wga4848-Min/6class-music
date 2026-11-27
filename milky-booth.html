@@ -338,8 +338,8 @@ const store = {
 };
 const setText = (sel, v) => { const el = $(sel); if (el && el.textContent !== String(v)) el.textContent = v; };
 function newSid(){ const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`; }
-const TIME_DEFAULTS = { capacity: 8, slots: 18, startTime: "09:00", endTime: "16:00", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slotMin: 20, maxParty: 2, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
-const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 5 });
+const TIME_DEFAULTS = { capacity: 8, slots: 17, startTime: "10:00", endTime: "16:40", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slotMin: 20, maxParty: 2, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
+const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 6 });
 
 function toast(msg){
   let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
@@ -883,10 +883,10 @@ function startAdmin(){
   const u = B.watchConfig(cfg => {
     const prev = A.cfg?.sid; A.cfg = cfg; if (!cfg) return;
     if ((cfg.cfgVer || 0) < 3 && !A.migrated){   // 선착순 대기 방식에서 타임제로 바뀔 때 한 번: 시간표 기본값 + 예약 새로 시작
-      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 5 }).catch(onErr); return;
+      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 6 }).catch(onErr); return;
     }
-    if ((cfg.cfgVer || 0) < 5 && !A.migrated){   // 운영 9:00~16:00, 점심 12:00~13:00, 18회차(회차당 20분), 한 번에 2명까지로 한 번 맞춤
-      A.migrated = true; B.setConfig({ startTime: "09:00", endTime: "16:00", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slots: 18, slotMin: 20, maxParty: 2, cfgVer: 5 }).catch(onErr); return;
+    if ((cfg.cfgVer || 0) < 6 && !A.migrated){   // 10:00 시작, 20분 간격, 마지막 회차 16:20(16:40 끝), 점심 12:00~13:00 → 17회차, 한 번에 2명까지로 한 번 맞춤
+      A.migrated = true; B.setConfig({ startTime: "10:00", endTime: "16:40", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slots: 17, slotMin: 20, maxParty: 2, cfgVer: 6 }).catch(onErr); return;
     }
     if (cfg.sid !== prev){ A.unsub?.(); A.all = []; A.unsub = B.watchAll(cfg.sid, list => { A.all = list; renderA(); }, onErr); }
     renderA();
