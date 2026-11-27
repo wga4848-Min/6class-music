@@ -210,6 +210,14 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .walk-in{flex-wrap:wrap;align-items:center}
 .walk input{flex:2 1 200px}
 .timein{height:50px;border:2px solid var(--ink);border-radius:12px;padding:0 10px;font-size:20px;font-family:var(--fd);color:var(--ink);background:#fff}
+.lunch{grid-column:1/-1;margin:4px 0;text-align:center;font-family:var(--fd);font-size:17px;color:var(--choco);background:var(--choco-l);border:2px dashed var(--choco);border-radius:12px;padding:6px 10px}
+.set-row.col{flex-direction:column;align-items:stretch;gap:8px}
+.trange{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.trange .timein{height:48px;font-size:18px;min-width:150px;flex:1 1 150px}
+.trange .tog{margin-right:4px}
+.trange span{font-family:var(--fd);font-size:20px}
+.sched{background:var(--sky);border-radius:10px;padding:8px 12px;color:var(--ink);font-size:15px;margin:6px 0}
+.sched.bad{background:var(--straw-l);color:var(--straw-d)}
 .q-nophone{font-family:var(--fd);font-size:clamp(18px,2.2vw,22px);color:var(--choco);margin:14px 0 0}
 .walk{display:grid;grid-template-columns:minmax(0,1fr);gap:6px 20px;align-items:center;background:#fff;border:2px solid var(--line);border-left:9px solid var(--choco);border-radius:18px;padding:12px 16px;margin:0 0 16px}
 .walk label b{font-family:var(--fd);font-weight:400;font-size:22px;display:block;line-height:1.25}
@@ -330,8 +338,8 @@ const store = {
 };
 const setText = (sel, v) => { const el = $(sel); if (el && el.textContent !== String(v)) el.textContent = v; };
 function newSid(){ const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`; }
-const TIME_DEFAULTS = { capacity: 8, slots: 20, startTime: "09:00", slotMin: 20, maxParty: 4, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
-const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 3 });
+const TIME_DEFAULTS = { capacity: 8, slots: 20, startTime: "09:00", endTime: "16:00", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slotMin: 18, maxParty: 4, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
+const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 4 });
 
 function toast(msg){
   let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
@@ -555,8 +563,46 @@ function route(){
 
 /* ========================= 회차 시간 ========================= */
 const SEAT = ["reserved", "active", "done"];          // 자리를 차지하는 상태
-function slotStart(cfg, i){ const [h, m] = String(cfg.startTime || "09:00").split(":").map(Number); const d = new Date(); d.setHours(h || 0, (m || 0) + (i - 1) * cfg.slotMin, 0, 0); return d.getTime(); }
+/* 운영 시작~끝 사이에 회차를 같은 길이로 이어 붙이고, 점심시간과 겹치는 회차는 점심이 끝난 뒤로 미룸 */
+const toMin = v => { const [h, m] = String(v || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+const toHM = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+const hasBreak = c => !!c.useBreak && toMin(c.breakEnd) > toMin(c.breakStart);
+function buildTimes(c, m, strict){
+  const E = toMin(c.endTime), bs = toMin(c.breakStart), be = toMin(c.breakEnd), br = hasBreak(c);
+  const out = []; let t = toMin(c.startTime || "09:00");
+  for (let i = 0; i < c.slots; i++){
+    if (br && t < be && t + m > bs) t = Math.max(t, be);
+    if (strict && c.endTime && t + m > E) return null;
+    out.push(t); t += m;
+  }
+  return out;
+}
+function fitSlotMin(c){   // 운영 시간 안에 회차 수가 다 들어가는 가장 긴 회차 길이(분)
+  const S = toMin(c.startTime), E = toMin(c.endTime);
+  const lunch = hasBreak(c) ? Math.max(0, Math.min(E, toMin(c.breakEnd)) - Math.max(S, toMin(c.breakStart))) : 0;
+  for (let m = Math.floor((E - S - lunch) / c.slots); m >= 1; m--) if (buildTimes(c, m, true)) return m;
+  return 0;
+}
+const TIMES = { key: "", v: [] };
+function slotTimes(c){
+  const k = [c.startTime, c.slotMin, c.slots, c.useBreak, c.breakStart, c.breakEnd].join("|");
+  if (TIMES.key !== k){ TIMES.key = k; TIMES.v = buildTimes(c, c.slotMin || 18, false); }
+  return TIMES.v;
+}
+const dayAt = min => { const d = new Date(); d.setHours(0, min, 0, 0); return d.getTime(); };
+const slotStart = (cfg, i) => dayAt(slotTimes(cfg)[i - 1] ?? 0);
 const slotEnd = (cfg, i) => slotStart(cfg, i) + cfg.slotMin * 60000;
+const inLunch = (cfg, now = Date.now()) => hasBreak(cfg) && now >= dayAt(toMin(cfg.breakStart)) && now < dayAt(toMin(cfg.breakEnd));
+const isAfterLunch = (cfg, i) => hasBreak(cfg) && (slotTimes(cfg)[i - 1] ?? 0) >= toMin(cfg.breakEnd);
+function scheduleText(c){
+  const t = buildTimes(c, c.slotMin, false), m = c.slotMin; if (!t.length) return "";
+  const end = t[t.length - 1] + m;
+  if (!hasBreak(c)) return `회차마다 ${m}분이에요. 1회차 ${toHM(t[0])} 시작, ${c.slots}회차 ${toHM(end)}에 끝나요.`;
+  const am = t.filter(x => x < toMin(c.breakStart)).length;
+  const amTxt = am ? `오전 1~${am}회차 ${toHM(t[0])}~${toHM(t[am - 1] + m)}` : "";
+  const pmTxt = am < t.length ? `오후 ${am + 1}~${c.slots}회차 ${toHM(t[am])}~${toHM(end)}` : "";
+  return `회차마다 ${m}분이에요. ${[amTxt, pmTxt].filter(Boolean).join(", ")}, 점심시간 ${c.breakStart}~${c.breakEnd}.`;
+}
 const lateBookMs = cfg => Math.min(5, cfg.cancelMin > 0 ? cfg.cancelMin : 5) * 60000;   // 시작 뒤에도 잠깐은 예약 가능
 const canBook = (cfg, i, now = Date.now()) => now < slotStart(cfg, i) + lateBookMs(cfg);
 function curSlot(cfg, now = Date.now()){ for (let i = 1; i <= cfg.slots; i++) if (now >= slotStart(cfg, i) && now < slotEnd(cfg, i)) return i; return 0; }
@@ -679,6 +725,7 @@ function slotGridHTML(){
   const cfg = P.cfg, now = Date.now(), party = P.form.party; let html = "";
   for (let i = 1; i <= cfg.slots; i++){
     if (now >= slotEnd(cfg, i)) continue;                       // 끝난 회차는 숨김
+    if (isAfterLunch(cfg, i) && !isAfterLunch(cfg, i - 1) && i > 1 && now < dayAt(toMin(cfg.breakEnd))) html += `<p class="lunch">점심시간 ${cfg.breakStart}~${cfg.breakEnd}</p>`;
     const l = seatsLeft(i), open = canBook(cfg, i, now), ok = open && l >= party, sel = P.form.slot === i;
     const st = !open ? "시작됨" : l === 0 ? "마감" : `남은 ${l}자리`;
     html += `<button type="button" class="slot${sel ? " sel" : ""}" data-act="pick" data-id="${i}" ${ok ? "" : "disabled"} aria-pressed="${sel}"><b>${i}회차</b><span class="t">${hm(slotStart(cfg, i))}</span><span class="l">${st}</span></button>`;
@@ -836,7 +883,10 @@ function startAdmin(){
   const u = B.watchConfig(cfg => {
     const prev = A.cfg?.sid; A.cfg = cfg; if (!cfg) return;
     if ((cfg.cfgVer || 0) < 3 && !A.migrated){   // 선착순 대기 방식에서 타임제로 바뀔 때 한 번: 시간표 기본값 + 예약 새로 시작
-      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 3 }).catch(onErr); return;
+      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 4 }).catch(onErr); return;
+    }
+    if ((cfg.cfgVer || 0) < 4 && !A.migrated){   // 운영 9:00~16:00, 점심 12:00~13:00, 20회차(회차당 18분)로 한 번 맞춤
+      A.migrated = true; B.setConfig({ startTime: "09:00", endTime: "16:00", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slots: 20, slotMin: 18, cfgVer: 4 }).catch(onErr); return;
     }
     if (cfg.sid !== prev){ A.unsub?.(); A.all = []; A.unsub = B.watchAll(cfg.sid, list => { A.all = list; renderA(); }, onErr); }
     renderA();
@@ -947,6 +997,7 @@ function renderA(){
       <button class="tbtn" data-act="logout">나가기</button>
     </nav>`;
   const nowLine = cur ? `<b>${cur}회차 진행 중</b><span>${hm(slotStart(cfg, cur))}–${hm(slotEnd(cfg, cur))}, 예약 ${slotUsed(cur)}/${cfg.capacity}명</span>`
+    : inLunch(cfg, now) && nxt ? `<b>점심시간</b><span>${cfg.breakEnd}에 ${nxt}회차가 시작해요</span>`
     : nxt ? `<b>${nxt}회차 시작 전</b><span>${hm(slotStart(cfg, nxt))}에 시작해요</span>` : `<b>오늘 회차가 모두 끝났어요</b><span></span>`;
   const nextLine = cur && nxt ? `<small>다음</small><div><b class="nx2">${nxt}회차 ${hm(slotStart(cfg, nxt))}</b><span>예약 ${slotUsed(nxt)}/${cfg.capacity}명</span></div>` : "";
   $("#a-hd").innerHTML = `
@@ -963,7 +1014,7 @@ function renderA(){
   const order = [], past = [];
   for (let i = 1; i <= cfg.slots; i++) (now >= slotEnd(cfg, i) ? past : order).push(i);
   $("#a-board").innerHTML = `
-    <div class="slots-grid">${order.map(i => slotCard(i, cur, nxt)).join("") || `<p class="empty">남은 회차가 없어요. 설정에서 시간을 확인해 주세요.</p>`}</div>
+    <div class="slots-grid">${order.map(i => (isAfterLunch(cfg, i) && i > 1 && !isAfterLunch(cfg, i - 1) && now < dayAt(toMin(cfg.breakEnd)) ? `<p class="lunch">점심시간 ${cfg.breakStart}~${cfg.breakEnd}</p>` : "") + slotCard(i, cur, nxt)).join("") || `<p class="empty">남은 회차가 없어요. 설정에서 시간을 확인해 주세요.</p>`}</div>
     ${past.length ? `<details class="pastwrap" id="pastw" ${A.pastOpen ? "open" : ""}><summary>지난 회차 ${past.length}개</summary><div class="slots-grid">${past.map(i => slotCard(i, cur, nxt)).join("")}</div></details>` : ""}
     <details class="rec" id="rec" ${A.recOpen ? "open" : ""}>
       <summary>기록 보기<em>완료 ${done.length}팀, 시간 초과 ${expired.length}팀, 취소 ${cancelled.length}팀</em></summary>
@@ -1040,16 +1091,21 @@ function exportCSV(){
   a.download = `${cfg.name}_${cfg.sid}.csv`; document.body.appendChild(a); a.click(); a.remove();
   toast("CSV 파일을 내려받았어요");
 }
-const STEPS = { slots: [1, 40, 1], slotMin: [5, 120, 5], capacity: [1, 30, 1], maxParty: [1, 10, 1], notifyBefore: [0, 30, 1], noShowMin: [1, 15, 1], cancelMin: [0, 30, 1] };
+const STEPS = { slots: [1, 40, 1], capacity: [1, 30, 1], maxParty: [1, 10, 1], notifyBefore: [0, 30, 1], noShowMin: [1, 15, 1], cancelMin: [0, 30, 1] };
 function openSettings(){
   const c = { ...A.cfg };
   const stepRow = (k, title, hint) => `<div class="set-row"><div><b>${title}</b><small>${hint}</small></div><div class="step"><button type="button" data-step="${k}" data-d="-1" aria-label="${title} 줄이기">−</button><output id="s-${k}">${c[k]}</output><button type="button" data-step="${k}" data-d="1" aria-label="${title} 늘리기">+</button></div></div>`;
-  const span = () => `1회차 ${c.startTime} 시작, ${c.slots}회차 ${hm(slotStart(c, c.slots))} 시작, ${hm(slotEnd(c, c.slots))}에 끝나요.`;
+  const recalc = () => {
+    c.slotMin = fitSlotMin(c);
+    const ok = c.slotMin >= 5;
+    setText("#s-span", ok ? scheduleText(c) : "운영 시간이 모자라요. 회차 수를 줄이거나 운영 시간을 늘려 주세요.");
+    $("#s-span").classList.toggle("bad", !ok); $('[data-x="save"]').disabled = !ok;
+  };
   const m = modal(`<h3>부스 설정</h3>
-    <label class="set-row"><div><b>첫 회차 시작 시각</b><small>여기서부터 회차 간격만큼 이어져요.</small></div><input type="time" id="s-start" class="timein" value="${esc(c.startTime)}"></label>
-    ${stepRow("slots", "회차 수", "하루에 운영하는 회차 수예요.")}
-    ${stepRow("slotMin", "회차 간격(분)", "한 회차가 차지하는 시간이에요. 5분씩 바뀌어요.")}
-    <p class="msub small" id="s-span">${span()}</p>
+    <div class="set-row col"><div><b>운영 시간</b><small>첫 회차 시작부터 마지막 회차 끝까지예요.</small></div><div class="trange"><input type="time" id="s-start" class="timein" value="${esc(c.startTime)}"><span>~</span><input type="time" id="s-end" class="timein" value="${esc(c.endTime)}"></div></div>
+    <div class="set-row col"><div><b>점심시간</b><small>이 시간에는 회차를 넣지 않아요.</small></div><div class="trange"><input type="checkbox" class="tog" id="s-brk" ${c.useBreak ? "checked" : ""} aria-label="점심시간 사용"><input type="time" id="s-bs" class="timein" value="${esc(c.breakStart)}"><span>~</span><input type="time" id="s-be" class="timein" value="${esc(c.breakEnd)}"></div></div>
+    ${stepRow("slots", "회차 수", "운영 시간을 회차 수로 나눠 회차 길이를 자동으로 정해요.")}
+    <p class="msub small sched" id="s-span"></p>
     ${stepRow("capacity", "회차당 정원(명)", "한 회차에 체험할 수 있는 사람 수예요.")}
     ${stepRow("maxParty", "한 번에 예약할 수 있는 인원", "가족이나 친구와 함께 예약할 때 최대 인원이에요.")}
     ${stepRow("notifyBefore", "시작 전 알림(분)", "회차 시작 몇 분 전에 미리 알릴지 정해요. 0이면 시작할 때만 알려요.")}
@@ -1059,14 +1115,17 @@ function openSettings(){
     <div class="mbtns"><button class="btn ghost" data-x="close">닫기</button><button class="btn" data-x="save">저장</button></div>
     <hr>
     <div class="set-more"><button class="sbtn" data-act="csv">결과 CSV 내려받기</button><button class="sbtn warn" data-act="newSession">예약 전체 초기화</button></div>
-    <p class="msub small">예약이 있을 때 시작 시각이나 간격을 바꾸면, 이미 예약한 회차의 시각도 함께 바뀌어요. 예약 전체 초기화는 행사 전에 시험 예약을 지울 때 써요.</p>`);
-  $("#s-start").addEventListener("input", e => { if (e.target.value){ c.startTime = e.target.value; setText("#s-span", span()); } });
+    <p class="msub small">예약이 있을 때 운영 시간이나 회차 수를 바꾸면, 이미 예약한 회차의 시각도 함께 바뀌어요. 예약 전체 초기화는 행사 전에 시험 예약을 지울 때 써요.</p>`);
+  const bindT = (id, k) => $(id).addEventListener("input", e => { if (e.target.value){ c[k] = e.target.value; recalc(); } });
+  bindT("#s-start", "startTime"); bindT("#s-end", "endTime"); bindT("#s-bs", "breakStart"); bindT("#s-be", "breakEnd");
+  $("#s-brk").addEventListener("change", e => { c.useBreak = e.target.checked; recalc(); });
+  recalc();
   m.addEventListener("click", e => {
     const s = e.target.closest("[data-step]");
-    if (s){ const k = s.dataset.step, [mn, mx, st] = STEPS[k]; c[k] = clamp((+c[k] || 0) + st * +s.dataset.d, mn, mx); $("#s-" + k).textContent = c[k]; setText("#s-span", span()); return; }
-    const x = e.target.closest("[data-x]"); if (!x) return;
+    if (s){ const k = s.dataset.step, [mn, mx, st] = STEPS[k]; c[k] = clamp((+c[k] || 0) + st * +s.dataset.d, mn, mx); $("#s-" + k).textContent = c[k]; recalc(); return; }
+    const x = e.target.closest("[data-x]"); if (!x || x.disabled) return;
     if (x.dataset.x === "close"){ closeModal(); return; }
-    const patch = { startTime: c.startTime, slots: c.slots, slotMin: c.slotMin, capacity: c.capacity, maxParty: c.maxParty, notifyBefore: c.notifyBefore, noShowMin: c.noShowMin, cancelMin: c.cancelMin, name: $("#s-name").value.trim() || "MILKY UP", sub: $("#s-sub").value.trim() };
+    const patch = { startTime: c.startTime, endTime: c.endTime, useBreak: !!c.useBreak, breakStart: c.breakStart, breakEnd: c.breakEnd, slots: c.slots, slotMin: c.slotMin, capacity: c.capacity, maxParty: c.maxParty, notifyBefore: c.notifyBefore, noShowMin: c.noShowMin, cancelMin: c.cancelMin, name: $("#s-name").value.trim() || "MILKY UP", sub: $("#s-sub").value.trim() };
     closeModal(); safe(B.setConfig(patch)).then(() => toast("설정을 저장했어요")).catch(() => {});
   });
 }
