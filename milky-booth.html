@@ -194,6 +194,9 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .cap i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--blue)}
 .cap em{font-style:normal;font-family:var(--fd);font-size:19px}
 .cap small{font-size:13px;color:var(--muted)}
+.lostc{border:3px solid var(--straw);margin-bottom:14px;background:var(--straw-l)}
+.lostc header{flex-direction:column;align-items:flex-start;gap:2px}
+.lostc .tm{font-family:var(--fb);font-size:14px}
 .ph-full .cap i::after{background:var(--straw)}
 .ph-full .cap em{color:var(--straw-d)}
 .brow{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:8px 4px;border-top:1px solid var(--line)}
@@ -339,8 +342,8 @@ const store = {
 };
 const setText = (sel, v) => { const el = $(sel); if (el && el.textContent !== String(v)) el.textContent = v; };
 function newSid(){ const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`; }
-const TIME_DEFAULTS = { capacity: 6, slots: 17, startTime: "10:00", endTime: "16:40", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slotMin: 20, maxParty: 2, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
-const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 7 });
+const TIME_DEFAULTS = { capacity: 5, slots: 11, startTime: "10:00", endTime: "16:30", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slotMin: 30, maxParty: 2, notifyBefore: 5, noShowMin: 3, cancelMin: 10 };
+const DEFAULT_CFG = () => ({ sid: newSid(), open: true, ...TIME_DEFAULTS, name: "MILKY UP", sub: "우유팩 업사이클링 키트 만들기", cfgVer: 8 });
 
 function toast(msg){
   let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
@@ -657,6 +660,7 @@ function pScreen(){
     const t = P.ticket;
     if (t === undefined) return "loading";
     if (t){
+      if (t.status === "reserved" && t.slot > P.cfg.slots) return "moved";
       if (t.status === "reserved") return Date.now() >= slotStart(P.cfg, t.slot) ? "called" : "waiting";
       if (t.status === "active") return P.me.ratingStep ? "rating" : "active";
       if (t.status === "done") return (t.rating == null && !P.me.rated) ? "rating" : "done";
@@ -703,6 +707,10 @@ const PT = {
     <h1>체험 완료!</h1>
     <p class="sub" id="d-sub"></p>
     <div class="stack"><button class="btn ghost" data-act="again">새로 예약하기</button></div>`,
+  moved: () => `${carton("st-off")}
+    <h1>예약 시간이 바뀌었어요</h1>
+    <p class="sub">부스 시간표가 바뀌어서 예약한 회차가 없어졌어요. 미안하지만 새 시간표에서 다시 예약해 주세요.</p>
+    <div class="stack"><button class="btn" data-act="rebook">다시 예약하기</button></div>`,
   expired: () => `${carton("st-off")}
     <h1>예약이 취소됐어요</h1>
     <p class="sub">시작하고 정해진 시간 안에 부스에 오지 않아 예약이 취소됐어요. 다른 시간에 체험하고 싶으면 다시 예약해 주세요.</p>
@@ -784,8 +792,8 @@ function updateP(){
     setLab({ ...lab, stamp: `${party}명 ${hm(t.doneAt)} 완료` }); setFill(1);
     const r = t.rating;
     setText("#d-sub", r ? `별점 ${"★".repeat(r)}${"☆".repeat(5 - r)} 고마워요. 우유팩이 새 물건으로 다시 태어났어요.` : "우유팩이 새 물건으로 다시 태어났어요. 함께해 줘서 고마워요.");
-  } else if (s === "expired"){
-    setLab(lab); setFill(.12);
+  } else if (s === "expired" || s === "moved"){
+    setLab(s === "moved" ? { small: "예약 회차", big: "?", nm: t.name } : lab); setFill(.12);
   }
   paintTimers();
 }
@@ -801,7 +809,7 @@ function tickP(){
 }
 function checkAlerts(){
   const t = P.ticket, me = P.me, cfg = P.cfg; if (!t || !me || !cfg) return;
-  if (t.status === "reserved"){
+  if (t.status === "reserved" && t.slot <= cfg.slots){
     const st = slotStart(cfg, t.slot), now = Date.now();
     if (!me.nearDone && cfg.notifyBefore > 0 && now >= st - cfg.notifyBefore * 60000 && now < st){
       me.nearDone = true; saveMe();
@@ -871,6 +879,7 @@ const PACT = {
   },
   skiprate(){ P.me.rated = true; saveMe(); renderP(); },
   again(){ clearMe(); renderP(); },
+  async rebook(){ const me = P.me; try { await B.release(me.sid, me.id, "cancelled", ["reserved"]); } catch(e){} clearMe(); renderP(); },
   sound(){ unlockAudio(); setTimeout(() => { chime(NEARTONE, 1); updateP(); }, 120); },
   async notif(){ try { await Notification.requestPermission(); } catch(e){} regSW(); updateP(); }
 };
@@ -886,12 +895,15 @@ function startAdmin(){
   const u = B.watchConfig(cfg => {
     const prev = A.cfg?.sid; A.cfg = cfg; if (!cfg) return;
     if ((cfg.cfgVer || 0) < 3 && !A.migrated){   // 선착순 대기 방식에서 타임제로 바뀔 때 한 번: 시간표 기본값 + 예약 새로 시작
-      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 7 }).catch(onErr); return;
+      A.migrated = true; B.setConfig({ ...TIME_DEFAULTS, sid: newSid(), cfgVer: 8 }).catch(onErr); return;
     }
     if ((cfg.cfgVer || 0) < 6 && !A.migrated){   // 10:00 시작, 20분 간격, 마지막 회차 16:20(16:40 끝), 점심 12:00~13:00 → 17회차, 한 번에 2명까지로 한 번 맞춤
       A.migrated = true; B.setConfig({ startTime: "10:00", endTime: "16:40", useBreak: true, breakStart: "12:00", breakEnd: "13:00", slots: 17, slotMin: 20, maxParty: 2, cfgVer: 6 }).catch(onErr); return;
     }
     if (cfg.sid !== prev){ A.unsub?.(); A.all = []; A.loaded = false; A.unsub = B.watchAll(cfg.sid, list => { A.all = list; A.loaded = true; renderA(); toTeams(); }, onErr); }
+    if ((cfg.cfgVer || 0) === 7 && !A.v8){   // 회차당 5팀, 30분 간격(10:00~16:30, 점심 12:00~13:00 → 11회차)으로 한 번 맞춤
+      A.v8 = true; B.setConfig({ capacity: 5, slots: 11, slotMin: 30, startTime: "10:00", endTime: "16:30", useBreak: true, breakStart: "12:00", breakEnd: "13:00", cfgVer: 8 }).catch(onErr);
+    }
     renderA(); toTeams();
   }, onErr);
   cleanup.push(u, () => { A.unsub?.(); A.unsub = null; });
@@ -1022,9 +1034,11 @@ function renderA(){
       </div>
     </div>`;
   renderWalkSelect();
+  const lost = A.all.filter(t => SEAT.includes(t.status) && t.slot > cfg.slots);
   const order = [], past = [];
   for (let i = 1; i <= cfg.slots; i++) (now >= slotEnd(cfg, i) ? past : order).push(i);
   $("#a-board").innerHTML = `
+    ${lost.length ? `<section class="slotc lostc"><header><b>시간표 밖 예약 ${lost.length}건</b><span class="tm">회차 수가 줄어 시간이 없어진 예약이에요. 다른 회차로 다시 예약하거나 취소해 주세요.</span></header>${lost.map(t => `<div class="brow"><span class="bn">${t.slot}회차 ${esc(t.name)}${walkTag(t)}</span><span class="bp">${t.party || 1}명</span><span class="ba"><button class="sbtn quiet" data-act="cancelT" data-id="${t.id}">취소</button></span></div>`).join("")}</section>` : ""}
     <div class="slots-grid">${order.map(i => (isAfterLunch(cfg, i) && i > 1 && !isAfterLunch(cfg, i - 1) && now < dayAt(toMin(cfg.breakEnd)) ? `<p class="lunch">점심시간 ${cfg.breakStart}~${cfg.breakEnd}</p>` : "") + slotCard(i, cur, nxt)).join("") || `<p class="empty">남은 회차가 없어요. 설정에서 시간을 확인해 주세요.</p>`}</div>
     ${past.length ? `<details class="pastwrap" id="pastw" ${A.pastOpen ? "open" : ""}><summary>지난 회차 ${past.length}개</summary><div class="slots-grid">${past.map(i => slotCard(i, cur, nxt)).join("")}</div></details>` : ""}
     <details class="rec" id="rec" ${A.recOpen ? "open" : ""}>
@@ -1046,7 +1060,7 @@ function checkExpire(){
   const cfg = A.cfg; if (!cfg || !(cfg.cancelMin > 0)) return;
   const now = Date.now();
   A.all.forEach(t => {
-    if (t.status !== "reserved" || expiring.has(t.id) || now < slotStart(cfg, t.slot) + cfg.cancelMin * 60000) return;
+    if (t.status !== "reserved" || t.slot > cfg.slots || expiring.has(t.id) || now < slotStart(cfg, t.slot) + cfg.cancelMin * 60000) return;
     expiring.add(t.id);
     B.release(cfg.sid, t.id, "expired", ["reserved"])
       .then(ok => { if (ok) toast(`${t.slot}회차 ${t.name}(${t.party || 1}명): ${cfg.cancelMin}분 안에 오지 않아 예약을 취소했어요`); })
