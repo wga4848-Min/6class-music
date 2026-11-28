@@ -194,6 +194,10 @@ button.chip{border-color:var(--ink);color:var(--ink);font-family:var(--fd);font-
 .cap i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--blue)}
 .cap em{font-style:normal;font-family:var(--fd);font-size:19px}
 .cap small{font-size:13px;color:var(--muted)}
+.a-call{margin:0 0 14px;background:var(--straw)}
+.a-call:disabled{background:var(--grey)}
+.sbtn.call{background:var(--straw-l);border-color:var(--straw-d);color:var(--straw-d);box-shadow:0 2px 0 var(--straw-d)}
+.slotc header .sbtn.call{font-size:15px;padding:4px 10px}
 .lostc{border:3px solid var(--straw);margin-bottom:14px;background:var(--straw-l)}
 .lostc header{flex-direction:column;align-items:flex-start;gap:2px}
 .lostc .tm{font-family:var(--fb);font-size:14px}
@@ -661,7 +665,7 @@ function pScreen(){
     if (t === undefined) return "loading";
     if (t){
       if (t.status === "reserved" && t.slot > P.cfg.slots) return "moved";
-      if (t.status === "reserved") return Date.now() >= slotStart(P.cfg, t.slot) ? "called" : "waiting";
+      if (t.status === "reserved") return (Date.now() >= slotStart(P.cfg, t.slot) || (t.callCount || 0) > 0) ? "called" : "waiting";
       if (t.status === "active") return P.me.ratingStep ? "rating" : "active";
       if (t.status === "done") return (t.rating == null && !P.me.rated) ? "rating" : "done";
       if (t.status === "expired") return "expired";
@@ -688,7 +692,7 @@ const PT = {
     <div class="chips" id="w-chips"></div>
     <div class="stack"><button class="btn ghost" data-act="cancel">예약 취소</button></div>`,
   called: () => `${carton("st-called")}
-    <h1>체험 시작 시간이에요!</h1>
+    <h1 id="c-h">체험 시작 시간이에요!</h1>
     <p class="since" id="c-line"></p>
     <p class="sub" id="c-sub"></p>
     <div class="stack"><button class="btn straw" data-act="start">체험 시작하기</button><button class="btn ghost" data-act="cancel">예약 취소</button></div>`,
@@ -747,7 +751,7 @@ function updateP(){
   const cfg = P.cfg; if (!cfg){ setFill(.2); return; }
   const s = P.screen, t = P.ticket, now = Date.now();
   setText("#brandName", cfg.name); setText("#brandSub", cfg.sub); setRoof(cfg.name);
-  const title = s === "called" ? "🔔 체험 시작 시간이에요!" : `${cfg.name} 체험 예약`;
+  const title = s === "called" ? "🔔 부스로 와 주세요!" : `${cfg.name} 체험 예약`;
   if (document.title !== title) document.title = title;
   if (s === "loading"){ if (P.me) setLab({ small: "예약 회차", big: P.me.slot || "", nm: P.me.name }); setFill(.15); return; }
   if (s === "join"){
@@ -780,6 +784,7 @@ function updateP(){
     const c = $("#w-chips"); if (c && c.innerHTML !== chips) c.innerHTML = chips;
   } else if (s === "called"){
     setLab(lab); setFill(1);
+    setText("#c-h", now < st ? "부스에서 부르고 있어요!" : "체험 시작 시간이에요!");
     const m = cfg.cancelMin || 0;
     setLine("#c-line", m > 0 ? `남은 시간 <b data-until="${st + m * 60000}"></b>` : `시작한 지 <b data-since="${st}"></b>`);
     if (!(m > 0 && now >= st + m * 60000)) setText("#c-sub", m > 0 ? `부스에 도착하면 아래 버튼을 눌러 주세요. ${m}분 안에 오지 않으면 예약이 취소돼요.` : "부스에 도착하면 아래 버튼을 눌러 주세요.");
@@ -824,7 +829,7 @@ function checkAlerts(){
     if ((t.callCount || 0) > (me.alerted || 0)){
       me.alerted = t.callCount; saveMe();
       chime(DINGDONG, 2); buzz([450, 150, 450]);
-      notify("부스에서 부르고 있어요!", `${t.slot}회차 ${t.name}님, 부스로 와 주세요.`);
+      notify("부스에서 부르고 있어요!", `${t.slot}회차 ${t.name}님, 지금 부스로 와 주세요.`);
     }
   }
   if (t.status === "expired" && !me.expiredSeen){
@@ -943,13 +948,13 @@ function bookRow(t){
   const cfg = A.cfg, st = slotStart(cfg, t.slot), started = Date.now() >= st;
   let state = "", acts = "", late = "";
   if (t.status === "reserved"){
-    if (!started) state = `<span class="bs">예약</span>`;
+    if (!started) state = (t.callCount || 0) > 0 ? `<span class="bs come">호출함</span>` : `<span class="bs">예약</span>`;
     else {
       state = `<span class="bs come">오는 중${cfg.cancelMin > 0 ? `<span class="cut">취소까지 <span data-until="${st + cfg.cancelMin * 60000}"></span></span>` : ""}</span>`;
       late = `data-late="${st + cfg.noShowMin * 60000}"`;
     }
     acts = `<button class="sbtn pri" data-act="arrive" data-id="${t.id}">도착 확인</button>`
-      + (started && !t.walkin ? `<button class="sbtn" data-act="recall" data-id="${t.id}">다시 알림</button>` : "")
+      + (!t.walkin ? `<button class="sbtn call" data-act="recall" data-id="${t.id}">${(t.callCount || 0) > 0 ? "다시 호출" : "호출"}</button>` : "")
       + `<button class="sbtn quiet" data-act="cancelT" data-id="${t.id}">취소</button>`;
   } else if (t.status === "active"){
     state = `<span class="bs act">체험 중 <span data-since="${t.startedAt || ""}"></span></span>`;
@@ -965,7 +970,7 @@ function slotCard(i, cur, nxt){
   const phLab = { past: "끝남", now: "진행 중", next: "다음", future: "" }[ph];
   const rows = slotTickets(i).map(bookRow).join("");
   return `<section class="slotc ph-${ph}${u >= cfg.capacity ? " ph-full" : ""}">
-    <header><b>${i}회차</b><span class="tm">${hm(slotStart(cfg, i))}–${hm(slotEnd(cfg, i))}</span>${phLab ? `<span class="ph">${phLab}</span>` : ""}<span class="cap"><i style="--w:${Math.min(100, Math.round(u / cfg.capacity * 100))}%"></i><em>${u}/${cfg.capacity}팀</em><small>${slotPeople(i)}명</small></span></header>
+    <header><b>${i}회차</b><span class="tm">${hm(slotStart(cfg, i))}–${hm(slotEnd(cfg, i))}</span>${phLab ? `<span class="ph">${phLab}</span>` : ""}<span class="cap"><i style="--w:${Math.min(100, Math.round(u / cfg.capacity * 100))}%"></i><em>${u}/${cfg.capacity}팀</em><small>${slotPeople(i)}명</small></span>${ph !== "past" && slotTickets(i).some(t => t.status === "reserved") ? `<button class="sbtn call" data-act="callSlot" data-id="${i}">${i}회차 호출</button>` : ""}</header>
     ${rows || `<p class="empty">예약이 없어요</p>`}</section>`;
 }
 function renderWalkSelect(){
@@ -1025,6 +1030,12 @@ function renderA(){
   const nowLine = cur ? `<b>${cur}회차 진행 중</b><span>${hm(slotStart(cfg, cur))}–${hm(slotEnd(cfg, cur))}, 예약 ${slotUsed(cur)}/${cfg.capacity}팀</span>`
     : inLunch(cfg, now) && nxt ? `<b>점심시간</b><span>${cfg.breakEnd}에 ${nxt}회차가 시작해요</span>`
     : nxt ? `<b>${nxt}회차 시작 전</b><span>${hm(slotStart(cfg, nxt))}에 시작해요</span>` : `<b>오늘 회차가 모두 끝났어요</b><span></span>`;
+  const waitIn = i => i ? slotTickets(i).filter(t => t.status === "reserved").length : 0;
+  const target = cur && waitIn(cur) ? cur : (nxt || cur);
+  const nWait = waitIn(target);
+  const callBtn = target
+    ? `<button class="btn a-next a-call" data-act="callSlot" data-id="${target}" ${nWait ? "" : "disabled"}>${nWait ? `${target}회차 호출하기 <span class="nx">${hm(slotStart(cfg, target))} 시작, ${nWait}팀</span>` : `${target}회차에 부를 팀이 없어요`}</button>`
+    : `<button class="btn a-next a-call" disabled>오늘 회차가 모두 끝났어요</button>`;
   const nextLine = cur && nxt ? `<small>다음</small><div><b class="nx2">${nxt}회차 ${hm(slotStart(cfg, nxt))}</b><span>예약 ${slotUsed(nxt)}/${cfg.capacity}팀</span></div>` : "";
   $("#a-hd").innerHTML = `
     <div class="a-head">
@@ -1035,7 +1046,8 @@ function renderA(){
         <div><b>${avg}</b><span>평균 별점</span></div>
         <div><b>${expired.length}</b><span>시간 초과 취소(팀)</span></div>
       </div>
-    </div>`;
+    </div>
+    ${callBtn}`;
   renderWalkSelect();
   const lost = A.all.filter(t => SEAT.includes(t.status) && t.slot > cfg.slots);
   const order = [], past = [];
@@ -1164,7 +1176,14 @@ const AACT = {
   logout(){ store.del("milkyAdmin"); location.hash = ""; },
   wkParty(d){ A.wk.party = clamp(A.wk.party + +d, 1, A.cfg.maxParty); renderWalkSelect(); },
   async arrive(id){ const t = findT(id); await safe(B.update(A.cfg.sid, id, { status: "active", startedAt: NOW })); toast(`${t.slot}회차 ${t.name} ${t.party || 1}명 체험을 시작했어요`); },
-  async recall(id){ const t = findT(id); await safe(B.update(A.cfg.sid, id, { callCount: INC, lastCallAt: NOW })); toast(`${t.name}에게 다시 알렸어요`); },
+  async recall(id){ const t = findT(id); const again = (t.callCount || 0) > 0; await safe(B.update(A.cfg.sid, id, { callCount: INC, lastCallAt: NOW })); toast(`${t.slot}회차 ${t.name}을(를) ${again ? "다시 " : ""}호출했어요`); },
+  async callSlot(i){
+    i = +i; const list = slotTickets(i).filter(t => t.status === "reserved");
+    if (!list.length){ toast(`${i}회차에 부를 팀이 없어요`); return; }
+    const phones = list.filter(t => !t.walkin), walks = list.filter(t => t.walkin);
+    try { await Promise.all(phones.map(t => B.update(A.cfg.sid, t.id, { callCount: INC, lastCallAt: NOW }))); } catch(e){ onErr(e); return; }
+    toast(`${i}회차 ${phones.length}팀을 호출했어요${walks.length ? `. 휴대폰 없는 ${walks.map(t => t.name).join(", ")}은(는) 이름을 불러 주세요` : ""}`);
+  },
   finishT(id){ const t = findT(id); if (t) openFinish(t); },
   async cancelT(id){
     const t = findT(id);
